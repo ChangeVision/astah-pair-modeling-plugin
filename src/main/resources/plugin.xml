@@ -11,12 +11,20 @@
                path="tool/pair-modeling-prototype">
          </menu>
          <action
-			   label="%menu_label"
-               icon="icons/sample.gif"
-               class="jp.ex_t.kazuaki.change_vision.TemplateAction"
-               tooltip="%menu_tooltip"
-               menubarPath="tool/pair-modeling-prototype/"
-               id="pair-modeling-prototype">
+                 label="%menu_label_receive"
+                 icon="icons/sample.gif"
+                 class="jp.ex_t.kazuaki.change_vision.ReceiveAction"
+                 tooltip="%menu_tooltip"
+                 menubarPath="tool/pair-modeling-prototype/"
+                 id="pair-modeling-prototype">
+         </action>
+         <action
+                 label="%menu_label_send"
+                 icon="icons/sample.gif"
+                 class="jp.ex_t.kazuaki.change_vision.SendAction"
+                 tooltip="%menu_tooltip"
+                 menubarPath="tool/pair-modeling-prototype/"
+                 id="pair-modeling-prototype">
          </action>
      </actionSet>
    </extension>
