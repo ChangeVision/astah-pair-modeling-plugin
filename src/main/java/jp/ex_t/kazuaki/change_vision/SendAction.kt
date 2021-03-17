@@ -34,12 +34,6 @@ class SendAction: IPluginActionDelegate {
                 socketClient.close()
             }
             isLaunched = !isLaunched
-        } catch (e: IPAddressFormatException) {
-            val message = "IP address must be IPv4 address."
-            JOptionPane.showMessageDialog(window.parent, message, "IP address error", JOptionPane.WARNING_MESSAGE)
-        } catch (e: NumberFormatException) {
-            val message = "Port number must be an integer and be 0 - 65535."
-            JOptionPane.showMessageDialog(window.parent, message, "Port number error", JOptionPane.WARNING_MESSAGE)
         } catch (e: Exception) {
             JOptionPane.showMessageDialog(window.parent, "Exception occurred.", "Alert", JOptionPane.ERROR_MESSAGE)
             println(e.message)
@@ -50,9 +44,16 @@ class SendAction: IPluginActionDelegate {
     private fun getHostAddressAndPortNumber(window: IWindow): Pair<String, Int>? {
         val ipAddress = JOptionPane.showInputDialog(window.parent, "Input IP address or \"localhost\"") ?: return null
         val ipAddressPattern = Regex("""^((25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])\.){3}(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])${'$'}""")
-        if (!ipAddressPattern.matches(ipAddress) && ipAddress != "localhost") throw IPAddressFormatException()
+        if (!ipAddressPattern.matches(ipAddress) && ipAddress != "localhost") {
+            val message = "IP address must be IPv4 address."
+            JOptionPane.showMessageDialog(window.parent, message, "IP address error", JOptionPane.WARNING_MESSAGE)
+        }
         val portNumber = (JOptionPane.showInputDialog(window.parent, "Input server port.") ?: return null).toInt()
-        if ((0 > portNumber) or (65535 < portNumber)) throw NumberFormatException()
+        if ((0 > portNumber) or (65535 < portNumber)) {
+            val message = "Port number must be an integer and be 0 - 65535."
+            JOptionPane.showMessageDialog(window.parent, message, "Port number error", JOptionPane.WARNING_MESSAGE)
+            return null
+        }
         return Pair(ipAddress, portNumber)
     }
 }
