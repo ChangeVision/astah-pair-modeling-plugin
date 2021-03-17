@@ -24,7 +24,7 @@ class SendAction: IPluginActionDelegate {
             val api = AstahAPI.getAstahAPI()
             val projectAccessor = api.projectAccessor
             if (!isLaunched) {
-                val (ipAddress, portNumber) = getHostAddressAndIPAddress(window) ?: return
+                val (ipAddress, portNumber) = getHostAddressAndPortNumber(window) ?: return
                 socketClient = SocketClient(ipAddress, portNumber)
                 socketClient.connect()
                 projectChangedListener = ProjectChangedListener(socketClient)
@@ -47,7 +47,7 @@ class SendAction: IPluginActionDelegate {
         }
     }
 
-    private fun getHostAddressAndIPAddress(window: IWindow): Pair<String, Int>? {
+    private fun getHostAddressAndPortNumber(window: IWindow): Pair<String, Int>? {
         val ipAddress = JOptionPane.showInputDialog(window.parent, "Input IP address or \"localhost\"") ?: return null
         val ipAddressPattern = Regex("""^((25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])\.){3}(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])${'$'}""")
         if (!ipAddressPattern.matches(ipAddress) && ipAddress != "localhost") throw IPAddressFormatException()
