@@ -37,7 +37,7 @@ class SendAction: IPluginActionDelegate {
         } catch (e: IPAddressFormatException) {
             val message = "IP address must be IPv4 address."
             JOptionPane.showMessageDialog(window.parent, message, "IP address error", JOptionPane.WARNING_MESSAGE)
-        } catch (e: java.lang.NumberFormatException) {
+        } catch (e: NumberFormatException) {
             val message = "Port number must be an integer and be 0 - 65535."
             JOptionPane.showMessageDialog(window.parent, message, "Port number error", JOptionPane.WARNING_MESSAGE)
         } catch (e: Exception) {
