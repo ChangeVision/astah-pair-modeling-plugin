@@ -9,6 +9,7 @@
 package jp.ex_t.kazuaki.change_vision
 
 import com.change_vision.jude.api.inf.model.IClass
+import com.change_vision.jude.api.inf.model.IModel
 import com.change_vision.jude.api.inf.project.ProjectEvent
 import com.change_vision.jude.api.inf.project.ProjectEventListener
 
@@ -22,8 +23,8 @@ class ProjectChangedListener(private val socketClient: SocketClient): ProjectEve
                 when (val entity = it.entity) {
                     is IClass -> {
                         if (operation == Operation.ADD) {
-                            socketClient.write(entity.name)
-                            socketClient.read()
+                            val model = entity.owner as IModel
+                            socketClient.write("${model.name}&&${entity.name}")
                         }
                         println("Op: ${Operation.values()[it.operation]} -> ${entity.name}(IClass)")
                     }
