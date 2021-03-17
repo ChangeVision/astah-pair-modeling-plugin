@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<plugin>
+   <extension point="com.change_vision.astah.ui.actionSets">
+      <actionSet
+            label="%action_set_label"
+            visible="true"
+            id="jp.ex_t.kazuaki.change_vision.pair-modeling-prototype.actionSet">
+         <menu
+               id="pair-modeling-prototype"
+               label="%menu_group"
+               path="tool/pair-modeling-prototype">
+         </menu>
+         <action
+			   label="%menu_label"
+               icon="icons/sample.gif"
+               class="jp.ex_t.kazuaki.change_vision.TemplateAction"
+               tooltip="%menu_tooltip"
+               menubarPath="tool/pair-modeling-prototype/"
+               id="pair-modeling-prototype">
+         </action>
+     </actionSet>
+   </extension>
+</plugin>
