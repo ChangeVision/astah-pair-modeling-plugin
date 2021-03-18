@@ -26,7 +26,7 @@ class ReceiveAction: IPluginActionDelegate {
                 val ipAddress = if (!IP_ADDRESS.isEmpty()) IP_ADDRESS else getHostAddress(window) ?: return
                 reflectTransaction = ReflectTransaction()
                 val topic = "debug/astah" //JOptionPane.showInputDialog("Input topic. (Ex: debug/astah)") ?: return
-                val clientId = JOptionPane.showInputDialog("Input child id. (Ex: astah/debug-sub)") ?: return // clientId ... such as Licensed user name
+                val clientId = JOptionPane.showInputDialog("Input client id. (Ex: astah/debug-sub)") ?: return // clientId ... such as Licensed user name
                 mqttSubscriber = MqttSubscriber(ipAddress, topic, clientId, reflectTransaction)
                 mqttSubscriber.subscribe()
             } else {
