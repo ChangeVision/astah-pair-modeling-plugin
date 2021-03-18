@@ -13,7 +13,7 @@ import com.change_vision.jude.api.inf.model.IModel
 import com.change_vision.jude.api.inf.project.ProjectEvent
 import com.change_vision.jude.api.inf.project.ProjectEventListener
 
-class ProjectChangedListener(private val socketClient: SocketClient): ProjectEventListener {
+class ProjectChangedListener(private val mqttPublisher: MqttPublisher): ProjectEventListener {
     override fun projectChanged(e: ProjectEvent) {
         println("===== Transaction detected =====")
         val projectEditUnit = e.projectEditUnit.filter { it.entity != null }
@@ -24,7 +24,7 @@ class ProjectChangedListener(private val socketClient: SocketClient): ProjectEve
                     is IClass -> {
                         if (operation == Operation.ADD) {
                             val model = entity.owner as IModel
-                            socketClient.write("${model.name}&&${entity.name}")
+                            mqttPublisher.publish("${model.name}&&${entity.name}")
                         }
                         println("Op: ${Operation.values()[it.operation]} -> ${entity.name}(IClass)")
                     }

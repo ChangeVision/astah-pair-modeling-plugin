@@ -14,6 +14,7 @@ import javax.swing.JOptionPane
 
 class ReceiveAction: IPluginActionDelegate {
     private lateinit var socketServer: SocketServer
+    private lateinit var mqttSubscriber: MqttSubscriber
     private lateinit var reflectTransaction: ReflectTransaction
     private var isLaunched = false
 
@@ -21,12 +22,14 @@ class ReceiveAction: IPluginActionDelegate {
     override fun run(window: IWindow) {
         try {
             if (!isLaunched) {
-                val portNmber = getPortNumber(window) ?: return
+                val ipAddress = getHostAddress(window) ?: return
                 reflectTransaction = ReflectTransaction()
-                socketServer = SocketServer(portNmber, reflectTransaction)
-                socketServer.launch()
+                val topic = JOptionPane.showInputDialog("Input topic. (Ex: debug/astah)") ?: return
+                val clientId = JOptionPane.showInputDialog("Input child id. (Ex: astah/debug)") ?: return
+                mqttSubscriber = MqttSubscriber(ipAddress, topic, clientId, reflectTransaction)
+                mqttSubscriber.subscribe() // clientId ... such as Licensed user name
             } else {
-                socketServer.stop()
+                mqttSubscriber.close()
             }
             isLaunched = !isLaunched
         } catch (e: Exception) {
@@ -44,5 +47,16 @@ class ReceiveAction: IPluginActionDelegate {
             return null
         }
         return portNumber
+    }
+
+    private fun getHostAddress(window: IWindow): String? {
+        val ipAddress = JOptionPane.showInputDialog(window.parent, "Input IP address or \"localhost\"") ?: return null
+        val ipAddressPattern = Regex("""^((25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])\.){3}(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])${'$'}""")
+        if (!ipAddressPattern.matches(ipAddress) && ipAddress != "localhost") {
+            val message = "IP address must be IPv4 address."
+            JOptionPane.showMessageDialog(window.parent, message, "IP address error", JOptionPane.WARNING_MESSAGE)
+            return null
+        }
+        return ipAddress
     }
 }
