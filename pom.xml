@@ -45,6 +45,10 @@
 			<id>uk-central</id>
 			<url>http://uk.maven.org/maven2/</url>
 		</repository>
+		<repository>
+			<id>Eclipse Paho Repo</id>
+			<url>https://repo.eclipse.org/content/repositories/paho-releases/</url>
+		</repository>
 	</repositories>
 	<reporting>
 		<plugins>
@@ -316,6 +320,11 @@
 			<groupId>org.jetbrains.kotlinx</groupId>
 			<artifactId>kotlinx-coroutines-core</artifactId>
 			<version>1.4.3</version>
+		</dependency>
+		<dependency>
+			<groupId>org.eclipse.paho</groupId>
+			<artifactId>org.eclipse.paho.client.mqttv3</artifactId>
+			<version>1.1.1</version>
 		</dependency>
     </dependencies>
 </project>
