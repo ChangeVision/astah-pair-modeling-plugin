@@ -24,7 +24,8 @@ class SendAction: IPluginActionDelegate {
             val api = AstahAPI.getAstahAPI()
             val projectAccessor = api.projectAccessor
             if (!isLaunched) {
-                val ipAddress = getHostAddress(window) ?: return
+                val IP_ADDRESS = "" // WRITE IP ADDRESS IF YOU WANT HARD CODE
+                val ipAddress = if (!IP_ADDRESS.isEmpty()) IP_ADDRESS else getHostAddress(window) ?: return
                 val topic = "debug/astah" //JOptionPane.showInputDialog("Input topic. (Ex: debug/astah)") ?: return
                 val clientId = JOptionPane.showInputDialog("Input child id. (Ex: astah/debug-pub)") ?: return // clientId ... such as Licensed user name
                 mqttPublisher = MqttPublisher(ipAddress, topic, clientId)
