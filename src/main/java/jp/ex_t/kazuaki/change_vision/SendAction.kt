@@ -26,8 +26,8 @@ class SendAction: IPluginActionDelegate {
             if (!isLaunched) {
                 val ipAddress = getHostAddress(window) ?: return
                 val topic = "debug/astah" //JOptionPane.showInputDialog("Input topic. (Ex: debug/astah)") ?: return
-                val clientId = "debug/astah-pub" // JOptionPane.showInputDialog("Input child id. (Ex: astah/debug)") ?: return
-                mqttPublisher = MqttPublisher(ipAddress, topic, clientId) // clientId ... such as Licensed user name
+                val clientId = JOptionPane.showInputDialog("Input child id. (Ex: astah/debug-pub)") ?: return // clientId ... such as Licensed user name
+                mqttPublisher = MqttPublisher(ipAddress, topic, clientId)
                 projectChangedListener = ProjectChangedListener(mqttPublisher)
                 projectAccessor.addProjectEventListener(projectChangedListener)
                 println("Publisher ready.")
