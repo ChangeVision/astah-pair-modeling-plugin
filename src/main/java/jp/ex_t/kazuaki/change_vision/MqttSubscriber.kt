@@ -45,8 +45,9 @@ class MqttSubscriber(private val brokerAddress: String, private val topic: Strin
     }
 
     override fun messageArrived(topic: String, message: MqttMessage) {
-        println("Received: $message ($topic)")
-        val receivedMessageArray = message.toString().split("&&")
+        val receivedMessage = message.payload.toString(Charsets.UTF_8)
+        println("Received: $receivedMessage ($topic)")
+        val receivedMessageArray = receivedMessage.split("&&")
         val parentName = receivedMessageArray[0]
         val childName = receivedMessageArray[1]
         if (parentName == "" || childName == "") return

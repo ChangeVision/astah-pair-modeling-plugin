@@ -27,7 +27,7 @@ class MqttPublisher(private val brokerAddress: String, private val topic: String
 
             mqttClient.connect(mqttConnectOptions)
             println("Connected to broker $broker.")
-            val mqttMessage = MqttMessage(message.toByteArray())
+            val mqttMessage = MqttMessage(message.toByteArray(Charsets.UTF_8))
             mqttMessage.qos = qos
             mqttClient.publish(topic, mqttMessage)
             mqttClient.disconnect()
