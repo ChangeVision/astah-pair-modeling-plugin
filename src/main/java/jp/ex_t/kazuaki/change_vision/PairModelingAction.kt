@@ -1,5 +1,5 @@
 /*
- * ReceiveAction.kt - pair-modeling-prototype
+ * PairModelingAction.kt - pair-modeling-prototype
  * Copyright © 2021 HyodaKazuaki.
  *
  * Released under the MIT License.
@@ -8,28 +8,30 @@
 
 package jp.ex_t.kazuaki.change_vision
 
+import com.change_vision.jude.api.inf.AstahAPI
 import com.change_vision.jude.api.inf.ui.IPluginActionDelegate
 import com.change_vision.jude.api.inf.ui.IWindow
+import java.util.*
 import javax.swing.JOptionPane
 
-class ReceiveAction: IPluginActionDelegate {
-    private lateinit var mqttSubscriber: MqttSubscriber
-    private lateinit var reflectTransaction: ReflectTransaction
+class PairModelingAction: IPluginActionDelegate {
     private var isLaunched = false
+    private lateinit var pairModeling: PairModeling
 
     @Throws(Exception::class)
     override fun run(window: IWindow) {
         try {
+            val api = AstahAPI.getAstahAPI()
+            val projectAccessor = api.projectAccessor
             if (!isLaunched) {
-                val IP_ADDRESS = "" // WRITE IP ADDRESS IF YOU WANT HARD CODE
-                val ipAddress = if (!IP_ADDRESS.isEmpty()) IP_ADDRESS else getHostAddress(window) ?: return
-                reflectTransaction = ReflectTransaction()
+                val brokerAddress = getHostAddress(window) ?: return
                 val topic = "debug/astah" //JOptionPane.showInputDialog("Input topic. (Ex: debug/astah)") ?: return
-                val clientId = JOptionPane.showInputDialog("Input client id. (Ex: astah/debug-sub)") ?: return // clientId ... such as Licensed user name
-                mqttSubscriber = MqttSubscriber(ipAddress, topic, clientId, reflectTransaction)
-                mqttSubscriber.subscribe()
+                val clientId = UUID.randomUUID().toString()
+                pairModeling = PairModeling(topic, clientId, brokerAddress)
+                pairModeling.start()
             } else {
-                mqttSubscriber.close()
+                // stop系の処理
+                pairModeling.end()
             }
             isLaunched = !isLaunched
         } catch (e: Exception) {
@@ -37,16 +39,6 @@ class ReceiveAction: IPluginActionDelegate {
             println(e.message)
             throw e
         }
-    }
-
-    private fun getPortNumber(window: IWindow): Int? {
-        val portNumber = (JOptionPane.showInputDialog(window.parent, "Input server port.") ?: return null).toInt()
-        if ((0 > portNumber) or (65535 < portNumber)) {
-            val message = "Port number must be an integer and be 0 - 65535."
-            JOptionPane.showMessageDialog(window.parent, message, "Port number error", JOptionPane.WARNING_MESSAGE)
-            return null
-        }
-        return portNumber
     }
 
     private fun getHostAddress(window: IWindow): String? {
@@ -58,5 +50,4 @@ class ReceiveAction: IPluginActionDelegate {
             return null
         }
         return ipAddress
-    }
-}
+    }}

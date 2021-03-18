@@ -17,11 +17,12 @@ import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence
 class MqttPublisher(private val brokerAddress: String, private val topic: String, private val clientId: String) {
     private val qos = 2
     private var broker: String = "tcp://$brokerAddress:1883"
+    private val clientIdPublisher = "$clientId/pub"
 
     @Throws(MqttException::class)
     fun publish(message: String) {
         try {
-            val mqttClient = MqttClient(broker, clientId, MemoryPersistence())
+            val mqttClient = MqttClient(broker, clientIdPublisher, MemoryPersistence())
             val mqttConnectOptions = MqttConnectOptions()
             mqttConnectOptions.isCleanSession = false
 

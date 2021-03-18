@@ -8,19 +8,18 @@
 
 package jp.ex_t.kazuaki.change_vision
 
-import com.change_vision.jude.api.inf.AstahAPI
 import org.eclipse.paho.client.mqttv3.*
 import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence
 
 class MqttSubscriber(private val brokerAddress: String, private val topic: String, private val clientId: String, private val reflectTransaction: ReflectTransaction): MqttCallback {
     private var broker: String = "tcp://$brokerAddress:1883"
-    private val api = AstahAPI.getAstahAPI()
     private lateinit var mqttClient: MqttClient
+    private val clientIdSubscriber = "$clientId/sub"
 
     fun subscribe() {
         val qos = 2
 
-        mqttClient = MqttClient(broker, clientId, MemoryPersistence())
+        mqttClient = MqttClient(broker, clientIdSubscriber, MemoryPersistence())
         mqttClient.setCallback(this)
         val mqttConnectOptions = MqttConnectOptions()
         mqttConnectOptions.isCleanSession = false
@@ -45,6 +44,9 @@ class MqttSubscriber(private val brokerAddress: String, private val topic: Strin
     }
 
     override fun messageArrived(topic: String, message: MqttMessage) {
+        // If the message was send by myself,  ignore this one.
+        val receivedClientId = topic.split("/").last()
+        if (receivedClientId == clientId) return
         val receivedMessage = message.payload.toString(Charsets.UTF_8)
         println("Received: $receivedMessage ($topic)")
         val receivedMessageArray = receivedMessage.split("&&")
