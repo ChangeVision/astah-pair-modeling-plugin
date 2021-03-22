@@ -13,7 +13,7 @@ import com.change_vision.jude.api.inf.exception.BadTransactionException
 import com.change_vision.jude.api.inf.model.IModel
 import com.change_vision.jude.api.inf.project.ProjectAccessor
 
-class ReflectTransaction {
+class ReflectTransaction(private val projectChangedListener: ProjectChangedListener? = null) {
     private val api: AstahAPI = AstahAPI.getAstahAPI()
     private val projectAccessor: ProjectAccessor = api.projectAccessor
 
@@ -24,12 +24,17 @@ class ReflectTransaction {
         val basicModelEditor = modelEditorFactory.basicModelEditor
         val parent = projectAccessor.findElements(IModel::class.java, parentName).first() as IModel
         try {
+            if (projectChangedListener != null)
+                projectAccessor.removeProjectEventListener(projectChangedListener)
             transactionManager.beginTransaction()
             basicModelEditor.createClass(parent, name)
             transactionManager.endTransaction()
         } catch (e: BadTransactionException) {
             transactionManager.abortTransaction()
             throw e
+        } finally {
+            if (projectChangedListener != null)
+                projectAccessor.addProjectEventListener(projectChangedListener)
         }
     }
 }

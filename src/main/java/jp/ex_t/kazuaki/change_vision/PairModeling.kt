@@ -32,9 +32,8 @@ class PairModeling(private val topic: String, private val clientId: String, priv
         println("Launched publisher.")
 
         println("Launching subscriber...")
-        // TODO: トランザクションが相手のところで跳ね返って(イベントが掴まれる)くる問題を解消する
         val topicTransactionSubscriber = "$topicTransaction/#"
-        reflectTransaction = ReflectTransaction()
+        reflectTransaction = ReflectTransaction(projectChangedListener)
         mqttSubscriber = MqttSubscriber(brokerAddress, topicTransactionSubscriber, clientId, reflectTransaction)
         mqttSubscriber.subscribe()
         println("Subscribed: $brokerAddress:$topicTransaction ($clientId")
