@@ -10,6 +10,7 @@ package jp.ex_t.kazuaki.change_vision
 
 import com.change_vision.jude.api.inf.model.IClass
 import com.change_vision.jude.api.inf.model.IModel
+import com.change_vision.jude.api.inf.presentation.INodePresentation
 import com.change_vision.jude.api.inf.project.ProjectEvent
 import com.change_vision.jude.api.inf.project.ProjectEventListener
 import kotlinx.serialization.cbor.Cbor
@@ -27,7 +28,8 @@ class ProjectChangedListener(private val mqttPublisher: MqttPublisher): ProjectE
                         if (operation == Operation.ADD) {
                             val model = entity.owner as IModel
                             val createIClass = CreateIClass(entity.name, model.name)
-                            val byteArray = Cbor.encodeToByteArray(createIClass)
+                            val iEntity = Entity(createIClass)
+                            val byteArray = Cbor.encodeToByteArray(iEntity)
                             mqttPublisher.publish(byteArray)
                         }
                         println("Op: ${Operation.values()[it.operation]} -> ${entity.name}(IClass)")
@@ -47,6 +49,20 @@ class ProjectChangedListener(private val mqttPublisher: MqttPublisher): ProjectE
 //                    is IPresentation -> {
 //                        println("Op: ${Operation.values()[it.operation]} -> ${entity.label}(IPresentation)")
 //                    }
+                    is INodePresentation -> {
+                        if (operation == Operation.ADD) {
+                            when (val model = entity.model) {
+                                is IClass -> {
+                                    val location = Pair(entity.location.x, entity.location.y)
+                                    val createINodePresentation = CreateINodePresentation(model.name, location, entity.diagram.name)
+                                    val iEntity = Entity(null, createINodePresentation)
+                                    val byteArray = Cbor.encodeToByteArray(iEntity)
+                                    mqttPublisher.publish(byteArray)
+                                    println("Op: ${Operation.values()[it.operation]} -> ${entity.label}(INodePresentation)::${model.name}(IClass)")
+                                }
+                            }
+                        }
+                    }
                     else -> {
                         println("Op: ${Operation.values()[it.operation]} -> ${entity}(Unknown)")
                     }

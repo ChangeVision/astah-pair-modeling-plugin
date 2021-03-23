@@ -12,6 +12,7 @@ import kotlinx.serialization.cbor.Cbor
 import kotlinx.serialization.decodeFromByteArray
 import org.eclipse.paho.client.mqttv3.*
 import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence
+import java.awt.geom.Point2D
 
 class MqttSubscriber(private val brokerAddress: String, private val topic: String, private val clientId: String, private val reflectTransaction: ReflectTransaction): MqttCallback {
     private var broker: String = "tcp://$brokerAddress:1883"
@@ -40,7 +41,7 @@ class MqttSubscriber(private val brokerAddress: String, private val topic: Strin
 
     override fun connectionLost(cause: Throwable) {
         println("Connection lost.")
-        println(cause)
+        println(cause.message)
         throw cause
         // TODO: retry?
     }
@@ -49,12 +50,23 @@ class MqttSubscriber(private val brokerAddress: String, private val topic: Strin
         // If the message was send by myself,  ignore this one.
         val receivedClientId = topic.split("/").last()
         if (receivedClientId == clientId) return
-        val receivedMessage = Cbor.decodeFromByteArray<CreateIClass>(message.payload)
+        val receivedMessage = Cbor.decodeFromByteArray<Entity>(message.payload)
         println("Received: $receivedMessage ($topic)")
-        val parentName = receivedMessage.parentName
-        val childName = receivedMessage.name
-        if (parentName == "" || childName == "") return
-        reflectTransaction.add(parentName, childName)
+        if (receivedMessage.iClass != null) {
+            val iClass = receivedMessage.iClass
+            val name = iClass.name
+            val parentName = iClass.parentName
+            if (parentName.isEmpty() || name.isEmpty()) return
+            reflectTransaction.addClass(name, parentName)
+        } else if (receivedMessage.iClassPresentation != null) {
+            val iClassPresentation = receivedMessage.iClassPresentation
+            val className = iClassPresentation.className
+            val locationPair = iClassPresentation.location
+            val location = Point2D.Double(locationPair.first, locationPair.second)
+            val diagramName = iClassPresentation.diagramName
+            if (diagramName.isEmpty() || className.isEmpty()) return
+            reflectTransaction.addClassPresentation(className, location, diagramName)
+        }
     }
 
     override fun deliveryComplete(token: IMqttDeliveryToken) {
