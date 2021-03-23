@@ -8,6 +8,8 @@
 
 package jp.ex_t.kazuaki.change_vision
 
+import kotlinx.serialization.cbor.Cbor
+import kotlinx.serialization.decodeFromByteArray
 import org.eclipse.paho.client.mqttv3.*
 import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence
 
@@ -47,11 +49,10 @@ class MqttSubscriber(private val brokerAddress: String, private val topic: Strin
         // If the message was send by myself,  ignore this one.
         val receivedClientId = topic.split("/").last()
         if (receivedClientId == clientId) return
-        val receivedMessage = message.payload.toString(Charsets.UTF_8)
+        val receivedMessage = Cbor.decodeFromByteArray<CreateIClass>(message.payload)
         println("Received: $receivedMessage ($topic)")
-        val receivedMessageArray = receivedMessage.split("&&")
-        val parentName = receivedMessageArray[0]
-        val childName = receivedMessageArray[1]
+        val parentName = receivedMessage.parentName
+        val childName = receivedMessage.name
         if (parentName == "" || childName == "") return
         reflectTransaction.add(parentName, childName)
     }

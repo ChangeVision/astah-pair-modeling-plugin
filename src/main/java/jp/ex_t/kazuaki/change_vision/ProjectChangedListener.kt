@@ -12,6 +12,8 @@ import com.change_vision.jude.api.inf.model.IClass
 import com.change_vision.jude.api.inf.model.IModel
 import com.change_vision.jude.api.inf.project.ProjectEvent
 import com.change_vision.jude.api.inf.project.ProjectEventListener
+import kotlinx.serialization.cbor.Cbor
+import kotlinx.serialization.encodeToByteArray
 
 class ProjectChangedListener(private val mqttPublisher: MqttPublisher): ProjectEventListener {
     override fun projectChanged(e: ProjectEvent) {
@@ -24,7 +26,9 @@ class ProjectChangedListener(private val mqttPublisher: MqttPublisher): ProjectE
                     is IClass -> {
                         if (operation == Operation.ADD) {
                             val model = entity.owner as IModel
-                            mqttPublisher.publish("${model.name}&&${entity.name}")
+                            val createIClass = CreateIClass(entity.name, model.name)
+                            val byteArray = Cbor.encodeToByteArray(createIClass)
+                            mqttPublisher.publish(byteArray)
                         }
                         println("Op: ${Operation.values()[it.operation]} -> ${entity.name}(IClass)")
                     }

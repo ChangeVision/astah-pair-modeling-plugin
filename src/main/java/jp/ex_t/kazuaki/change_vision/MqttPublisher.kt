@@ -20,7 +20,7 @@ class MqttPublisher(private val brokerAddress: String, private val topic: String
     private val clientIdPublisher = "$clientId/pub"
 
     @Throws(MqttException::class)
-    fun publish(message: String) {
+    fun publish(message: ByteArray) {
         try {
             val mqttClient = MqttClient(broker, clientIdPublisher, MemoryPersistence())
             val mqttConnectOptions = MqttConnectOptions()
@@ -28,7 +28,7 @@ class MqttPublisher(private val brokerAddress: String, private val topic: String
 
             mqttClient.connect(mqttConnectOptions)
             println("Connected to broker $broker.")
-            val mqttMessage = MqttMessage(message.toByteArray(Charsets.UTF_8))
+            val mqttMessage = MqttMessage(message)
             mqttMessage.qos = qos
             mqttClient.publish(topic, mqttMessage)
             mqttClient.disconnect()
