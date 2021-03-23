@@ -10,6 +10,7 @@ package jp.ex_t.kazuaki.change_vision
 
 import com.change_vision.jude.api.inf.AstahAPI
 import com.change_vision.jude.api.inf.ui.IPluginActionDelegate
+import com.change_vision.jude.api.inf.ui.IPluginActionDelegate.UnExpectedException
 import com.change_vision.jude.api.inf.ui.IWindow
 import java.util.*
 import javax.swing.JOptionPane
@@ -18,11 +19,9 @@ class PairModelingAction: IPluginActionDelegate {
     private var isLaunched = false
     private lateinit var pairModeling: PairModeling
 
-    @Throws(Exception::class)
+    @Throws(UnExpectedException::class)
     override fun run(window: IWindow) {
         try {
-            val api = AstahAPI.getAstahAPI()
-            val projectAccessor = api.projectAccessor
             if (!isLaunched) {
                 val brokerAddress = getHostAddress(window) ?: return
                 val topic = "debug/astah" //JOptionPane.showInputDialog("Input topic. (Ex: debug/astah)") ?: return
@@ -34,7 +33,7 @@ class PairModelingAction: IPluginActionDelegate {
                 pairModeling.end()
             }
             isLaunched = !isLaunched
-        } catch (e: Exception) {
+        } catch (e: UnExpectedException) {
             JOptionPane.showMessageDialog(window.parent, "Exception occurred.", "Alert", JOptionPane.ERROR_MESSAGE)
             println(e.message)
             throw e

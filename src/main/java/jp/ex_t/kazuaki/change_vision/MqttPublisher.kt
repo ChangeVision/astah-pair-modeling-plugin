@@ -14,7 +14,7 @@ import org.eclipse.paho.client.mqttv3.MqttException
 import org.eclipse.paho.client.mqttv3.MqttMessage
 import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence
 
-class MqttPublisher(private val brokerAddress: String, private val topic: String, private val clientId: String) {
+class MqttPublisher(brokerAddress: String, private val topic: String, clientId: String) {
     private val qos = 2
     private var broker: String = "tcp://$brokerAddress:1883"
     private val clientIdPublisher = "$clientId/pub"

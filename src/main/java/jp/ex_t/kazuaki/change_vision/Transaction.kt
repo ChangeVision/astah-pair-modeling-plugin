@@ -1,5 +1,5 @@
 /*
- * Entity.kt - pair-modeling-prototype
+ * Transaction.kt - pair-modeling-prototype
  * Copyright © 2021 HyodaKazuaki.
  *
  * Released under the MIT License.
@@ -11,7 +11,7 @@ package jp.ex_t.kazuaki.change_vision
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class Entity (
+data class Transaction (
     val iClass: CreateIClass? = null,
     val iClassPresentation: CreateINodePresentation? = null
         )

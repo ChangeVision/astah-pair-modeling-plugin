@@ -8,13 +8,14 @@
 
 package jp.ex_t.kazuaki.change_vision
 
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.cbor.Cbor
 import kotlinx.serialization.decodeFromByteArray
 import org.eclipse.paho.client.mqttv3.*
 import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence
 import java.awt.geom.Point2D
 
-class MqttSubscriber(private val brokerAddress: String, private val topic: String, private val clientId: String, private val reflectTransaction: ReflectTransaction): MqttCallback {
+class MqttSubscriber(brokerAddress: String, private val topic: String, private val clientId: String, private val reflectTransaction: ReflectTransaction): MqttCallback {
     private var broker: String = "tcp://$brokerAddress:1883"
     private lateinit var mqttClient: MqttClient
     private val clientIdSubscriber = "$clientId/sub"
@@ -46,11 +47,12 @@ class MqttSubscriber(private val brokerAddress: String, private val topic: Strin
         // TODO: retry?
     }
 
+    @ExperimentalSerializationApi
     override fun messageArrived(topic: String, message: MqttMessage) {
         // If the message was send by myself,  ignore this one.
         val receivedClientId = topic.split("/").last()
         if (receivedClientId == clientId) return
-        val receivedMessage = Cbor.decodeFromByteArray<Entity>(message.payload)
+        val receivedMessage = Cbor.decodeFromByteArray<Transaction>(message.payload)
         println("Received: $receivedMessage ($topic)")
         if (receivedMessage.iClass != null) {
             val iClass = receivedMessage.iClass

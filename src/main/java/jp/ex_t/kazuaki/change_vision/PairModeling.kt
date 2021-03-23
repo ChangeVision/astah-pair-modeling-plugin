@@ -10,7 +10,7 @@ package jp.ex_t.kazuaki.change_vision
 
 import com.change_vision.jude.api.inf.AstahAPI
 
-class PairModeling(private val topic: String, private val clientId: String, private val brokerAddress: String) {
+class PairModeling(topic: String, private val clientId: String, private val brokerAddress: String) {
     private val topicTransaction = "$topic/transaction"
     // TODO: もしプロジェクト全体が欲しいとなった場合はトピックを別で生やす
     // TODO: もしチャットが欲しいとなった場合はトピックを別で生やす

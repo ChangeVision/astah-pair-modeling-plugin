@@ -13,10 +13,11 @@ import com.change_vision.jude.api.inf.model.IModel
 import com.change_vision.jude.api.inf.presentation.INodePresentation
 import com.change_vision.jude.api.inf.project.ProjectEvent
 import com.change_vision.jude.api.inf.project.ProjectEventListener
+import kotlinx.serialization.*
 import kotlinx.serialization.cbor.Cbor
-import kotlinx.serialization.encodeToByteArray
 
 class ProjectChangedListener(private val mqttPublisher: MqttPublisher): ProjectEventListener {
+    @ExperimentalSerializationApi
     override fun projectChanged(e: ProjectEvent) {
         println("===== Transaction detected =====")
         val projectEditUnit = e.projectEditUnit.filter { it.entity != null }
@@ -28,7 +29,7 @@ class ProjectChangedListener(private val mqttPublisher: MqttPublisher): ProjectE
                         if (operation == Operation.ADD) {
                             val model = entity.owner as IModel
                             val createIClass = CreateIClass(entity.name, model.name)
-                            val iEntity = Entity(createIClass)
+                            val iEntity = Transaction(createIClass)
                             val byteArray = Cbor.encodeToByteArray(iEntity)
                             mqttPublisher.publish(byteArray)
                         }
@@ -55,7 +56,7 @@ class ProjectChangedListener(private val mqttPublisher: MqttPublisher): ProjectE
                                 is IClass -> {
                                     val location = Pair(entity.location.x, entity.location.y)
                                     val createINodePresentation = CreateINodePresentation(model.name, location, entity.diagram.name)
-                                    val iEntity = Entity(null, createINodePresentation)
+                                    val iEntity = Transaction(null, createINodePresentation)
                                     val byteArray = Cbor.encodeToByteArray(iEntity)
                                     mqttPublisher.publish(byteArray)
                                     println("Op: ${Operation.values()[it.operation]} -> ${entity.label}(INodePresentation)::${model.name}(IClass)")

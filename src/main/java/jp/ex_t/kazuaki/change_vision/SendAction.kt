@@ -10,6 +10,7 @@ package jp.ex_t.kazuaki.change_vision
 
 import com.change_vision.jude.api.inf.AstahAPI
 import com.change_vision.jude.api.inf.ui.IPluginActionDelegate
+import com.change_vision.jude.api.inf.ui.IPluginActionDelegate.UnExpectedException
 import com.change_vision.jude.api.inf.ui.IWindow
 import javax.swing.JOptionPane
 
@@ -18,7 +19,7 @@ class SendAction: IPluginActionDelegate {
     private lateinit var projectChangedListener: ProjectChangedListener
     private var isLaunched = false
 
-    @Throws(Exception::class)
+    @Throws(UnExpectedException::class)
     override fun run(window: IWindow) {
         try {
             val api = AstahAPI.getAstahAPI()
@@ -36,7 +37,7 @@ class SendAction: IPluginActionDelegate {
                 projectAccessor.removeProjectEventListener(projectChangedListener)
             }
             isLaunched = !isLaunched
-        } catch (e: Exception) {
+        } catch (e: UnExpectedException) {
             JOptionPane.showMessageDialog(window.parent, "Exception occurred.", "Alert", JOptionPane.ERROR_MESSAGE)
             println(e.message)
             throw e
