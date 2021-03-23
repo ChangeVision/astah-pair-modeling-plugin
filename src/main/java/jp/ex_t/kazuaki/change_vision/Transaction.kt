@@ -12,12 +12,16 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class Transaction (
-    val iClass: CreateIClass? = null,
-    val iClassPresentation: CreateINodePresentation? = null
+    val classModel: ClassModel? = null,
+    val classPresentation: ClassPresentation? = null,
+    val associationModel: AssociationModel? = null
         )
 
 @Serializable
-data class CreateIClass(val name: String, val parentName: String)
+data class ClassModel(val name: String, val parentName: String)
 
 @Serializable
-data class CreateINodePresentation(val className: String, val location: Pair<Double, Double>, val diagramName: String)
+data class ClassPresentation(val className: String, val location: Pair<Double, Double>, val diagramName: String)
+
+@Serializable
+data class AssociationModel(val sourceClassName: String, val destinationClassName: String, val name: String = "")

@@ -54,20 +54,31 @@ class MqttSubscriber(brokerAddress: String, private val topic: String, private v
         if (receivedClientId == clientId) return
         val receivedMessage = Cbor.decodeFromByteArray<Transaction>(message.payload)
         println("Received: $receivedMessage ($topic)")
-        if (receivedMessage.iClass != null) {
-            val iClass = receivedMessage.iClass
-            val name = iClass.name
-            val parentName = iClass.parentName
-            if (parentName.isEmpty() || name.isEmpty()) return
-            reflectTransaction.addClass(name, parentName)
-        } else if (receivedMessage.iClassPresentation != null) {
-            val iClassPresentation = receivedMessage.iClassPresentation
-            val className = iClassPresentation.className
-            val locationPair = iClassPresentation.location
-            val location = Point2D.Double(locationPair.first, locationPair.second)
-            val diagramName = iClassPresentation.diagramName
-            if (diagramName.isEmpty() || className.isEmpty()) return
-            reflectTransaction.addClassPresentation(className, location, diagramName)
+        when {
+            receivedMessage.classModel != null -> {
+                val classModel = receivedMessage.classModel
+                val name = classModel.name
+                val parentName = classModel.parentName
+                if (parentName.isEmpty() || name.isEmpty()) return
+                reflectTransaction.addClassModel(name, parentName)
+            }
+            receivedMessage.classPresentation != null -> {
+                val classPresentation = receivedMessage.classPresentation
+                val className = classPresentation.className
+                val locationPair = classPresentation.location
+                val location = Point2D.Double(locationPair.first, locationPair.second)
+                val diagramName = classPresentation.diagramName
+                if (diagramName.isEmpty() || className.isEmpty()) return
+                reflectTransaction.addClassPresentation(className, location, diagramName)
+            }
+            receivedMessage.associationModel != null -> {
+                val associationModel = receivedMessage.associationModel
+                val sourceClassName = associationModel.sourceClassName
+                val destinationClassName = associationModel.destinationClassName
+                val name = associationModel.name
+                if (sourceClassName.isEmpty() || destinationClassName.isEmpty()) return
+                reflectTransaction.addAssociationModel(sourceClassName, destinationClassName, name)
+            }
         }
     }
 

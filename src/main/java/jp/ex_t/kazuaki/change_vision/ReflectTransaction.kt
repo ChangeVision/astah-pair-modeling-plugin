@@ -16,13 +16,14 @@ import com.change_vision.jude.api.inf.model.IModel
 import com.change_vision.jude.api.inf.project.ProjectAccessor
 import com.change_vision.jude.api.inf.ui.IPluginActionDelegate.UnExpectedException
 import java.awt.geom.Point2D
+import java.rmi.UnexpectedException
 
 class ReflectTransaction(private val projectChangedListener: ProjectChangedListener? = null) {
     private val api: AstahAPI = AstahAPI.getAstahAPI()
     private val projectAccessor: ProjectAccessor = api.projectAccessor
 
     @Throws(UnExpectedException::class)
-    fun addClass(name: String, parentName: String,) {
+    fun addClassModel(name: String, parentName: String,) {
         val transactionManager = projectAccessor.transactionManager
         val modelEditorFactory = projectAccessor.modelEditorFactory
         val basicModelEditor = modelEditorFactory.basicModelEditor
@@ -55,6 +56,28 @@ class ReflectTransaction(private val projectChangedListener: ProjectChangedListe
                 projectAccessor.removeProjectEventListener(projectChangedListener)
             transactionManager.beginTransaction()
             classDiagramEditor.createNodePresentation(clazz, location)
+            transactionManager.endTransaction()
+        } catch (e: BadTransactionException) {
+            transactionManager.abortTransaction()
+            throw UnExpectedException()
+        } finally {
+            if (projectChangedListener != null)
+                projectAccessor.addProjectEventListener(projectChangedListener)
+        }
+    }
+
+    @Throws(UnexpectedException::class)
+    fun addAssociationModel(sourceClassName: String, destinationClassName: String, associationName: String) {
+        val transactionManager = projectAccessor.transactionManager
+        val modelEditorFactory = projectAccessor.modelEditorFactory
+        val basicModelEditor = modelEditorFactory.basicModelEditor
+        val sourceClass = projectAccessor.findElements(IClass::class.java, sourceClassName).first() as IClass
+        val destinationClass = projectAccessor.findElements(IClass::class.java, destinationClassName).first() as IClass
+        try {
+            if (projectChangedListener != null)
+                projectAccessor.removeProjectEventListener(projectChangedListener)
+            transactionManager.beginTransaction()
+            basicModelEditor.createAssociation(sourceClass, destinationClass, associationName, "", "")
             transactionManager.endTransaction()
         } catch (e: BadTransactionException) {
             transactionManager.abortTransaction()

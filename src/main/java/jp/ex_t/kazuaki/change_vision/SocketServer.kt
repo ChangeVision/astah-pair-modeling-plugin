@@ -55,7 +55,7 @@ class SocketServer(private val portNumber: Int, private val reflectTransaction: 
                                 if (parentName == "" || childName == "") {
                                     break
                                 }
-                                reflectTransaction.addClass(parentName, childName)
+                                reflectTransaction.addClassModel(parentName, childName)
                             }
                         }
                     }
