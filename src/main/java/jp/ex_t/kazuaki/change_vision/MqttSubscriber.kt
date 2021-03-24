@@ -60,16 +60,16 @@ class MqttSubscriber(brokerAddress: String, private val topic: String, private v
                 val name = classModel.name
                 val parentName = classModel.parentName
                 if (parentName.isEmpty() || name.isEmpty()) return
-                reflectTransaction.addClassModel(name, parentName)
+                reflectTransaction.createClassModel(name, parentName)
             }
-            receivedMessage.classPresentation != null -> {
-                val classPresentation = receivedMessage.classPresentation
-                val className = classPresentation.className
-                val locationPair = classPresentation.location
+            receivedMessage.createClassPresentation != null -> {
+                val createClassPresentation = receivedMessage.createClassPresentation
+                val className = createClassPresentation.className
+                val locationPair = createClassPresentation.location
                 val location = Point2D.Double(locationPair.first, locationPair.second)
-                val diagramName = classPresentation.diagramName
+                val diagramName = createClassPresentation.diagramName
                 if (diagramName.isEmpty() || className.isEmpty()) return
-                reflectTransaction.addClassPresentation(className, location, diagramName)
+                reflectTransaction.createClassPresentation(className, location, diagramName)
             }
             receivedMessage.associationModel != null -> {
                 val associationModel = receivedMessage.associationModel
@@ -77,7 +77,7 @@ class MqttSubscriber(brokerAddress: String, private val topic: String, private v
                 val destinationClassName = associationModel.destinationClassName
                 val name = associationModel.name
                 if (sourceClassName.isEmpty() || destinationClassName.isEmpty()) return
-                reflectTransaction.addAssociationModel(sourceClassName, destinationClassName, name)
+                reflectTransaction.createAssociationModel(sourceClassName, destinationClassName, name)
             }
             receivedMessage.associationPresentation != null -> {
                 val associationPresentation = receivedMessage.associationPresentation

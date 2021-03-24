@@ -72,9 +72,9 @@ class ProjectChangedListener(private val mqttPublisher: MqttPublisher): ProjectE
                                 is IClass -> {
                                     if (operation == Operation.ADD) {
                                         val location = Pair(entity.location.x, entity.location.y)
-                                        val classPresentation =
-                                            ClassPresentation(model.name, location, entity.diagram.name)
-                                        val transaction = Transaction(classPresentation = classPresentation)
+                                        val createClassPresentation =
+                                            CreateClassPresentation(model.name, location, entity.diagram.name)
+                                        val transaction = Transaction(createClassPresentation = createClassPresentation)
                                         val byteArray = Cbor.encodeToByteArray(transaction)
                                         mqttPublisher.publish(byteArray)
                                     }

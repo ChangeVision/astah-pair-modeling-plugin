@@ -25,7 +25,7 @@ class ReflectTransaction(private val projectChangedListener: ProjectChangedListe
     private val projectAccessor: ProjectAccessor = api.projectAccessor
 
     @Throws(UnExpectedException::class)
-    fun addClassModel(name: String, parentName: String,) {
+    fun createClassModel(name: String, parentName: String,) {
         val transactionManager = projectAccessor.transactionManager
         val modelEditorFactory = projectAccessor.modelEditorFactory
         val basicModelEditor = modelEditorFactory.basicModelEditor
@@ -46,7 +46,7 @@ class ReflectTransaction(private val projectChangedListener: ProjectChangedListe
     }
 
     @Throws(UnExpectedException::class)
-    fun addClassPresentation(className: String, location: Point2D, diagramName: String) {
+    fun createClassPresentation(className: String, location: Point2D, diagramName: String) {
         val transactionManager = projectAccessor.transactionManager
         val diagramEditorFactory = projectAccessor.diagramEditorFactory
         val classDiagramEditor = diagramEditorFactory.classDiagramEditor
@@ -69,7 +69,7 @@ class ReflectTransaction(private val projectChangedListener: ProjectChangedListe
     }
 
     @Throws(UnexpectedException::class)
-    fun addAssociationModel(sourceClassName: String, destinationClassName: String, associationName: String) {
+    fun createAssociationModel(sourceClassName: String, destinationClassName: String, associationName: String) {
         val transactionManager = projectAccessor.transactionManager
         val modelEditorFactory = projectAccessor.modelEditorFactory
         val basicModelEditor = modelEditorFactory.basicModelEditor

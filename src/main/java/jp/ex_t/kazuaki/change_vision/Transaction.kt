@@ -13,7 +13,7 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class Transaction (
     val classModel: ClassModel? = null,
-    val classPresentation: ClassPresentation? = null,
+    val createClassPresentation: CreateClassPresentation? = null,
     val associationModel: AssociationModel? = null,
     val associationPresentation: AssociationPresentation? = null
         )
@@ -22,7 +22,7 @@ data class Transaction (
 data class ClassModel(val name: String, val parentName: String)
 
 @Serializable
-data class ClassPresentation(val className: String, val location: Pair<Double, Double>, val diagramName: String)
+data class CreateClassPresentation(val className: String, val location: Pair<Double, Double>, val diagramName: String)
 
 @Serializable
 data class AssociationModel(val sourceClassName: String, val destinationClassName: String, val name: String = "")
