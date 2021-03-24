@@ -68,6 +68,33 @@ class ReflectTransaction(private val projectChangedListener: ProjectChangedListe
         }
     }
 
+    @Throws(UnExpectedException::class)
+    fun resizeClassPresentation(className: String, location: Point2D, size: Pair<Double, Double>, diagramName: String) {
+        val (width, height) = size
+        val transactionManager = projectAccessor.transactionManager
+        val diagramEditorFactory = projectAccessor.diagramEditorFactory
+        val classDiagramEditor = diagramEditorFactory.classDiagramEditor
+        val diagram = projectAccessor.findElements(IDiagram::class.java, diagramName).first() as IDiagram
+        classDiagramEditor.diagram = diagram
+        val clazz = projectAccessor.findElements(IClass::class.java, className).first() as IClass
+        val classPresentation = clazz.presentations.first { it.diagram == diagram } as INodePresentation
+        try {
+            if (projectChangedListener != null)
+                projectAccessor.removeProjectEventListener(projectChangedListener)
+            transactionManager.beginTransaction()
+            classPresentation.location = location
+            classPresentation.width = width
+            classPresentation.height =height
+            transactionManager.endTransaction()
+        } catch (e: BadTransactionException) {
+            transactionManager.abortTransaction()
+            throw UnExpectedException()
+        } finally {
+            if (projectChangedListener != null)
+                projectAccessor.addProjectEventListener(projectChangedListener)
+        }
+    }
+
     @Throws(UnexpectedException::class)
     fun createAssociationModel(sourceClassName: String, destinationClassName: String, associationName: String) {
         val transactionManager = projectAccessor.transactionManager

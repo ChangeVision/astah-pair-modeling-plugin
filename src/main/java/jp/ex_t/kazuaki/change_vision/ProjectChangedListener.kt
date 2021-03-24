@@ -77,8 +77,15 @@ class ProjectChangedListener(private val mqttPublisher: MqttPublisher): ProjectE
                                         val transaction = Transaction(createClassPresentation = createClassPresentation)
                                         val byteArray = Cbor.encodeToByteArray(transaction)
                                         mqttPublisher.publish(byteArray)
+                                    } else if (operation == Operation.MODIFY) {
+                                        val location = Pair(entity.location.x, entity.location.y)
+                                        val size = Pair(entity.width, entity.height)
+                                        val resizeClassPresentation = ResizeClassPresentation(model.name, location, size, entity.diagram.name)
+                                        val transaction = Transaction(resizeClassPresentation = resizeClassPresentation)
+                                        val byteArray = Cbor.encodeToByteArray(transaction)
+                                        mqttPublisher.publish(byteArray)
                                     }
-                                    println("Op: ${Operation.values()[it.operation]} -> ${entity.label}(INodePresentation)::${model.name}(IClass)")
+                                    println("Op: ${Operation.values()[it.operation]} -> ${entity.label}(INodePresentation)::${model.name}(IClass, ${Pair(entity.width, entity.height)} at ${entity.location})")
                                 }
                                 else -> {
                                     println("Op: ${Operation.values()[it.operation]} -> ${entity.label}(INodePresentation) - $model(Unknown)")

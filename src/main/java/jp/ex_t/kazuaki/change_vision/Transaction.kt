@@ -14,6 +14,7 @@ import kotlinx.serialization.Serializable
 data class Transaction (
     val createCreateClassModel: CreateClassModel? = null,
     val createClassPresentation: CreateClassPresentation? = null,
+    val resizeClassPresentation: ResizeClassPresentation? = null,
     val createCreateAssociationModel: CreateAssociationModel? = null,
     val createAssociationPresentation: CreateAssociationPresentation? = null
         )
@@ -23,6 +24,9 @@ data class CreateClassModel(val name: String, val parentName: String)
 
 @Serializable
 data class CreateClassPresentation(val className: String, val location: Pair<Double, Double>, val diagramName: String)
+
+@Serializable
+data class ResizeClassPresentation(val className: String, val location: Pair<Double, Double>, val size: Pair<Double, Double>, val diagramName: String)
 
 @Serializable
 data class CreateAssociationModel(val sourceClassName: String, val destinationClassName: String, val name: String = "")

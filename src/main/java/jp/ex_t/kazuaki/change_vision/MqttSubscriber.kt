@@ -71,6 +71,16 @@ class MqttSubscriber(brokerAddress: String, private val topic: String, private v
                 if (diagramName.isEmpty() || className.isEmpty()) return
                 reflectTransaction.createClassPresentation(className, location, diagramName)
             }
+            receivedMessage.resizeClassPresentation != null -> {
+                val resizeClassPresentation = receivedMessage.resizeClassPresentation
+                val className = resizeClassPresentation.className
+                val locationPair = resizeClassPresentation.location
+                val location = Point2D.Double(locationPair.first, locationPair.second)
+                val size = resizeClassPresentation.size
+                val diagramName = resizeClassPresentation.diagramName
+                if (className.isEmpty() || diagramName.isEmpty()) return
+                reflectTransaction.resizeClassPresentation(className, location, size, diagramName)
+            }
             receivedMessage.createCreateAssociationModel != null -> {
                 val createAssociationModel = receivedMessage.createCreateAssociationModel
                 val sourceClassName = createAssociationModel.sourceClassName
