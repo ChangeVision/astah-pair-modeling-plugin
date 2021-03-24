@@ -20,7 +20,7 @@ data class Transaction (
         )
 
 @Serializable
-data class CreateClassModel(val name: String, val parentName: String)
+data class CreateClassModel(val name: String, val parentPackageName: String)
 
 @Serializable
 data class CreateClassPresentation(val className: String, val location: Pair<Double, Double>, val diagramName: String)

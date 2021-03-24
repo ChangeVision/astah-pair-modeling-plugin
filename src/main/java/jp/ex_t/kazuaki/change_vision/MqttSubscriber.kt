@@ -58,9 +58,9 @@ class MqttSubscriber(brokerAddress: String, private val topic: String, private v
             receivedMessage.createCreateClassModel != null -> {
                 val createClassModel = receivedMessage.createCreateClassModel
                 val name = createClassModel.name
-                val parentName = createClassModel.parentName
-                if (parentName.isEmpty() || name.isEmpty()) return
-                reflectTransaction.createClassModel(name, parentName)
+                val parentPackageName = createClassModel.parentPackageName
+                if (parentPackageName.isEmpty() || name.isEmpty()) return
+                reflectTransaction.createClassModel(name, parentPackageName)
             }
             receivedMessage.createClassPresentation != null -> {
                 val createClassPresentation = receivedMessage.createClassPresentation

@@ -13,7 +13,7 @@ import com.change_vision.jude.api.inf.exception.BadTransactionException
 import com.change_vision.jude.api.inf.model.IAssociation
 import com.change_vision.jude.api.inf.model.IClass
 import com.change_vision.jude.api.inf.model.IDiagram
-import com.change_vision.jude.api.inf.model.IModel
+import com.change_vision.jude.api.inf.model.IPackage
 import com.change_vision.jude.api.inf.presentation.INodePresentation
 import com.change_vision.jude.api.inf.project.ProjectAccessor
 import com.change_vision.jude.api.inf.ui.IPluginActionDelegate.UnExpectedException
@@ -25,16 +25,16 @@ class ReflectTransaction(private val projectChangedListener: ProjectChangedListe
     private val projectAccessor: ProjectAccessor = api.projectAccessor
 
     @Throws(UnExpectedException::class)
-    fun createClassModel(name: String, parentName: String,) {
+    fun createClassModel(name: String, parentPackageName: String,) {
         val transactionManager = projectAccessor.transactionManager
         val modelEditorFactory = projectAccessor.modelEditorFactory
         val basicModelEditor = modelEditorFactory.basicModelEditor
-        val parent = projectAccessor.findElements(IModel::class.java, parentName).first() as IModel
+        val parentPackage = projectAccessor.findElements(IPackage::class.java, parentPackageName).first() as IPackage
         try {
             if (projectChangedListener != null)
                 projectAccessor.removeProjectEventListener(projectChangedListener)
             transactionManager.beginTransaction()
-            basicModelEditor.createClass(parent, name)
+            basicModelEditor.createClass(parentPackage, name)
             transactionManager.endTransaction()
         } catch (e: BadTransactionException) {
             transactionManager.abortTransaction()
