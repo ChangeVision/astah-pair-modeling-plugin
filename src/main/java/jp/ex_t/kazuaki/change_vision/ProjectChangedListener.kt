@@ -22,6 +22,7 @@ class ProjectChangedListener(private val mqttPublisher: MqttPublisher): ProjectE
     override fun projectChanged(e: ProjectEvent) {
         println("===== Transaction detected =====")
         val projectEditUnit = e.projectEditUnit.filter { it.entity != null }
+        val transaction = Transaction()
         projectEditUnit
             .forEach {
                 val operation = Operation.values()[it.operation]
@@ -30,9 +31,7 @@ class ProjectChangedListener(private val mqttPublisher: MqttPublisher): ProjectE
                         if (operation == Operation.ADD) {
                             val owner = entity.owner as INamedElement
                             val createClassDiagram = CreateClassDiagram(entity.name, owner.name)
-                            val transaction = Transaction(createClassDiagram = createClassDiagram)
-                            val byteArray = Cbor.encodeToByteArray(transaction)
-                            mqttPublisher.publish(byteArray)
+                            transaction.createClassDiagram = createClassDiagram
                         }
                         println("Op: ${Operation.values()[it.operation]} -> ${entity.name}(IClassDiagram)")
                     }
@@ -41,15 +40,11 @@ class ProjectChangedListener(private val mqttPublisher: MqttPublisher): ProjectE
                             Operation.ADD -> {
                                 val parentPackage = entity.owner as IPackage
                                 val createClassModel = CreateClassModel(entity.name, parentPackage.name)
-                                val transaction = Transaction(createCreateClassModel=createClassModel)
-                                val byteArray = Cbor.encodeToByteArray(transaction)
-                                mqttPublisher.publish(byteArray)
+                                transaction.createClassModel = createClassModel
                             }
                             Operation.REMOVE -> {
                                 val deleteClassModel = DeleteClassModel(entity.name)
-                                val transaction = Transaction(deleteClassModel = deleteClassModel)
-                                val byteArray = Cbor.encodeToByteArray(transaction)
-                                mqttPublisher.publish(byteArray)
+                                transaction.deleteClassModel = deleteClassModel
                             }
                         }
                         println("Op: ${Operation.values()[it.operation]} -> ${entity.name}(IClass)")
@@ -62,9 +57,7 @@ class ProjectChangedListener(private val mqttPublisher: MqttPublisher): ProjectE
                                 is IClass -> {
                                     if (operation == Operation.ADD) {
                                         val createAssociationModel = CreateAssociationModel(sourceClass.name, destinationClass.name, entity.name)
-                                        val transaction = Transaction(createCreateAssociationModel = createAssociationModel)
-                                        val byteArray = Cbor.encodeToByteArray(transaction)
-                                        mqttPublisher.publish(byteArray)
+                                        transaction.createAssociationModel = createAssociationModel
                                     }
                                     println("Op: ${Operation.values()[it.operation]} -> ${sourceClass.name} - ${entity.name}(IAssociation) - ${destinationClass.name}")
                                 }
@@ -90,16 +83,12 @@ class ProjectChangedListener(private val mqttPublisher: MqttPublisher): ProjectE
                                         val location = Pair(entity.location.x, entity.location.y)
                                         val createClassPresentation =
                                             CreateClassPresentation(model.name, location, entity.diagram.name)
-                                        val transaction = Transaction(createClassPresentation = createClassPresentation)
-                                        val byteArray = Cbor.encodeToByteArray(transaction)
-                                        mqttPublisher.publish(byteArray)
+                                        transaction.createClassPresentation = createClassPresentation
                                     } else if (operation == Operation.MODIFY) {
                                         val location = Pair(entity.location.x, entity.location.y)
                                         val size = Pair(entity.width, entity.height)
                                         val resizeClassPresentation = ResizeClassPresentation(model.name, location, size, entity.diagram.name)
-                                        val transaction = Transaction(resizeClassPresentation = resizeClassPresentation)
-                                        val byteArray = Cbor.encodeToByteArray(transaction)
-                                        mqttPublisher.publish(byteArray)
+                                        transaction.resizeClassPresentation = resizeClassPresentation
                                     }
                                     println("Op: ${Operation.values()[it.operation]} -> ${entity.label}(INodePresentation)::${model.name}(IClass, ${Pair(entity.width, entity.height)} at ${entity.location})")
                                 }
@@ -117,9 +106,7 @@ class ProjectChangedListener(private val mqttPublisher: MqttPublisher): ProjectE
                                     is IClass -> {
                                         if (operation == Operation.ADD) {
                                             val createAssociationPresentation = CreateAssociationPresentation(source.name, target.name, entity.diagram.name)
-                                            val transaction = Transaction(createAssociationPresentation = createAssociationPresentation)
-                                            val byteArray = Cbor.encodeToByteArray(transaction)
-                                            mqttPublisher.publish(byteArray)
+                                            transaction.createAssociationPresentation = createAssociationPresentation
                                         }
                                         println("Op: ${Operation.values()[it.operation]} -> ${source.name}(IClass) - ${entity.label}(ILinkPresentation) - ${target.name}(IClass)")
                                     }
@@ -132,6 +119,8 @@ class ProjectChangedListener(private val mqttPublisher: MqttPublisher): ProjectE
                     }
                 }
             }
+        val byteArray = Cbor.encodeToByteArray(transaction)
+        mqttPublisher.publish(byteArray)
     }
 
     override fun projectOpened(p0: ProjectEvent) {}

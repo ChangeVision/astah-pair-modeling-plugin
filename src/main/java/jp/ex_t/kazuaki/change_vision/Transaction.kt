@@ -12,14 +12,14 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class Transaction (
-    val createClassDiagram: CreateClassDiagram? = null,
-    val createCreateClassModel: CreateClassModel? = null,
-    val createClassPresentation: CreateClassPresentation? = null,
-    val resizeClassPresentation: ResizeClassPresentation? = null,
-    val createCreateAssociationModel: CreateAssociationModel? = null,
-    val createAssociationPresentation: CreateAssociationPresentation? = null,
-    val deleteClassModel: DeleteClassModel? = null
-        )
+    var createClassDiagram: CreateClassDiagram? = null,
+    var createClassModel: CreateClassModel? = null,
+    var createClassPresentation: CreateClassPresentation? = null,
+    var resizeClassPresentation: ResizeClassPresentation? = null,
+    var createAssociationModel: CreateAssociationModel? = null,
+    var createAssociationPresentation: CreateAssociationPresentation? = null,
+    var deleteClassModel: DeleteClassModel? = null
+)
 
 @Serializable
 data class CreateClassDiagram(val name: String, val ownerName: String)
