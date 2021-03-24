@@ -25,7 +25,7 @@ class ReflectTransaction(private val projectChangedListener: ProjectChangedListe
     private val projectAccessor: ProjectAccessor = api.projectAccessor
 
     @Throws(UnExpectedException::class)
-    fun createClassModel(name: String, parentPackageName: String,) {
+    fun createClassModel(name: String, parentPackageName: String) {
         val transactionManager = projectAccessor.transactionManager
         val modelEditorFactory = projectAccessor.modelEditorFactory
         val basicModelEditor = modelEditorFactory.basicModelEditor
