@@ -55,10 +55,10 @@ class MqttSubscriber(brokerAddress: String, private val topic: String, private v
         val receivedMessage = Cbor.decodeFromByteArray<Transaction>(message.payload)
         println("Received: $receivedMessage ($topic)")
         when {
-            receivedMessage.classModel != null -> {
-                val classModel = receivedMessage.classModel
-                val name = classModel.name
-                val parentName = classModel.parentName
+            receivedMessage.createCreateClassModel != null -> {
+                val createClassModel = receivedMessage.createCreateClassModel
+                val name = createClassModel.name
+                val parentName = createClassModel.parentName
                 if (parentName.isEmpty() || name.isEmpty()) return
                 reflectTransaction.createClassModel(name, parentName)
             }
@@ -71,21 +71,21 @@ class MqttSubscriber(brokerAddress: String, private val topic: String, private v
                 if (diagramName.isEmpty() || className.isEmpty()) return
                 reflectTransaction.createClassPresentation(className, location, diagramName)
             }
-            receivedMessage.associationModel != null -> {
-                val associationModel = receivedMessage.associationModel
-                val sourceClassName = associationModel.sourceClassName
-                val destinationClassName = associationModel.destinationClassName
-                val name = associationModel.name
+            receivedMessage.createCreateAssociationModel != null -> {
+                val createAssociationModel = receivedMessage.createCreateAssociationModel
+                val sourceClassName = createAssociationModel.sourceClassName
+                val destinationClassName = createAssociationModel.destinationClassName
+                val name = createAssociationModel.name
                 if (sourceClassName.isEmpty() || destinationClassName.isEmpty()) return
                 reflectTransaction.createAssociationModel(sourceClassName, destinationClassName, name)
             }
-            receivedMessage.associationPresentation != null -> {
-                val associationPresentation = receivedMessage.associationPresentation
-                val sourceClassName = associationPresentation.sourceClassName
-                val targetClassName = associationPresentation.targetClassName
-                val diagramName = associationPresentation.diagramName
+            receivedMessage.createAssociationPresentation != null -> {
+                val createAssociationPresentation = receivedMessage.createAssociationPresentation
+                val sourceClassName = createAssociationPresentation.sourceClassName
+                val targetClassName = createAssociationPresentation.targetClassName
+                val diagramName = createAssociationPresentation.diagramName
                 if (sourceClassName.isEmpty() || targetClassName.isEmpty() || diagramName.isEmpty()) return
-                reflectTransaction.addAssociationPresentation(sourceClassName, targetClassName, diagramName)
+                reflectTransaction.createAssociationPresentation(sourceClassName, targetClassName, diagramName)
             }
         }
     }

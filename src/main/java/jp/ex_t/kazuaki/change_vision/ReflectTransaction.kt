@@ -91,7 +91,7 @@ class ReflectTransaction(private val projectChangedListener: ProjectChangedListe
     }
 
     @Throws(UnExpectedException::class)
-    fun addAssociationPresentation(sourceClassName: String, targetClassName: String, diagramName: String) {
+    fun createAssociationPresentation(sourceClassName: String, targetClassName: String, diagramName: String) {
         @Throws(ClassNotFoundException::class)
         fun searchAssociation(sourceClass: IClass, targetClass: IClass): IAssociation? {
             sourceClass.attributes.forEach { sourceClassAttribute ->

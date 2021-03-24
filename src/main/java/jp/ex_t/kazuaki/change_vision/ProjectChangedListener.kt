@@ -31,8 +31,8 @@ class ProjectChangedListener(private val mqttPublisher: MqttPublisher): ProjectE
                     is IClass -> {
                         if (operation == Operation.ADD) {
                             val model = entity.owner as IModel
-                            val classModel = ClassModel(entity.name, model.name)
-                            val transaction = Transaction(classModel=classModel)
+                            val createClassModel = CreateClassModel(entity.name, model.name)
+                            val transaction = Transaction(createCreateClassModel=createClassModel)
                             val byteArray = Cbor.encodeToByteArray(transaction)
                             mqttPublisher.publish(byteArray)
                         }
@@ -45,8 +45,8 @@ class ProjectChangedListener(private val mqttPublisher: MqttPublisher): ProjectE
                             is IClass -> when (destinationClass) {
                                 is IClass -> {
                                     if (operation == Operation.ADD) {
-                                        val associationModel = AssociationModel(sourceClass.name, destinationClass.name, entity.name)
-                                        val transaction = Transaction(associationModel = associationModel)
+                                        val createAssociationModel = CreateAssociationModel(sourceClass.name, destinationClass.name, entity.name)
+                                        val transaction = Transaction(createCreateAssociationModel = createAssociationModel)
                                         val byteArray = Cbor.encodeToByteArray(transaction)
                                         mqttPublisher.publish(byteArray)
                                     }
@@ -93,8 +93,8 @@ class ProjectChangedListener(private val mqttPublisher: MqttPublisher): ProjectE
                                 when (target) {
                                     is IClass -> {
                                         if (operation == Operation.ADD) {
-                                            val associationPresentation = AssociationPresentation(source.name, target.name, entity.diagram.name)
-                                            val transaction = Transaction(associationPresentation = associationPresentation)
+                                            val createAssociationPresentation = CreateAssociationPresentation(source.name, target.name, entity.diagram.name)
+                                            val transaction = Transaction(createAssociationPresentation = createAssociationPresentation)
                                             val byteArray = Cbor.encodeToByteArray(transaction)
                                             mqttPublisher.publish(byteArray)
                                         }
