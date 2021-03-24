@@ -12,12 +12,16 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class Transaction (
+    val createClassDiagram: CreateClassDiagram? = null,
     val createCreateClassModel: CreateClassModel? = null,
     val createClassPresentation: CreateClassPresentation? = null,
     val resizeClassPresentation: ResizeClassPresentation? = null,
     val createCreateAssociationModel: CreateAssociationModel? = null,
     val createAssociationPresentation: CreateAssociationPresentation? = null
         )
+
+@Serializable
+data class CreateClassDiagram(val name: String, val ownerName: String)
 
 @Serializable
 data class CreateClassModel(val name: String, val parentPackageName: String)

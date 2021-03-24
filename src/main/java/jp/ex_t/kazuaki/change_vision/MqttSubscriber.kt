@@ -55,6 +55,13 @@ class MqttSubscriber(brokerAddress: String, private val topic: String, private v
         val receivedMessage = Cbor.decodeFromByteArray<Transaction>(message.payload)
         println("Received: $receivedMessage ($topic)")
         when {
+            receivedMessage.createClassDiagram != null -> {
+                val createClassDiagram = receivedMessage.createClassDiagram
+                val name = createClassDiagram.name
+                val ownerName = createClassDiagram.ownerName
+                if (name.isEmpty() || ownerName.isEmpty()) return
+                reflectTransaction.createClassDiagram(name, ownerName)
+            }
             receivedMessage.createCreateClassModel != null -> {
                 val createClassModel = receivedMessage.createCreateClassModel
                 val name = createClassModel.name

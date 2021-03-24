@@ -8,9 +8,7 @@
 
 package jp.ex_t.kazuaki.change_vision
 
-import com.change_vision.jude.api.inf.model.IAssociation
-import com.change_vision.jude.api.inf.model.IClass
-import com.change_vision.jude.api.inf.model.IPackage
+import com.change_vision.jude.api.inf.model.*
 import com.change_vision.jude.api.inf.presentation.ILinkPresentation
 import com.change_vision.jude.api.inf.presentation.INodePresentation
 import com.change_vision.jude.api.inf.project.ProjectEvent
@@ -28,6 +26,16 @@ class ProjectChangedListener(private val mqttPublisher: MqttPublisher): ProjectE
             .forEach {
                 val operation = Operation.values()[it.operation]
                 when (val entity = it.entity) {
+                    is IClassDiagram -> {
+                        if (operation == Operation.ADD) {
+                            val owner = entity.owner as INamedElement
+                            val createClassDiagram = CreateClassDiagram(entity.name, owner.name)
+                            val transaction = Transaction(createClassDiagram = createClassDiagram)
+                            val byteArray = Cbor.encodeToByteArray(transaction)
+                            mqttPublisher.publish(byteArray)
+                        }
+                        println("Op: ${Operation.values()[it.operation]} -> ${entity.name}(IClassDiagram)")
+                    }
                     is IClass -> {
                         if (operation == Operation.ADD) {
                             val parentPackage = entity.owner as IPackage
