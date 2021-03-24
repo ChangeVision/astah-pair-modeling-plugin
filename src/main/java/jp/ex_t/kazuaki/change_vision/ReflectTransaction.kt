@@ -178,4 +178,25 @@ class ReflectTransaction(private val projectChangedListener: ProjectChangedListe
             return
         }
     }
+
+    @Throws(UnExpectedException::class)
+    fun deleteClassModel(name: String) {
+        val transactionManager = projectAccessor.transactionManager
+        val modelEditorFactory = projectAccessor.modelEditorFactory
+        val basicModelEditor = modelEditorFactory.basicModelEditor
+        val clazz = projectAccessor.findElements(IClass::class.java, name).first() as IClass
+        try {
+            if (projectChangedListener != null)
+                projectAccessor.removeProjectEventListener(projectChangedListener)
+            transactionManager.beginTransaction()
+            basicModelEditor.delete(clazz)
+            transactionManager.endTransaction()
+        } catch (e: BadTransactionException) {
+            transactionManager.abortTransaction()
+            throw UnExpectedException()
+        } finally {
+            if (projectChangedListener != null)
+                projectAccessor.addProjectEventListener(projectChangedListener)
+        }
+    }
 }

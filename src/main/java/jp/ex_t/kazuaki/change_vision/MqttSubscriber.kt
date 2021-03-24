@@ -104,6 +104,12 @@ class MqttSubscriber(brokerAddress: String, private val topic: String, private v
                 if (sourceClassName.isEmpty() || targetClassName.isEmpty() || diagramName.isEmpty()) return
                 reflectTransaction.createAssociationPresentation(sourceClassName, targetClassName, diagramName)
             }
+            receivedMessage.deleteClassModel != null -> {
+                val deleteClassModel = receivedMessage.deleteClassModel
+                val name = deleteClassModel.className
+                if (name.isEmpty()) return
+                reflectTransaction.deleteClassModel(name)
+            }
         }
     }
 

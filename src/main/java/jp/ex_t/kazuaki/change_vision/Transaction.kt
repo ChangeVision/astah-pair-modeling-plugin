@@ -17,7 +17,8 @@ data class Transaction (
     val createClassPresentation: CreateClassPresentation? = null,
     val resizeClassPresentation: ResizeClassPresentation? = null,
     val createCreateAssociationModel: CreateAssociationModel? = null,
-    val createAssociationPresentation: CreateAssociationPresentation? = null
+    val createAssociationPresentation: CreateAssociationPresentation? = null,
+    val deleteClassModel: DeleteClassModel? = null
         )
 
 @Serializable
@@ -37,3 +38,6 @@ data class CreateAssociationModel(val sourceClassName: String, val destinationCl
 
 @Serializable
 data class CreateAssociationPresentation(val sourceClassName: String, val targetClassName: String, val diagramName: String)
+
+@Serializable
+data class DeleteClassModel(val className: String)

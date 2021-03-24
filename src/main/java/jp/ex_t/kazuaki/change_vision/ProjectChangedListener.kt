@@ -37,12 +37,20 @@ class ProjectChangedListener(private val mqttPublisher: MqttPublisher): ProjectE
                         println("Op: ${Operation.values()[it.operation]} -> ${entity.name}(IClassDiagram)")
                     }
                     is IClass -> {
-                        if (operation == Operation.ADD) {
-                            val parentPackage = entity.owner as IPackage
-                            val createClassModel = CreateClassModel(entity.name, parentPackage.name)
-                            val transaction = Transaction(createCreateClassModel=createClassModel)
-                            val byteArray = Cbor.encodeToByteArray(transaction)
-                            mqttPublisher.publish(byteArray)
+                        when (operation) {
+                            Operation.ADD -> {
+                                val parentPackage = entity.owner as IPackage
+                                val createClassModel = CreateClassModel(entity.name, parentPackage.name)
+                                val transaction = Transaction(createCreateClassModel=createClassModel)
+                                val byteArray = Cbor.encodeToByteArray(transaction)
+                                mqttPublisher.publish(byteArray)
+                            }
+                            Operation.REMOVE -> {
+                                val deleteClassModel = DeleteClassModel(entity.name)
+                                val transaction = Transaction(deleteClassModel = deleteClassModel)
+                                val byteArray = Cbor.encodeToByteArray(transaction)
+                                mqttPublisher.publish(byteArray)
+                            }
                         }
                         println("Op: ${Operation.values()[it.operation]} -> ${entity.name}(IClass)")
                     }
