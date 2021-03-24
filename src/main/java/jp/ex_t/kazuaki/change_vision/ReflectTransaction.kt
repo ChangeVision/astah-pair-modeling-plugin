@@ -26,13 +26,15 @@ class ReflectTransaction(private val projectChangedListener: ProjectChangedListe
         val transactionManager = projectAccessor.transactionManager
         val diagramEditorFactory = projectAccessor.diagramEditorFactory
         val classDiagramEditor = diagramEditorFactory.classDiagramEditor
+        val diagramViewManager = api.viewManager.diagramViewManager
         val owner = projectAccessor.findElements(INamedElement::class.java, ownerName).first() as INamedElement
         try {
             if (projectChangedListener != null)
                 projectAccessor.removeProjectEventListener(projectChangedListener)
             transactionManager.beginTransaction()
-            classDiagramEditor.createClassDiagram(owner, name)
+            val diagram = classDiagramEditor.createClassDiagram(owner, name)
             transactionManager.endTransaction()
+            diagramViewManager.open(diagram)
         } catch (e: BadTransactionException) {
             transactionManager.abortTransaction()
             throw UnExpectedException()
