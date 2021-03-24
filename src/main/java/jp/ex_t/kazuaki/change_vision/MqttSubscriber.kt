@@ -79,6 +79,14 @@ class MqttSubscriber(brokerAddress: String, private val topic: String, private v
                 if (sourceClassName.isEmpty() || destinationClassName.isEmpty()) return
                 reflectTransaction.addAssociationModel(sourceClassName, destinationClassName, name)
             }
+            receivedMessage.associationPresentation != null -> {
+                val associationPresentation = receivedMessage.associationPresentation
+                val sourceClassName = associationPresentation.sourceClassName
+                val targetClassName = associationPresentation.targetClassName
+                val diagramName = associationPresentation.diagramName
+                if (sourceClassName.isEmpty() || targetClassName.isEmpty() || diagramName.isEmpty()) return
+                reflectTransaction.addAssociationPresentation(sourceClassName, targetClassName, diagramName)
+            }
         }
     }
 

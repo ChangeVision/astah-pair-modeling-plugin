@@ -11,6 +11,7 @@ package jp.ex_t.kazuaki.change_vision
 import com.change_vision.jude.api.inf.model.IAssociation
 import com.change_vision.jude.api.inf.model.IClass
 import com.change_vision.jude.api.inf.model.IModel
+import com.change_vision.jude.api.inf.presentation.ILinkPresentation
 import com.change_vision.jude.api.inf.presentation.INodePresentation
 import com.change_vision.jude.api.inf.project.ProjectEvent
 import com.change_vision.jude.api.inf.project.ProjectEventListener
@@ -49,7 +50,7 @@ class ProjectChangedListener(private val mqttPublisher: MqttPublisher): ProjectE
                                         val byteArray = Cbor.encodeToByteArray(transaction)
                                         mqttPublisher.publish(byteArray)
                                     }
-                                    println("Op: ${Operation.values()[it.operation]} -> ${sourceClass.name} - ${entity.name}(IAssociation, ${entity.memberEnds.size}) - ${destinationClass.name}")
+                                    println("Op: ${Operation.values()[it.operation]} -> ${sourceClass.name} - ${entity.name}(IAssociation) - ${destinationClass.name}")
                                 }
                             }
                         }
@@ -67,18 +68,38 @@ class ProjectChangedListener(private val mqttPublisher: MqttPublisher): ProjectE
 //                        println("Op: ${Operation.values()[it.operation]} -> ${entity.label}(IPresentation)")
 //                    }
                     is INodePresentation -> {
-                        if (operation == Operation.ADD) {
                             when (val model = entity.model) {
                                 is IClass -> {
-                                    val location = Pair(entity.location.x, entity.location.y)
-                                    val classPresentation = ClassPresentation(model.name, location, entity.diagram.name)
-                                    val transaction = Transaction(classPresentation = classPresentation)
-                                    val byteArray = Cbor.encodeToByteArray(transaction)
-                                    mqttPublisher.publish(byteArray)
+                                    if (operation == Operation.ADD) {
+                                        val location = Pair(entity.location.x, entity.location.y)
+                                        val classPresentation =
+                                            ClassPresentation(model.name, location, entity.diagram.name)
+                                        val transaction = Transaction(classPresentation = classPresentation)
+                                        val byteArray = Cbor.encodeToByteArray(transaction)
+                                        mqttPublisher.publish(byteArray)
+                                    }
                                     println("Op: ${Operation.values()[it.operation]} -> ${entity.label}(INodePresentation)::${model.name}(IClass)")
                                 }
-                                is IAssociation -> {
-                                    println("Op: ${Operation.values()[it.operation]} -> ${entity.label}(INodePresentation)::${model.name}(IAssociation)")
+                                else -> {
+                                    println("Op: ${Operation.values()[it.operation]} -> ${entity.label}(INodePresentation) - $model(Unknown)")
+                                }
+                            }
+                    }
+                    is ILinkPresentation -> {
+                        val source = entity.source.model
+                        val target = entity.target.model
+                        when (source) {
+                            is IClass -> {
+                                when (target) {
+                                    is IClass -> {
+                                        if (operation == Operation.ADD) {
+                                            val associationPresentation = AssociationPresentation(source.name, target.name, entity.diagram.name)
+                                            val transaction = Transaction(associationPresentation = associationPresentation)
+                                            val byteArray = Cbor.encodeToByteArray(transaction)
+                                            mqttPublisher.publish(byteArray)
+                                        }
+                                        println("Op: ${Operation.values()[it.operation]} -> ${source.name}(IClass) - ${entity.label}(ILinkPresentation) - ${target.name}(IClass)")
+                                    }
                                 }
                             }
                         }
