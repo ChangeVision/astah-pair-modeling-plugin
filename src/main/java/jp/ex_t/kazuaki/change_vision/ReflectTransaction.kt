@@ -15,7 +15,6 @@ import com.change_vision.jude.api.inf.presentation.INodePresentation
 import com.change_vision.jude.api.inf.project.ProjectAccessor
 import com.change_vision.jude.api.inf.ui.IPluginActionDelegate.UnExpectedException
 import java.awt.geom.Point2D
-import java.rmi.UnexpectedException
 import javax.swing.SwingUtilities
 
 class ReflectTransaction(private val projectChangedListener: ProjectChangedListener? = null) {
@@ -111,8 +110,7 @@ class ReflectTransaction(private val projectChangedListener: ProjectChangedListe
         }
     }
 
-    @Throws(UnExpectedException::class)
-    fun createClassDiagram(name: String, ownerName: String) {
+    private fun createClassDiagram(name: String, ownerName: String) {
         val diagramEditorFactory = projectAccessor.diagramEditorFactory
         val classDiagramEditor = diagramEditorFactory.classDiagramEditor
         val diagramViewManager = api.viewManager.diagramViewManager
@@ -121,8 +119,7 @@ class ReflectTransaction(private val projectChangedListener: ProjectChangedListe
         diagramViewManager.open(diagram)
     }
 
-    @Throws(UnExpectedException::class)
-    fun createMindMapDiagram(name: String, ownerName: String) {
+    private fun createMindMapDiagram(name: String, ownerName: String) {
         val diagramEditorFactory = projectAccessor.diagramEditorFactory
         val mindmapEditor = diagramEditorFactory.mindmapEditor
         val diagramViewManager = api.viewManager.diagramViewManager
@@ -131,16 +128,14 @@ class ReflectTransaction(private val projectChangedListener: ProjectChangedListe
         diagramViewManager.open(diagram)
     }
 
-    @Throws(UnExpectedException::class)
-    fun createClassModel(name: String, parentPackageName: String) {
+    private fun createClassModel(name: String, parentPackageName: String) {
         val modelEditorFactory = projectAccessor.modelEditorFactory
         val basicModelEditor = modelEditorFactory.basicModelEditor
         val parentPackage = projectAccessor.findElements(IPackage::class.java, parentPackageName).first() as IPackage
         basicModelEditor.createClass(parentPackage, name)
     }
 
-    @Throws(UnExpectedException::class)
-    fun createClassPresentation(className: String, location: Point2D, diagramName: String) {
+    private fun createClassPresentation(className: String, location: Point2D, diagramName: String) {
         val diagramEditorFactory = projectAccessor.diagramEditorFactory
         val classDiagramEditor = diagramEditorFactory.classDiagramEditor
         val diagram = projectAccessor.findElements(IDiagram::class.java, diagramName).first() as IDiagram
@@ -149,7 +144,7 @@ class ReflectTransaction(private val projectChangedListener: ProjectChangedListe
         classDiagramEditor.createNodePresentation(clazz, location)
     }
 
-    fun searchTopic(name: String, topics: Array<INodePresentation>): INodePresentation? {
+    private fun searchTopic(name: String, topics: Array<INodePresentation>): INodePresentation? {
         topics.forEach {
             if (it.label == name) return it
             else if (it.children != null) {
@@ -159,8 +154,7 @@ class ReflectTransaction(private val projectChangedListener: ProjectChangedListe
         return null
     }
 
-    @Throws(UnExpectedException::class)
-    fun createTopic(ownerName: String, name: String, diagramName: String) {
+    private fun createTopic(ownerName: String, name: String, diagramName: String) {
         val diagramEditorFactory = projectAccessor.diagramEditorFactory
         val mindmapEditor = diagramEditorFactory.mindmapEditor
         val diagram = projectAccessor.findElements(IDiagram::class.java, diagramName).first() as IMindMapDiagram
@@ -170,8 +164,7 @@ class ReflectTransaction(private val projectChangedListener: ProjectChangedListe
         mindmapEditor.createTopic(parent, name)
     }
 
-    @Throws(UnExpectedException::class)
-    fun resizeClassPresentation(className: String, location: Point2D, size: Pair<Double, Double>, diagramName: String) {
+    private fun resizeClassPresentation(className: String, location: Point2D, size: Pair<Double, Double>, diagramName: String) {
         val (width, height) = size
         val diagramEditorFactory = projectAccessor.diagramEditorFactory
         val classDiagramEditor = diagramEditorFactory.classDiagramEditor
@@ -184,8 +177,7 @@ class ReflectTransaction(private val projectChangedListener: ProjectChangedListe
         classPresentation.height =height
     }
 
-    @Throws(UnexpectedException::class)
-    fun createAssociationModel(sourceClassName: String, destinationClassName: String, associationName: String) {
+    private fun createAssociationModel(sourceClassName: String, destinationClassName: String, associationName: String) {
         val modelEditorFactory = projectAccessor.modelEditorFactory
         val basicModelEditor = modelEditorFactory.basicModelEditor
         val sourceClass = projectAccessor.findElements(IClass::class.java, sourceClassName).first() as IClass
@@ -193,8 +185,7 @@ class ReflectTransaction(private val projectChangedListener: ProjectChangedListe
         basicModelEditor.createAssociation(sourceClass, destinationClass, associationName, "", "")
     }
 
-    @Throws(UnExpectedException::class)
-    fun createAssociationPresentation(sourceClassName: String, targetClassName: String, diagramName: String) {
+    private fun createAssociationPresentation(sourceClassName: String, targetClassName: String, diagramName: String) {
         @Throws(ClassNotFoundException::class)
         fun searchAssociation(sourceClass: IClass, targetClass: IClass): IAssociation? {
             sourceClass.attributes.forEach { sourceClassAttribute ->
@@ -222,8 +213,7 @@ class ReflectTransaction(private val projectChangedListener: ProjectChangedListe
         }
     }
 
-    @Throws(UnExpectedException::class)
-    fun deleteClassModel(name: String) {
+    private fun deleteClassModel(name: String) {
         val modelEditorFactory = projectAccessor.modelEditorFactory
         val basicModelEditor = modelEditorFactory.basicModelEditor
         val clazz = projectAccessor.findElements(IClass::class.java, name).first() as IClass
