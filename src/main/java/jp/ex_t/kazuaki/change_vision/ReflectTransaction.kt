@@ -16,6 +16,7 @@ import com.change_vision.jude.api.inf.project.ProjectAccessor
 import com.change_vision.jude.api.inf.ui.IPluginActionDelegate.UnExpectedException
 import java.awt.geom.Point2D
 import java.rmi.UnexpectedException
+import javax.swing.SwingUtilities
 
 class ReflectTransaction(private val projectChangedListener: ProjectChangedListener? = null) {
     private val api: AstahAPI = AstahAPI.getAstahAPI()
@@ -23,73 +24,75 @@ class ReflectTransaction(private val projectChangedListener: ProjectChangedListe
 
     @Throws(UnExpectedException::class)
     fun transact(transaction: Transaction) {
-        val transactionManager = projectAccessor.transactionManager
-        try {
-            if (projectChangedListener != null)
-                projectAccessor.removeProjectEventListener(projectChangedListener)
-            transactionManager.beginTransaction()
-            if (transaction.createClassDiagram != null) {
-                val createClassDiagram = transaction.createClassDiagram as CreateClassDiagram
-                val name = createClassDiagram.name
-                val ownerName = createClassDiagram.ownerName
-                if (name.isNotEmpty() && ownerName.isNotEmpty())
-                    createClassDiagram(name, ownerName)
+        SwingUtilities.invokeLater {
+            val transactionManager = projectAccessor.transactionManager
+            try {
+                if (projectChangedListener != null)
+                    projectAccessor.removeProjectEventListener(projectChangedListener)
+                transactionManager.beginTransaction()
+                if (transaction.createClassDiagram != null) {
+                    val createClassDiagram = transaction.createClassDiagram as CreateClassDiagram
+                    val name = createClassDiagram.name
+                    val ownerName = createClassDiagram.ownerName
+                    if (name.isNotEmpty() && ownerName.isNotEmpty())
+                        createClassDiagram(name, ownerName)
+                }
+                if (transaction.createClassModel != null) {
+                    val createClassModel = transaction.createClassModel as CreateClassModel
+                    val name = createClassModel.name
+                    val parentPackageName = createClassModel.parentPackageName
+                    if (parentPackageName.isNotEmpty() && name.isNotEmpty())
+                        createClassModel(name, parentPackageName)
+                }
+                if (transaction.createClassPresentation != null) {
+                    val createClassPresentation = transaction.createClassPresentation as CreateClassPresentation
+                    val className = createClassPresentation.className
+                    val locationPair = createClassPresentation.location
+                    val location = Point2D.Double(locationPair.first, locationPair.second)
+                    val diagramName = createClassPresentation.diagramName
+                    if (diagramName.isNotEmpty() && className.isNotEmpty())
+                        createClassPresentation(className, location, diagramName)
+                }
+                if (transaction.resizeClassPresentation != null) {
+                    val resizeClassPresentation = transaction.resizeClassPresentation as ResizeClassPresentation
+                    val className = resizeClassPresentation.className
+                    val locationPair = resizeClassPresentation.location
+                    val location = Point2D.Double(locationPair.first, locationPair.second)
+                    val size = resizeClassPresentation.size
+                    val diagramName = resizeClassPresentation.diagramName
+                    if (className.isNotEmpty() && diagramName.isNotEmpty())
+                        resizeClassPresentation(className, location, size, diagramName)
+                }
+                if (transaction.createAssociationModel != null) {
+                    val createAssociationModel = transaction.createAssociationModel as CreateAssociationModel
+                    val sourceClassName = createAssociationModel.sourceClassName
+                    val destinationClassName = createAssociationModel.destinationClassName
+                    val name = createAssociationModel.name
+                    if (sourceClassName.isNotEmpty() && destinationClassName.isNotEmpty())
+                        createAssociationModel(sourceClassName, destinationClassName, name)
+                }
+                if (transaction.createAssociationPresentation != null) {
+                    val createAssociationPresentation = transaction.createAssociationPresentation as CreateAssociationPresentation
+                    val sourceClassName = createAssociationPresentation.sourceClassName
+                    val targetClassName = createAssociationPresentation.targetClassName
+                    val diagramName = createAssociationPresentation.diagramName
+                    if (sourceClassName.isNotEmpty() && targetClassName.isNotEmpty() && diagramName.isNotEmpty())
+                        createAssociationPresentation(sourceClassName, targetClassName, diagramName)
+                }
+                if (transaction.deleteClassModel != null) {
+                    val deleteClassModel = transaction.deleteClassModel as DeleteClassModel
+                    val name = deleteClassModel.className
+                    if (name.isNotEmpty())
+                        deleteClassModel(name)
+                }
+                transactionManager.endTransaction()
+            } catch (e: BadTransactionException) {
+                transactionManager.abortTransaction()
+                throw UnExpectedException()
+            } finally {
+                if (projectChangedListener != null)
+                    projectAccessor.addProjectEventListener(projectChangedListener)
             }
-            if (transaction.createClassModel != null) {
-                val createClassModel = transaction.createClassModel as CreateClassModel
-                val name = createClassModel.name
-                val parentPackageName = createClassModel.parentPackageName
-                if (parentPackageName.isNotEmpty() && name.isNotEmpty())
-                    createClassModel(name, parentPackageName)
-            }
-            if (transaction.createClassPresentation != null) {
-                val createClassPresentation = transaction.createClassPresentation as CreateClassPresentation
-                val className = createClassPresentation.className
-                val locationPair = createClassPresentation.location
-                val location = Point2D.Double(locationPair.first, locationPair.second)
-                val diagramName = createClassPresentation.diagramName
-                if (diagramName.isNotEmpty() && className.isNotEmpty())
-                    createClassPresentation(className, location, diagramName)
-            }
-            if (transaction.resizeClassPresentation != null) {
-                val resizeClassPresentation = transaction.resizeClassPresentation as ResizeClassPresentation
-                val className = resizeClassPresentation.className
-                val locationPair = resizeClassPresentation.location
-                val location = Point2D.Double(locationPair.first, locationPair.second)
-                val size = resizeClassPresentation.size
-                val diagramName = resizeClassPresentation.diagramName
-                if (className.isNotEmpty() && diagramName.isNotEmpty())
-                    resizeClassPresentation(className, location, size, diagramName)
-            }
-            if (transaction.createAssociationModel != null) {
-                val createAssociationModel = transaction.createAssociationModel as CreateAssociationModel
-                val sourceClassName = createAssociationModel.sourceClassName
-                val destinationClassName = createAssociationModel.destinationClassName
-                val name = createAssociationModel.name
-                if (sourceClassName.isNotEmpty() && destinationClassName.isNotEmpty())
-                    createAssociationModel(sourceClassName, destinationClassName, name)
-            }
-            if (transaction.createAssociationPresentation != null) {
-                val createAssociationPresentation = transaction.createAssociationPresentation as CreateAssociationPresentation
-                val sourceClassName = createAssociationPresentation.sourceClassName
-                val targetClassName = createAssociationPresentation.targetClassName
-                val diagramName = createAssociationPresentation.diagramName
-                if (sourceClassName.isNotEmpty() && targetClassName.isNotEmpty() && diagramName.isNotEmpty())
-                    createAssociationPresentation(sourceClassName, targetClassName, diagramName)
-            }
-            if (transaction.deleteClassModel != null) {
-                val deleteClassModel = transaction.deleteClassModel as DeleteClassModel
-                val name = deleteClassModel.className
-                if (name.isNotEmpty())
-                    deleteClassModel(name)
-            }
-            transactionManager.endTransaction()
-        } catch (e: BadTransactionException) {
-            transactionManager.abortTransaction()
-            throw UnExpectedException()
-        } finally {
-            if (projectChangedListener != null)
-                projectAccessor.addProjectEventListener(projectChangedListener)
         }
     }
 
