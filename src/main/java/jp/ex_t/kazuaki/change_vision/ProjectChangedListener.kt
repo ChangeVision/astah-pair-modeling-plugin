@@ -22,78 +22,114 @@ class ProjectChangedListener(private val mqttPublisher: MqttPublisher): ProjectE
     override fun projectChanged(e: ProjectEvent) {
         println("===== Transaction detected =====")
         val projectEditUnit = e.projectEditUnit.filter { it.entity != null }
-        val transaction = Transaction()
-        projectEditUnit
+//        val removeTransaction = Transaction()
+        val createTransaction = Transaction()
+        val modifyTransaction = Transaction()
+//        projectEditUnit.filter { it.operation == Operation.REMOVE.ordinal }.forEach {
+//            val operation = Operation.values()[it.operation]
+//            print("Op: $operation -> ")
+//            when (val entity = it.entity) {
+//                is IClass -> {
+//                    val deleteClassModel = DeleteClassModel(entity.name)
+//                    removeTransaction.deleteClassModel = deleteClassModel
+//                    println("${entity.name}(IClass)")
+//                }
+//                is ILinkPresentation -> {
+//                    when (val model = entity.model) {
+//                        is IAssociation -> {
+//                            val memberEnds = model.memberEnds
+//                            val source = memberEnds.first().owner
+//                            val target = memberEnds.last().owner
+//                            when (source) {
+//                                is IClass -> {
+//                                    when (target) {
+//                                        is IClass -> {
+//                                            val deleteAssociationPresentation = DeleteAssociationPresentation(source.name, target.name, entity.diagram.name)
+//                                            createTransaction.deleteAssociationPresentation = deleteAssociationPresentation
+//                                            println("${source.name}(IClass) - ${entity.label}(ILinkPresentation) - ${target.name}(IClass)")
+//                                        }
+//                                        else -> {
+//                                            println("${source.name}(IClass) - ${entity.label}(ILinkPresentation) - $target(Unknown)")
+//                                        }
+//                                    }
+//                                }
+//                                else -> {
+//                                    println("$source(Unknown) - ${entity.label}(ILinkPresentation) - $target(Unknown)")
+//                                }
+//                            }
+//                        }
+//                        else -> {
+//                            println("$entity(INodePresentation)")
+//                        }
+//                    }
+//                }
+//                else -> {
+//                    println("$entity(Unknown)")
+//                }
+//            }
+//        }
+//        if (removeTransaction.isNotAllNull())
+//            encodeAndPublish(removeTransaction)
+        projectEditUnit.filter { it.operation == Operation.ADD.ordinal }
             .forEach {
                 val operation = Operation.values()[it.operation]
+                print("Op: $operation -> ")
                 when (val entity = it.entity) {
                     is IClassDiagram -> {
-                        if (operation == Operation.ADD) {
-                            val owner = entity.owner as INamedElement
-                            val createClassDiagram = CreateClassDiagram(entity.name, owner.name)
-                            transaction.createClassDiagram = createClassDiagram
-                        }
-                        println("Op: ${Operation.values()[it.operation]} -> ${entity.name}(IClassDiagram)")
+                        val owner = entity.owner as INamedElement
+                        val createClassDiagram = CreateClassDiagram(entity.name, owner.name)
+                        createTransaction.createClassDiagram = createClassDiagram
+                        println("${entity.name}(IClassDiagram)")
                     }
                     is IClass -> {
-                        when (operation) {
-                            Operation.ADD -> {
-                                val parentPackage = entity.owner as IPackage
-                                val createClassModel = CreateClassModel(entity.name, parentPackage.name)
-                                transaction.createClassModel = createClassModel
-                            }
-                            Operation.REMOVE -> {
-                                val deleteClassModel = DeleteClassModel(entity.name)
-                                transaction.deleteClassModel = deleteClassModel
-                            }
-                        }
-                        println("Op: ${Operation.values()[it.operation]} -> ${entity.name}(IClass)")
+                        val parentPackage = entity.owner as IPackage
+                        val createClassModel = CreateClassModel(entity.name, parentPackage.name)
+                        createTransaction.createClassModel = createClassModel
+                        println("${entity.name}(IClass)")
                     }
                     is IAssociation -> {
                         val sourceClass = entity.memberEnds.first().owner
                         val destinationClass = entity.memberEnds.last().owner
                         when (sourceClass) {
-                            is IClass -> when (destinationClass) {
-                                is IClass -> {
-                                    if (operation == Operation.ADD) {
+                            is IClass -> {
+                                when (destinationClass) {
+                                    is IClass -> {
                                         val createAssociationModel = CreateAssociationModel(sourceClass.name, destinationClass.name, entity.name)
-                                        transaction.createAssociationModel = createAssociationModel
+                                        createTransaction.createAssociationModel = createAssociationModel
+                                        println("${sourceClass.name}(IClass) - ${entity.name}(IAssociation) - ${destinationClass.name}(IClass)")
                                     }
-                                    println("Op: ${Operation.values()[it.operation]} -> ${sourceClass.name} - ${entity.name}(IAssociation) - ${destinationClass.name}")
+                                    else -> {
+                                        println("${sourceClass.name}(IClass) - ${entity.name}(IAssociation) - $destinationClass(Unknown)")
+                                    }
                                 }
+                            }
+                            else -> {
+                                println("$sourceClass(Unknown) - ${entity.name}(IAssociation) - $destinationClass(Unknown)")
                             }
                         }
                     }
 //                    is IAttribute -> {
-//                        println("Op: ${Operation.values()[it.operation]} -> ${entity.name}(IAttribute)")
+//                        println("${entity.name}(IAttribute)")
 //                    }
 //                    is IOperation -> {
-//                        println("Op: ${Operation.values()[it.operation]} -> ${entity.name}(IOperation)")
+//                        println("${entity.name}(IOperation)")
 //                    }
 //                    is IModel -> {
-//                        println("Op: ${Operation.values()[it.operation]} -> ${entity.name}(IModel)")
+//                        println("${entity.name}(IModel)")
 //                    }
 //                    is IPresentation -> {
-//                        println("Op: ${Operation.values()[it.operation]} -> ${entity.label}(IPresentation)")
+//                        println("${entity.label}(IPresentation)")
 //                    }
                     is INodePresentation -> {
                             when (val model = entity.model) {
                                 is IClass -> {
-                                    if (operation == Operation.ADD) {
-                                        val location = Pair(entity.location.x, entity.location.y)
-                                        val createClassPresentation =
-                                            CreateClassPresentation(model.name, location, entity.diagram.name)
-                                        transaction.createClassPresentation = createClassPresentation
-                                    } else if (operation == Operation.MODIFY) {
-                                        val location = Pair(entity.location.x, entity.location.y)
-                                        val size = Pair(entity.width, entity.height)
-                                        val resizeClassPresentation = ResizeClassPresentation(model.name, location, size, entity.diagram.name)
-                                        transaction.resizeClassPresentation = resizeClassPresentation
-                                    }
-                                    println("Op: ${Operation.values()[it.operation]} -> ${entity.label}(INodePresentation)::${model.name}(IClass, ${Pair(entity.width, entity.height)} at ${entity.location})")
+                                    val location = Pair(entity.location.x, entity.location.y)
+                                    val createClassPresentation = CreateClassPresentation(model.name, location, entity.diagram.name)
+                                    createTransaction.createClassPresentation = createClassPresentation
+                                    println("${entity.label}(INodePresentation)::${model.name}(IClass, ${Pair(entity.width, entity.height)} at ${entity.location})")
                                 }
                                 else -> {
-                                    println("Op: ${Operation.values()[it.operation]} -> ${entity.label}(INodePresentation) - $model(Unknown)")
+                                    println("${entity.label}(INodePresentation) - $model(Unknown)")
                                 }
                             }
                     }
@@ -104,21 +140,56 @@ class ProjectChangedListener(private val mqttPublisher: MqttPublisher): ProjectE
                             is IClass -> {
                                 when (target) {
                                     is IClass -> {
-                                        if (operation == Operation.ADD) {
-                                            val createAssociationPresentation = CreateAssociationPresentation(source.name, target.name, entity.diagram.name)
-                                            transaction.createAssociationPresentation = createAssociationPresentation
-                                        }
-                                        println("Op: ${Operation.values()[it.operation]} -> ${source.name}(IClass) - ${entity.label}(ILinkPresentation) - ${target.name}(IClass)")
+                                        val createAssociationPresentation = CreateAssociationPresentation(source.name, target.name, entity.diagram.name)
+                                        createTransaction.createAssociationPresentation = createAssociationPresentation
+                                        println("${source.name}(IClass) - ${entity.label}(ILinkPresentation) - ${target.name}(IClass)")
+                                    }
+                                    else -> {
+                                        println("${source.name}(IClass) - ${entity.label}(ILinkPresentation) - $target(Unknown)")
                                     }
                                 }
+                            }
+                            else -> {
+                                println("$source(Unknown) - ${entity.label}(ILinkPresentation) - $target(Unknown)")
                             }
                         }
                     }
                     else -> {
-                        println("Op: ${Operation.values()[it.operation]} -> ${entity}(Unknown)")
+                        println("$entity(Unknown)")
                     }
                 }
             }
+        if (createTransaction.isNotAllNull())
+            encodeAndPublish(createTransaction)
+        projectEditUnit.filter { it.operation == Operation.MODIFY.ordinal }.forEach {
+            val operation = Operation.values()[it.operation]
+            print("Op: $operation -> ")
+            when (val entity = it.entity) {
+                is INodePresentation -> {
+                    when (val model = entity.model) {
+                        is IClass -> {
+                            val location = Pair(entity.location.x, entity.location.y)
+                            val size = Pair(entity.width, entity.height)
+                            val resizeClassPresentation = ResizeClassPresentation(model.name, location, size, entity.diagram.name)
+                            modifyTransaction.resizeClassPresentation = resizeClassPresentation
+                            println("${entity.label}(INodePresentation)::${model.name}(IClass, ${Pair(entity.width, entity.height)} at ${entity.location})")
+                        }
+                        else -> {
+                            println("${entity.label}(INodePresentation) - $model(Unknown)")
+                        }
+                    }
+                }
+                else -> {
+                    println("$entity(Unknown)")
+                }
+            }
+        }
+        if (modifyTransaction.isNotAllNull())
+            encodeAndPublish(modifyTransaction)
+    }
+
+    @ExperimentalSerializationApi
+    private fun encodeAndPublish(transaction: Transaction) {
         val byteArray = Cbor.encodeToByteArray(transaction)
         mqttPublisher.publish(byteArray)
     }

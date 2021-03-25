@@ -18,8 +18,14 @@ data class Transaction (
     var resizeClassPresentation: ResizeClassPresentation? = null,
     var createAssociationModel: CreateAssociationModel? = null,
     var createAssociationPresentation: CreateAssociationPresentation? = null,
+    var deleteAssociationPresentation: DeleteAssociationPresentation? = null,
     var deleteClassModel: DeleteClassModel? = null
-)
+) {
+    fun isNotAllNull(): Boolean {
+        val checkList = listOf(createClassDiagram, createClassModel, createClassPresentation, resizeClassPresentation, createAssociationModel, createAssociationPresentation, deleteAssociationPresentation, deleteClassModel)
+        return checkList.any { it != null }
+    }
+}
 
 @Serializable
 data class CreateClassDiagram(val name: String, val ownerName: String)
@@ -38,6 +44,9 @@ data class CreateAssociationModel(val sourceClassName: String, val destinationCl
 
 @Serializable
 data class CreateAssociationPresentation(val sourceClassName: String, val targetClassName: String, val diagramName: String)
+
+@Serializable
+data class DeleteAssociationPresentation(val sourceClassName: String, val targetClassName: String, val diagramName: String)
 
 @Serializable
 data class DeleteClassModel(val className: String)
