@@ -32,15 +32,15 @@ class ReflectTransaction(private val projectChangedListener: ProjectChangedListe
                 val createClassDiagram = transaction.createClassDiagram as CreateClassDiagram
                 val name = createClassDiagram.name
                 val ownerName = createClassDiagram.ownerName
-                if (name.isEmpty() || ownerName.isEmpty()) return
-                createClassDiagram(name, ownerName)
+                if (name.isNotEmpty() && ownerName.isNotEmpty())
+                    createClassDiagram(name, ownerName)
             }
             if (transaction.createClassModel != null) {
                 val createClassModel = transaction.createClassModel as CreateClassModel
                 val name = createClassModel.name
                 val parentPackageName = createClassModel.parentPackageName
-                if (parentPackageName.isEmpty() || name.isEmpty()) return
-                createClassModel(name, parentPackageName)
+                if (parentPackageName.isNotEmpty() && name.isNotEmpty())
+                    createClassModel(name, parentPackageName)
             }
             if (transaction.createClassPresentation != null) {
                 val createClassPresentation = transaction.createClassPresentation as CreateClassPresentation
@@ -48,8 +48,8 @@ class ReflectTransaction(private val projectChangedListener: ProjectChangedListe
                 val locationPair = createClassPresentation.location
                 val location = Point2D.Double(locationPair.first, locationPair.second)
                 val diagramName = createClassPresentation.diagramName
-                if (diagramName.isEmpty() || className.isEmpty()) return
-                createClassPresentation(className, location, diagramName)
+                if (diagramName.isNotEmpty() && className.isNotEmpty())
+                    createClassPresentation(className, location, diagramName)
             }
             if (transaction.resizeClassPresentation != null) {
                 val resizeClassPresentation = transaction.resizeClassPresentation as ResizeClassPresentation
@@ -58,30 +58,30 @@ class ReflectTransaction(private val projectChangedListener: ProjectChangedListe
                 val location = Point2D.Double(locationPair.first, locationPair.second)
                 val size = resizeClassPresentation.size
                 val diagramName = resizeClassPresentation.diagramName
-                if (className.isEmpty() || diagramName.isEmpty()) return
-                resizeClassPresentation(className, location, size, diagramName)
+                if (className.isNotEmpty() && diagramName.isNotEmpty())
+                    resizeClassPresentation(className, location, size, diagramName)
             }
             if (transaction.createAssociationModel != null) {
                 val createAssociationModel = transaction.createAssociationModel as CreateAssociationModel
                 val sourceClassName = createAssociationModel.sourceClassName
                 val destinationClassName = createAssociationModel.destinationClassName
                 val name = createAssociationModel.name
-                if (sourceClassName.isEmpty() || destinationClassName.isEmpty()) return
-                createAssociationModel(sourceClassName, destinationClassName, name)
+                if (sourceClassName.isNotEmpty() && destinationClassName.isNotEmpty())
+                    createAssociationModel(sourceClassName, destinationClassName, name)
             }
             if (transaction.createAssociationPresentation != null) {
                 val createAssociationPresentation = transaction.createAssociationPresentation as CreateAssociationPresentation
                 val sourceClassName = createAssociationPresentation.sourceClassName
                 val targetClassName = createAssociationPresentation.targetClassName
                 val diagramName = createAssociationPresentation.diagramName
-                if (sourceClassName.isEmpty() || targetClassName.isEmpty() || diagramName.isEmpty()) return
-                createAssociationPresentation(sourceClassName, targetClassName, diagramName)
+                if (sourceClassName.isNotEmpty() && targetClassName.isNotEmpty() && diagramName.isNotEmpty())
+                    createAssociationPresentation(sourceClassName, targetClassName, diagramName)
             }
             if (transaction.deleteClassModel != null) {
                 val deleteClassModel = transaction.deleteClassModel as DeleteClassModel
                 val name = deleteClassModel.className
-                if (name.isEmpty()) return
-                deleteClassModel(name)
+                if (name.isNotEmpty())
+                    deleteClassModel(name)
             }
             transactionManager.endTransaction()
         } catch (e: BadTransactionException) {
