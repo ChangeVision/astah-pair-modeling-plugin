@@ -127,17 +127,27 @@ class ProjectChangedListener(private val mqttPublisher: MqttPublisher): ProjectE
 //                        println("${entity.label}(IPresentation)")
 //                    }
                     is INodePresentation -> {
-                            when (val model = entity.model) {
-                                is IClass -> {
-                                    val location = Pair(entity.location.x, entity.location.y)
-                                    val createClassPresentation = CreateClassPresentation(model.name, location, entity.diagram.name)
-                                    createTransaction.createClassPresentation = createClassPresentation
-                                    println("${entity.label}(INodePresentation)::${model.name}(IClass, ${Pair(entity.width, entity.height)} at ${entity.location})")
-                                }
-                                else -> {
-                                    println("${entity.label}(INodePresentation) - $model(Unknown)")
+                        when (val diagram = entity.diagram) {
+                            is IClassDiagram -> {
+                                when (val model = entity.model) {
+                                    is IClass -> {
+                                        val location = Pair(entity.location.x, entity.location.y)
+                                        val createClassPresentation = CreateClassPresentation(model.name, location, diagram.name)
+                                        createTransaction.createClassPresentation = createClassPresentation
+                                        println("${entity.label}(INodePresentation)::${model.name}(IClass, ${Pair(entity.width, entity.height)} at ${entity.location})")
+                                    }
+                                    else -> {
+                                        println("${entity.label}(INodePresentation) - $model(Unknown)")
+                                    }
                                 }
                             }
+                            is IMindMapDiagram -> {
+                                val owner = entity.parent
+                                val createTopic = CreateTopic(owner.label, entity.label, entity.diagram.name)
+                                createTransaction.createTopic = createTopic
+                                println("${owner.label}(INodePresentation) - ${entity.label}(INodePresentation)")
+                            }
+                        }
                     }
                     is ILinkPresentation -> {
                         val source = entity.source.model

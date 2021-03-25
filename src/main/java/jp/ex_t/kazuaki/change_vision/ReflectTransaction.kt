@@ -60,6 +60,14 @@ class ReflectTransaction(private val projectChangedListener: ProjectChangedListe
                     if (diagramName.isNotEmpty() && className.isNotEmpty())
                         createClassPresentation(className, location, diagramName)
                 }
+                if (transaction.createTopic != null) {
+                    val createTopic = transaction.createTopic as CreateTopic
+                    val ownerName = createTopic.ownerName
+                    val name = createTopic.name
+                    val diagramName = createTopic.diagramName
+                    if (ownerName.isNotEmpty() && name.isNotEmpty() && diagramName.isNotEmpty())
+                        createTopic(ownerName, name, diagramName)
+                }
                 if (transaction.resizeClassPresentation != null) {
                     val resizeClassPresentation = transaction.resizeClassPresentation as ResizeClassPresentation
                     val className = resizeClassPresentation.className
@@ -139,6 +147,27 @@ class ReflectTransaction(private val projectChangedListener: ProjectChangedListe
         classDiagramEditor.diagram = diagram
         val clazz = projectAccessor.findElements(IClass::class.java, className).first() as IClass
         classDiagramEditor.createNodePresentation(clazz, location)
+    }
+
+    fun searchTopic(name: String, topics: Array<INodePresentation>): INodePresentation? {
+        topics.forEach {
+            if (it.label == name) return it
+            else if (it.children != null) {
+                return searchTopic(name, it.children)
+            }
+        }
+        return null
+    }
+
+    @Throws(UnExpectedException::class)
+    fun createTopic(ownerName: String, name: String, diagramName: String) {
+        val diagramEditorFactory = projectAccessor.diagramEditorFactory
+        val mindmapEditor = diagramEditorFactory.mindmapEditor
+        val diagram = projectAccessor.findElements(IDiagram::class.java, diagramName).first() as IMindMapDiagram
+        mindmapEditor.diagram = diagram
+        val topics = diagram.floatingTopics + diagram.root
+        val parent = searchTopic(ownerName, topics) ?: return
+        mindmapEditor.createTopic(parent, name)
     }
 
     @Throws(UnExpectedException::class)
