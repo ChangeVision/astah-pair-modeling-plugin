@@ -37,6 +37,13 @@ class ReflectTransaction(private val projectChangedListener: ProjectChangedListe
                     if (name.isNotEmpty() && ownerName.isNotEmpty())
                         createClassDiagram(name, ownerName)
                 }
+                if (transaction.createMindMapDiagram != null) {
+                    val createMindMapDiagram = transaction.createMindMapDiagram as CreateMindMapDiagram
+                    val name = createMindMapDiagram.name
+                    val ownerName = createMindMapDiagram.ownerName
+                    if (name.isNotEmpty() && ownerName.isNotEmpty())
+                        createMindMapDiagram(name, ownerName)
+                }
                 if (transaction.createClassModel != null) {
                     val createClassModel = transaction.createClassModel as CreateClassModel
                     val name = createClassModel.name
@@ -103,6 +110,16 @@ class ReflectTransaction(private val projectChangedListener: ProjectChangedListe
         val diagramViewManager = api.viewManager.diagramViewManager
         val owner = projectAccessor.findElements(INamedElement::class.java, ownerName).first() as INamedElement
         val diagram = classDiagramEditor.createClassDiagram(owner, name)
+        diagramViewManager.open(diagram)
+    }
+
+    @Throws(UnExpectedException::class)
+    fun createMindMapDiagram(name: String, ownerName: String) {
+        val diagramEditorFactory = projectAccessor.diagramEditorFactory
+        val mindmapEditor = diagramEditorFactory.mindmapEditor
+        val diagramViewManager = api.viewManager.diagramViewManager
+        val owner = projectAccessor.findElements(INamedElement::class.java, ownerName).first() as INamedElement
+        val diagram = mindmapEditor.createMindmapDiagram(owner, name)
         diagramViewManager.open(diagram)
     }
 

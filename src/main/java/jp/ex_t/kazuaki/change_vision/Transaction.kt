@@ -13,6 +13,7 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class Transaction (
     var createClassDiagram: CreateClassDiagram? = null,
+    var createMindMapDiagram: CreateMindMapDiagram? = null,
     var createClassModel: CreateClassModel? = null,
     var createClassPresentation: CreateClassPresentation? = null,
     var resizeClassPresentation: ResizeClassPresentation? = null,
@@ -22,13 +23,16 @@ data class Transaction (
     var deleteClassModel: DeleteClassModel? = null
 ) {
     fun isNotAllNull(): Boolean {
-        val checkList = listOf(createClassDiagram, createClassModel, createClassPresentation, resizeClassPresentation, createAssociationModel, createAssociationPresentation, deleteAssociationPresentation, deleteClassModel)
+        val checkList = listOf(createClassDiagram, createMindMapDiagram, createClassModel, createClassPresentation, resizeClassPresentation, createAssociationModel, createAssociationPresentation, deleteAssociationPresentation, deleteClassModel)
         return checkList.any { it != null }
     }
 }
 
 @Serializable
 data class CreateClassDiagram(val name: String, val ownerName: String)
+
+@Serializable
+data class CreateMindMapDiagram(val name: String, val ownerName: String)
 
 @Serializable
 data class CreateClassModel(val name: String, val parentPackageName: String)

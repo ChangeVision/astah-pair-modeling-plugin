@@ -81,6 +81,12 @@ class ProjectChangedListener(private val mqttPublisher: MqttPublisher): ProjectE
                         createTransaction.createClassDiagram = createClassDiagram
                         println("${entity.name}(IClassDiagram)")
                     }
+                    is IMindMapDiagram -> {
+                        val owner = entity.owner as INamedElement
+                        val createMindMapDiagram = CreateMindMapDiagram(entity.name, owner.name)
+                        createTransaction.createMindMapDiagram = createMindMapDiagram
+                        println("${entity.name}(IMindMapDiagram)")
+                    }
                     is IClass -> {
                         val parentPackage = entity.owner as IPackage
                         val createClassModel = CreateClassModel(entity.name, parentPackage.name)
