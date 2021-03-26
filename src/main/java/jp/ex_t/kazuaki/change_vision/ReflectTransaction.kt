@@ -111,6 +111,15 @@ class ReflectTransaction(private val projectChangedListener: ProjectChangedListe
                     if (className.isNotEmpty() && diagramName.isNotEmpty())
                         resizeClassPresentation(className, location, size, diagramName)
                 }
+                if (transaction.changeAttributeNameAndTypeExpression != null) {
+                    val changeAttributeNameAndTypeExpression = transaction.changeAttributeNameAndTypeExpression as ChangeAttributeNameAndTypeExpression
+                    val ownerName = changeAttributeNameAndTypeExpression.ownerName
+                    val brotherNameAndTypeExpression = changeAttributeNameAndTypeExpression.brotherNameAndTypeExpression
+                    val name = changeAttributeNameAndTypeExpression.name
+                    val typeExpression = changeAttributeNameAndTypeExpression.typeExpression
+                    if (ownerName.isNotEmpty() && name.isNotEmpty() && typeExpression.isNotEmpty())
+                        changeAttributeNameAndTypeExpression(ownerName, brotherNameAndTypeExpression, name, typeExpression)
+                }
                 if (transaction.resizeTopic != null) {
                     val resizeTopic = transaction.resizeTopic as ResizeTopic
                     val name = resizeTopic.name
@@ -260,6 +269,13 @@ class ReflectTransaction(private val projectChangedListener: ProjectChangedListe
         classPresentation.location = location
         classPresentation.width = width
         classPresentation.height = height
+    }
+
+    private fun changeAttributeNameAndTypeExpression(ownerName: String, brotherNameAndTypeExpression: List<Pair<String, String>>, name: String, typeExpression: String) {
+        val ownerClass = projectAccessor.findElements(IClass::class.java, ownerName).first() as IClass
+        val attribute = ownerClass.attributes.filterNot { Pair(it.name, it.typeExpression) in brotherNameAndTypeExpression }.first()
+        attribute.name = name
+        attribute.typeExpression = typeExpression
     }
 
     private fun resizeTopic(name: String, location: Point2D, size: Pair<Double, Double>, diagramName: String) {

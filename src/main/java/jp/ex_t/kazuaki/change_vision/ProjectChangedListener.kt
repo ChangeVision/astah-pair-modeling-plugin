@@ -237,6 +237,19 @@ class ProjectChangedListener(private val mqttPublisher: MqttPublisher): ProjectE
                         }
                     }
                 }
+                is IAttribute -> {
+                    when (val owner = entity.owner) {
+                        is IClass -> {
+                            val brotherNameAndTypeExpression = owner.attributes.filterNot { it == entity }.map { Pair(it.name, it.typeExpression) }.toList()
+                            modifyTransaction.changeAttributeNameAndTypeExpression = ChangeAttributeNameAndTypeExpression(owner.name, brotherNameAndTypeExpression, entity.name, entity.typeExpression)
+                            println("${entity.name}:${entity.typeExpression}/${entity.type}(IAttribute) - ${entity.owner}(IClass)")
+                            break
+                        }
+                        else -> {
+                            println("$entity(IAttribute) - ${entity.owner}(Unknown)")
+                        }
+                    }
+                }
                 else -> {
                     println("$entity(Unknown)")
                 }
