@@ -75,6 +75,13 @@ class ReflectTransaction(private val projectChangedListener: ProjectChangedListe
                     if (sourceClassName.isNotEmpty() && targetClassName.isNotEmpty() && diagramName.isNotEmpty())
                         createAssociationPresentation(sourceClassName, targetClassName, diagramName)
                 }
+                if (transaction.createOperation != null) {
+                    val createOperation = transaction.createOperation as CreateOperation
+                    val ownerName = createOperation.ownerName
+                    val name = createOperation.name
+                    val returnTypeExpression = createOperation.returnTypeExpression
+                    if (ownerName.isNotEmpty() && name.isNotEmpty() && returnTypeExpression.isNotEmpty())
+                        createOperation(ownerName, name, returnTypeExpression)
                 if (transaction.createAttribute != null) {
                     val createAttribute = transaction.createAttribute as CreateAttribute
                     val ownerName = createAttribute.ownerName
@@ -217,6 +224,11 @@ class ReflectTransaction(private val projectChangedListener: ProjectChangedListe
         }
     }
 
+    private fun createOperation(ownerName: String, name: String, returnTypeExpression: String) {
+        val modelEditorFactory = projectAccessor.modelEditorFactory
+        val basicModelEditor = modelEditorFactory.basicModelEditor
+        val ownerClass = projectAccessor.findElements(IClass::class.java, ownerName).first() as IClass
+        basicModelEditor.createOperation(ownerClass, name, returnTypeExpression)
     private fun createAttribute(ownerName: String, name: String, typeExpression: String) {
         val modelEditorFactory = projectAccessor.modelEditorFactory
         val basicModelEditor = modelEditorFactory.basicModelEditor
