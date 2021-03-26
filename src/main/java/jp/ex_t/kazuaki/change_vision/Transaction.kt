@@ -17,6 +17,7 @@ data class Transaction (
     var createClassModel: CreateClassModel? = null,
     var createClassPresentation: CreateClassPresentation? = null,
     var createTopic: CreateTopic? = null,
+    var createFloatingTopic: CreateFloatingTopic? = null,
     var resizeClassPresentation: ResizeClassPresentation? = null,
     var createAssociationModel: CreateAssociationModel? = null,
     var createAssociationPresentation: CreateAssociationPresentation? = null,
@@ -24,7 +25,7 @@ data class Transaction (
     var deleteClassModel: DeleteClassModel? = null
 ) {
     fun isNotAllNull(): Boolean {
-        val checkList = listOf(createClassDiagram, createMindMapDiagram, createClassModel, createClassPresentation, createTopic, resizeClassPresentation, createAssociationModel, createAssociationPresentation, deleteAssociationPresentation, deleteClassModel)
+        val checkList = listOf(createClassDiagram, createMindMapDiagram, createClassModel, createClassPresentation, createTopic, createFloatingTopic, resizeClassPresentation, createAssociationModel, createAssociationPresentation, deleteAssociationPresentation, deleteClassModel)
         return checkList.any { it != null }
     }
 }
@@ -43,6 +44,9 @@ data class CreateClassPresentation(val className: String, val location: Pair<Dou
 
 @Serializable
 data class CreateTopic(val ownerName: String, val name: String, val diagramName: String)
+
+@Serializable
+data class CreateFloatingTopic(val name: String, val location: Pair<Double, Double>, val size: Pair<Double, Double>, val diagramName: String)
 
 @Serializable
 data class ResizeClassPresentation(val className: String, val location: Pair<Double, Double>, val size: Pair<Double, Double>, val diagramName: String)

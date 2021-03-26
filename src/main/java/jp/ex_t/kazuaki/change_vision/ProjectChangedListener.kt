@@ -145,10 +145,20 @@ class ProjectChangedListener(private val mqttPublisher: MqttPublisher): ProjectE
                             }
                         }
                         is IMindMapDiagram -> {
-                            val owner = entity.parent
-                            val createTopic = CreateTopic(owner.label, entity.label, entity.diagram.name)
-                            createTransaction.createTopic = createTopic
-                            println("${owner.label}(INodePresentation) - ${entity.label}(INodePresentation)")
+                            when (val owner = entity.parent) {
+                                null -> {
+                                    val location = Pair(entity.location.x, entity.location.y)
+                                    val size = Pair(entity.width, entity.height)
+                                    val createFloatingTopic = CreateFloatingTopic(entity.label, location, size, entity.diagram.name)
+                                    createTransaction.createFloatingTopic = createFloatingTopic
+                                    println("${entity.label}(INodePresentation, FloatingTopic)")
+                                }
+                                else -> {
+                                    val createTopic = CreateTopic(owner.label, entity.label, entity.diagram.name)
+                                    createTransaction.createTopic = createTopic
+                                    println("${owner.label}(INodePresentation) - ${entity.label}(INodePresentation)")
+                                }
+                            }
                         }
                     }
                 }

@@ -67,6 +67,16 @@ class ReflectTransaction(private val projectChangedListener: ProjectChangedListe
                     if (ownerName.isNotEmpty() && name.isNotEmpty() && diagramName.isNotEmpty())
                         createTopic(ownerName, name, diagramName)
                 }
+                if (transaction.createFloatingTopic != null) {
+                    val createFloatingTopic = transaction.createFloatingTopic as CreateFloatingTopic
+                    val name = createFloatingTopic.name
+                    val locationPair = createFloatingTopic.location
+                    val location = Point2D.Double(locationPair.first, locationPair.second)
+                    val size =createFloatingTopic.size
+                    val diagramName = createFloatingTopic.diagramName
+                    if (name.isNotEmpty() && diagramName.isNotEmpty())
+                        createFloatingTopic(name, location, size, diagramName)
+                }
                 if (transaction.resizeClassPresentation != null) {
                     val resizeClassPresentation = transaction.resizeClassPresentation as ResizeClassPresentation
                     val className = resizeClassPresentation.className
@@ -162,6 +172,19 @@ class ReflectTransaction(private val projectChangedListener: ProjectChangedListe
         val topics = diagram.floatingTopics + diagram.root
         val parent = searchTopic(ownerName, topics) ?: return
         mindmapEditor.createTopic(parent, name)
+    }
+
+    private fun createFloatingTopic(name: String, location: Point2D, size: Pair<Double, Double>, diagramName: String) {
+        val diagramEditorFactory = projectAccessor.diagramEditorFactory
+        val mindmapEditor = diagramEditorFactory.mindmapEditor
+        val diagram = projectAccessor.findElements(IDiagram::class.java, diagramName).first() as IMindMapDiagram
+        mindmapEditor.diagram = diagram
+        val parentTopic = diagram.root
+        val topic = mindmapEditor.createTopic(parentTopic, name)
+        mindmapEditor.changeToFloatingTopic(topic)
+        topic.location = location
+        topic.width = size.first
+        topic.height = size.second
     }
 
     private fun resizeClassPresentation(className: String, location: Point2D, size: Pair<Double, Double>, diagramName: String) {
