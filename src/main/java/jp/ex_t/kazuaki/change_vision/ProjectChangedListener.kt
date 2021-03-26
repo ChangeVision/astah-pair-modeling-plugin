@@ -117,9 +117,17 @@ class ProjectChangedListener(private val mqttPublisher: MqttPublisher): ProjectE
                         }
                     }
                 }
-//                    is IAttribute -> {
-//                        println("${entity.name}(IAttribute)")
-//                    }
+                is IAttribute -> {
+                    when (val owner = entity.owner) {
+                        is IClass -> {
+                            createTransaction.createAttribute = CreateAttribute(owner.name, entity.name, entity.typeExpression)
+                            println("${entity.name}(IAttribute) - ${owner}(IClass)")
+                        }
+                        else -> {
+                            println("${entity.name}(IAttribute) - ${owner}(Unknown)")
+                        }
+                    }
+                }
 //                    is IOperation -> {
 //                        println("${entity.name}(IOperation)")
 //                    }
