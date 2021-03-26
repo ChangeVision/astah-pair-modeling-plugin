@@ -82,6 +82,13 @@ class ReflectTransaction(private val projectChangedListener: ProjectChangedListe
                     val returnTypeExpression = createOperation.returnTypeExpression
                     if (ownerName.isNotEmpty() && name.isNotEmpty() && returnTypeExpression.isNotEmpty())
                         createOperation(ownerName, name, returnTypeExpression)
+                if (transaction.createAttribute != null) {
+                    val createAttribute = transaction.createAttribute as CreateAttribute
+                    val ownerName = createAttribute.ownerName
+                    val name = createAttribute.name
+                    val typeExpression = createAttribute.typeExpression
+                    if (ownerName.isNotEmpty() && name.isNotEmpty() && typeExpression.isNotEmpty())
+                        createAttribute(ownerName, name, typeExpression)
                 }
                 if (transaction.createTopic != null) {
                     val createTopic = transaction.createTopic as CreateTopic
@@ -119,6 +126,14 @@ class ReflectTransaction(private val projectChangedListener: ProjectChangedListe
                     val returnTypeExpression = changeOperationNameAndReturnTypeExpression.returnTypeExpression
                     if (ownerName.isNotEmpty() && name.isNotEmpty() && returnTypeExpression.isNotEmpty())
                         changeOperationNameAndReturnTypeExpression(ownerName, brotherNameAndReturnTypeExpression, name, returnTypeExpression)
+                if (transaction.changeAttributeNameAndTypeExpression != null) {
+                    val changeAttributeNameAndTypeExpression = transaction.changeAttributeNameAndTypeExpression as ChangeAttributeNameAndTypeExpression
+                    val ownerName = changeAttributeNameAndTypeExpression.ownerName
+                    val brotherNameAndTypeExpression = changeAttributeNameAndTypeExpression.brotherNameAndTypeExpression
+                    val name = changeAttributeNameAndTypeExpression.name
+                    val typeExpression = changeAttributeNameAndTypeExpression.typeExpression
+                    if (ownerName.isNotEmpty() && name.isNotEmpty() && typeExpression.isNotEmpty())
+                        changeAttributeNameAndTypeExpression(ownerName, brotherNameAndTypeExpression, name, typeExpression)
                 }
                 if (transaction.resizeTopic != null) {
                     val resizeTopic = transaction.resizeTopic as ResizeTopic
@@ -222,6 +237,11 @@ class ReflectTransaction(private val projectChangedListener: ProjectChangedListe
         val basicModelEditor = modelEditorFactory.basicModelEditor
         val ownerClass = projectAccessor.findElements(IClass::class.java, ownerName).first() as IClass
         basicModelEditor.createOperation(ownerClass, name, returnTypeExpression)
+    private fun createAttribute(ownerName: String, name: String, typeExpression: String) {
+        val modelEditorFactory = projectAccessor.modelEditorFactory
+        val basicModelEditor = modelEditorFactory.basicModelEditor
+        val ownerClass = projectAccessor.findElements(IClass::class.java, ownerName).first() as IClass
+        basicModelEditor.createAttribute(ownerClass, name, typeExpression)
     }
 
     private fun searchTopic(name: String, topics: Array<INodePresentation>): INodePresentation? {
@@ -276,6 +296,12 @@ class ReflectTransaction(private val projectChangedListener: ProjectChangedListe
         val operation = ownerClass.operations.filterNot { Pair(it.name, it.returnTypeExpression) in brotherNameAndReturnTypeExpression }.first()
         operation.name = name
         operation.returnTypeExpression = returnTypeExpression
+
+      private fun changeAttributeNameAndTypeExpression(ownerName: String, brotherNameAndTypeExpression: List<Pair<String, String>>, name: String, typeExpression: String) {
+        val ownerClass = projectAccessor.findElements(IClass::class.java, ownerName).first() as IClass
+        val attribute = ownerClass.attributes.filterNot { Pair(it.name, it.typeExpression) in brotherNameAndTypeExpression }.first()
+        attribute.name = name
+        attribute.typeExpression = typeExpression
     }
 
     private fun resizeTopic(name: String, location: Point2D, size: Pair<Double, Double>, diagramName: String) {

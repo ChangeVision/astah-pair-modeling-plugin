@@ -117,9 +117,6 @@ class ProjectChangedListener(private val mqttPublisher: MqttPublisher): ProjectE
                         }
                     }
                 }
-//                    is IAttribute -> {
-//                        println("${entity.name}(IAttribute)")
-//                    }
                 is IOperation -> {
                     when (val owner = entity.owner) {
                         is IClass -> {
@@ -128,6 +125,17 @@ class ProjectChangedListener(private val mqttPublisher: MqttPublisher): ProjectE
                         }
                         else -> {
                             println("${entity.name}(IOperation) - $owner(Unknown)")
+                        }
+                    }
+                }
+                is IAttribute -> {
+                    when (val owner = entity.owner) {
+                        is IClass -> {
+                            createTransaction.createAttribute = CreateAttribute(owner.name, entity.name, entity.typeExpression)
+                            println("${entity.name}(IAttribute) - ${owner}(IClass)")
+                        }
+                        else -> {
+                            println("${entity.name}(IAttribute) - ${owner}(Unknown)")
                         }
                     }
                 }
@@ -247,6 +255,16 @@ class ProjectChangedListener(private val mqttPublisher: MqttPublisher): ProjectE
                         }
                         else -> {
                             println("$entity(IOperation) - ${entity.owner}(Unknown)")
+                is IAttribute -> {
+                    when (val owner = entity.owner) {
+                        is IClass -> {
+                            val brotherNameAndTypeExpression = owner.attributes.filterNot { it == entity }.map { Pair(it.name, it.typeExpression) }.toList()
+                            modifyTransaction.changeAttributeNameAndTypeExpression = ChangeAttributeNameAndTypeExpression(owner.name, brotherNameAndTypeExpression, entity.name, entity.typeExpression)
+                            println("${entity.name}:${entity.typeExpression}/${entity.type}(IAttribute) - ${entity.owner}(IClass)")
+                            break
+                        }
+                        else -> {
+                            println("$entity(IAttribute) - ${entity.owner}(Unknown)")
                         }
                     }
                 }
