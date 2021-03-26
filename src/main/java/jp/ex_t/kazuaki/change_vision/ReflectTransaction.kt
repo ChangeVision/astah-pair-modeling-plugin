@@ -82,6 +82,7 @@ class ReflectTransaction(private val projectChangedListener: ProjectChangedListe
                     val returnTypeExpression = createOperation.returnTypeExpression
                     if (ownerName.isNotEmpty() && name.isNotEmpty() && returnTypeExpression.isNotEmpty())
                         createOperation(ownerName, name, returnTypeExpression)
+                }
                 if (transaction.createAttribute != null) {
                     val createAttribute = transaction.createAttribute as CreateAttribute
                     val ownerName = createAttribute.ownerName
@@ -119,13 +120,21 @@ class ReflectTransaction(private val projectChangedListener: ProjectChangedListe
                         resizeClassPresentation(className, location, size, diagramName)
                 }
                 if (transaction.changeOperationNameAndReturnTypeExpression != null) {
-                    val changeOperationNameAndReturnTypeExpression = transaction.changeOperationNameAndReturnTypeExpression as ChangeOperationNameAndReturnTypeExpression
+                    val changeOperationNameAndReturnTypeExpression =
+                        transaction.changeOperationNameAndReturnTypeExpression as ChangeOperationNameAndReturnTypeExpression
                     val ownerName = changeOperationNameAndReturnTypeExpression.ownerName
-                    val brotherNameAndReturnTypeExpression = changeOperationNameAndReturnTypeExpression.brotherNameAndReturnTypeExpression
+                    val brotherNameAndReturnTypeExpression =
+                        changeOperationNameAndReturnTypeExpression.brotherNameAndReturnTypeExpression
                     val name = changeOperationNameAndReturnTypeExpression.name
                     val returnTypeExpression = changeOperationNameAndReturnTypeExpression.returnTypeExpression
                     if (ownerName.isNotEmpty() && name.isNotEmpty() && returnTypeExpression.isNotEmpty())
-                        changeOperationNameAndReturnTypeExpression(ownerName, brotherNameAndReturnTypeExpression, name, returnTypeExpression)
+                        changeOperationNameAndReturnTypeExpression(
+                            ownerName,
+                            brotherNameAndReturnTypeExpression,
+                            name,
+                            returnTypeExpression
+                        )
+                }
                 if (transaction.changeAttributeNameAndTypeExpression != null) {
                     val changeAttributeNameAndTypeExpression = transaction.changeAttributeNameAndTypeExpression as ChangeAttributeNameAndTypeExpression
                     val ownerName = changeAttributeNameAndTypeExpression.ownerName
@@ -237,6 +246,7 @@ class ReflectTransaction(private val projectChangedListener: ProjectChangedListe
         val basicModelEditor = modelEditorFactory.basicModelEditor
         val ownerClass = projectAccessor.findElements(IClass::class.java, ownerName).first() as IClass
         basicModelEditor.createOperation(ownerClass, name, returnTypeExpression)
+    }
     private fun createAttribute(ownerName: String, name: String, typeExpression: String) {
         val modelEditorFactory = projectAccessor.modelEditorFactory
         val basicModelEditor = modelEditorFactory.basicModelEditor
@@ -293,11 +303,16 @@ class ReflectTransaction(private val projectChangedListener: ProjectChangedListe
 
     private fun changeOperationNameAndReturnTypeExpression(ownerName: String, brotherNameAndReturnTypeExpression: List<Pair<String, String>>, name: String, returnTypeExpression: String) {
         val ownerClass = projectAccessor.findElements(IClass::class.java, ownerName).first() as IClass
-        val operation = ownerClass.operations.filterNot { Pair(it.name, it.returnTypeExpression) in brotherNameAndReturnTypeExpression }.first()
+        val operation = ownerClass.operations.filterNot {
+            Pair(
+                it.name,
+                it.returnTypeExpression
+            ) in brotherNameAndReturnTypeExpression
+        }.first()
         operation.name = name
         operation.returnTypeExpression = returnTypeExpression
-
-      private fun changeAttributeNameAndTypeExpression(ownerName: String, brotherNameAndTypeExpression: List<Pair<String, String>>, name: String, typeExpression: String) {
+    }
+        private fun changeAttributeNameAndTypeExpression(ownerName: String, brotherNameAndTypeExpression: List<Pair<String, String>>, name: String, typeExpression: String) {
         val ownerClass = projectAccessor.findElements(IClass::class.java, ownerName).first() as IClass
         val attribute = ownerClass.attributes.filterNot { Pair(it.name, it.typeExpression) in brotherNameAndTypeExpression }.first()
         attribute.name = name

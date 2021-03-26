@@ -248,13 +248,23 @@ class ProjectChangedListener(private val mqttPublisher: MqttPublisher): ProjectE
                 is IOperation -> {
                     when (val owner = entity.owner) {
                         is IClass -> {
-                            val brotherNameAndReturnTypeExpression = owner.operations.filterNot { it == entity }.map { Pair(it.name, it.returnTypeExpression) }.toList()
-                            modifyTransaction.changeOperationNameAndReturnTypeExpression = ChangeOperationNameAndReturnTypeExpression(owner.name, brotherNameAndReturnTypeExpression, entity.name, entity.returnTypeExpression)
+                            val brotherNameAndReturnTypeExpression = owner.operations.filterNot { it == entity }
+                                .map { Pair(it.name, it.returnTypeExpression) }.toList()
+                            modifyTransaction.changeOperationNameAndReturnTypeExpression =
+                                ChangeOperationNameAndReturnTypeExpression(
+                                    owner.name,
+                                    brotherNameAndReturnTypeExpression,
+                                    entity.name,
+                                    entity.returnTypeExpression
+                                )
                             println("${entity.name}:${entity.returnTypeExpression}/${entity.returnType}(IOperation) - ${entity.owner}(IClass)")
                             break
                         }
                         else -> {
                             println("$entity(IOperation) - ${entity.owner}(Unknown)")
+                        }
+                    }
+                }
                 is IAttribute -> {
                     when (val owner = entity.owner) {
                         is IClass -> {
