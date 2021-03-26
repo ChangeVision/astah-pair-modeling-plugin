@@ -118,6 +118,14 @@ class ReflectTransaction(private val projectChangedListener: ProjectChangedListe
                     if (className.isNotEmpty() && diagramName.isNotEmpty())
                         resizeClassPresentation(className, location, size, diagramName)
                 }
+                if (transaction.changeOperationNameAndReturnTypeExpression != null) {
+                    val changeOperationNameAndReturnTypeExpression = transaction.changeOperationNameAndReturnTypeExpression as ChangeOperationNameAndReturnTypeExpression
+                    val ownerName = changeOperationNameAndReturnTypeExpression.ownerName
+                    val brotherNameAndReturnTypeExpression = changeOperationNameAndReturnTypeExpression.brotherNameAndReturnTypeExpression
+                    val name = changeOperationNameAndReturnTypeExpression.name
+                    val returnTypeExpression = changeOperationNameAndReturnTypeExpression.returnTypeExpression
+                    if (ownerName.isNotEmpty() && name.isNotEmpty() && returnTypeExpression.isNotEmpty())
+                        changeOperationNameAndReturnTypeExpression(ownerName, brotherNameAndReturnTypeExpression, name, returnTypeExpression)
                 if (transaction.changeAttributeNameAndTypeExpression != null) {
                     val changeAttributeNameAndTypeExpression = transaction.changeAttributeNameAndTypeExpression as ChangeAttributeNameAndTypeExpression
                     val ownerName = changeAttributeNameAndTypeExpression.ownerName
@@ -283,7 +291,13 @@ class ReflectTransaction(private val projectChangedListener: ProjectChangedListe
         classPresentation.height = height
     }
 
-    private fun changeAttributeNameAndTypeExpression(ownerName: String, brotherNameAndTypeExpression: List<Pair<String, String>>, name: String, typeExpression: String) {
+    private fun changeOperationNameAndReturnTypeExpression(ownerName: String, brotherNameAndReturnTypeExpression: List<Pair<String, String>>, name: String, returnTypeExpression: String) {
+        val ownerClass = projectAccessor.findElements(IClass::class.java, ownerName).first() as IClass
+        val operation = ownerClass.operations.filterNot { Pair(it.name, it.returnTypeExpression) in brotherNameAndReturnTypeExpression }.first()
+        operation.name = name
+        operation.returnTypeExpression = returnTypeExpression
+
+      private fun changeAttributeNameAndTypeExpression(ownerName: String, brotherNameAndTypeExpression: List<Pair<String, String>>, name: String, typeExpression: String) {
         val ownerClass = projectAccessor.findElements(IClass::class.java, ownerName).first() as IClass
         val attribute = ownerClass.attributes.filterNot { Pair(it.name, it.typeExpression) in brotherNameAndTypeExpression }.first()
         attribute.name = name
