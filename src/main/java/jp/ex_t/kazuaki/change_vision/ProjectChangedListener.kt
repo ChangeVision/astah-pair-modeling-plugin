@@ -8,6 +8,7 @@
 
 package jp.ex_t.kazuaki.change_vision
 
+import com.change_vision.jude.api.inf.AstahAPI
 import com.change_vision.jude.api.inf.model.*
 import com.change_vision.jude.api.inf.presentation.ILinkPresentation
 import com.change_vision.jude.api.inf.presentation.INodePresentation
@@ -217,11 +218,23 @@ class ProjectChangedListener(private val mqttPublisher: MqttPublisher): ProjectE
                             }
                         }
                         is IMindMapDiagram -> {
-                            val location = Pair(entity.location.x, entity.location.y)
-                            val size = Pair(entity.width, entity.height)
-                            val resizeTopic = ResizeTopic(entity.label, location, size, diagram.name)
-                            modifyTransaction.resizeTopic = resizeTopic
-                            println("${entity.label}(INodePresentation)::Topic(${Pair(entity.width, entity.height)} at ${entity.location}) @MindmapDiagram${diagram.name}")
+                            val api = AstahAPI.getAstahAPI()
+                            val projectAccessor = api.projectAccessor
+                            val diagramEditorFactory = projectAccessor.diagramEditorFactory
+                            val mindmapEditor = diagramEditorFactory.mindmapEditor
+                            mindmapEditor.diagram = diagram
+                            if (entity in diagram.floatingTopics) {
+                                val location = Pair(entity.location.x, entity.location.y)
+                                val size = Pair(entity.width, entity.height)
+                                val resizeTopic = ResizeTopic(entity.label, location, size, diagram.name)
+                                modifyTransaction.resizeTopic = resizeTopic
+                                println("${entity.label}(INodePresentation)::FloatingTopic(${Pair(entity.width, entity.height)} at ${entity.location}) @MindmapDiagram${diagram.name}")
+                            } else {
+                                val moveTopic = MoveTopic(entity.label, entity.parent.label, diagram.name)
+                                modifyTransaction.moveTopic = moveTopic
+                                // TODO: ラベルの変更と親トピックの変更(=付け替え)をどう区別するか
+                                println("${entity.label}(INodePresentation)::Topic(to ${entity.parent.label}) @MindmapDiagram${diagram.name}")
+                            }
                             break
                         }
                         else -> {

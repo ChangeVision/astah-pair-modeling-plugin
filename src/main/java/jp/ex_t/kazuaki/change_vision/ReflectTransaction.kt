@@ -113,6 +113,23 @@ class ReflectTransaction(private val projectChangedListener: ProjectChangedListe
                     if (name.isNotEmpty() && diagramName.isNotEmpty())
                         resizeTopic(name, location, size, diagramName)
                 }
+                if (transaction.moveTopic != null) {
+                    val moveTopic = transaction.moveTopic as MoveTopic
+                    val ownerName = moveTopic.ownerName
+                    val name = moveTopic.name
+                    val diagramName = moveTopic.diagramName
+                    if (ownerName.isNotEmpty() && name.isNotEmpty() && diagramName.isNotEmpty())
+                        moveTopic(ownerName, name, diagramName)
+                }
+                if (transaction.changeTopicLabel != null) {
+                    val changeTopicLabel = transaction.changeTopicLabel as ChangeTopicLabel
+                    val ownerName = changeTopicLabel.ownerName
+                    val name = changeTopicLabel.name
+                    val brotherName = changeTopicLabel.brotherName
+                    val diagramName = changeTopicLabel.diagramName
+                    if (ownerName.isNotEmpty() && name.isNotEmpty() && diagramName.isNotEmpty())
+                        changeTopicLabel(ownerName, name, brotherName, diagramName)
+                }
                 if (transaction.deleteClassModel != null) {
                     val deleteClassModel = transaction.deleteClassModel as DeleteClassModel
                     val name = deleteClassModel.className
@@ -253,10 +270,32 @@ class ReflectTransaction(private val projectChangedListener: ProjectChangedListe
         val mindmapEditor = diagramEditorFactory.mindmapEditor
         val diagram = projectAccessor.findElements(IDiagram::class.java, diagramName).first() as IMindMapDiagram
         mindmapEditor.diagram = diagram
-        val topic = diagram.floatingTopics.first { it.label == name }
+        val topic = diagram.floatingTopics.first { it.label == name } ?: return
         topic.location = location
         topic.width = width
         topic.height = height
+    }
+
+    private fun moveTopic(ownerName: String, name: String, diagramName: String) {
+        val diagramEditorFactory = projectAccessor.diagramEditorFactory
+        val mindmapEditor = diagramEditorFactory.mindmapEditor
+        val diagram = projectAccessor.findElements(IDiagram::class.java, diagramName).first() as IMindMapDiagram
+        mindmapEditor.diagram = diagram
+        val topics = diagram.floatingTopics + diagram.root
+        val topic = searchTopic(name, topics)
+        val parent = searchTopic(ownerName, topics)
+        mindmapEditor.moveTo(topic, parent)
+    }
+
+    private fun changeTopicLabel(ownerName: String, name: String, brotherName: List<String>, diagramName: String) {
+        val diagramEditorFactory = projectAccessor.diagramEditorFactory
+        val mindmapEditor = diagramEditorFactory.mindmapEditor
+        val diagram = projectAccessor.findElements(IDiagram::class.java, diagramName).first() as IMindMapDiagram
+        mindmapEditor.diagram = diagram
+        val topics = diagram.floatingTopics + diagram.root
+        val parent = searchTopic(ownerName, topics) ?: return
+        val topic = parent.children.filterNot { it.label in brotherName }.first()
+        topic.label = name
     }
 
     private fun deleteClassModel(name: String) {

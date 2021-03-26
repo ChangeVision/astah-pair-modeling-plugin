@@ -22,6 +22,8 @@ data class Transaction (
     var createFloatingTopic: CreateFloatingTopic? = null,
     var resizeClassPresentation: ResizeClassPresentation? = null,
     var resizeTopic: ResizeTopic? = null,
+    var moveTopic: MoveTopic? = null,
+    var changeTopicLabel: ChangeTopicLabel? = null,
     var deleteClassModel: DeleteClassModel? = null,
     var deleteAssociationPresentation: DeleteAssociationPresentation? = null,
 ) {
@@ -37,6 +39,8 @@ data class Transaction (
             createFloatingTopic,
             resizeClassPresentation,
             resizeTopic,
+            moveTopic,
+            changeTopicLabel,
             deleteClassModel,
             deleteAssociationPresentation,
         )
@@ -73,6 +77,12 @@ data class ResizeClassPresentation(val className: String, val location: Pair<Dou
 
 @Serializable
 data class ResizeTopic(val name: String, val location: Pair<Double, Double>, val size: Pair<Double, Double>, val diagramName: String)
+
+@Serializable
+data class MoveTopic(val ownerName: String, val name: String, val diagramName: String)
+
+@Serializable
+data class ChangeTopicLabel(val ownerName: String, val name: String, val brotherName: List<String>, val diagramName: String)
 
 @Serializable
 data class DeleteAssociationPresentation(val sourceClassName: String, val targetClassName: String, val diagramName: String)
