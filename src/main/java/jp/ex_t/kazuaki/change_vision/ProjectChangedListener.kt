@@ -160,6 +160,9 @@ class ProjectChangedListener(private val mqttPublisher: MqttPublisher): ProjectE
                                 }
                             }
                         }
+                        else -> {
+                            println("${entity.label}(Unknown)")
+                        }
                     }
                 }
                 is ILinkPresentation -> {
@@ -188,24 +191,42 @@ class ProjectChangedListener(private val mqttPublisher: MqttPublisher): ProjectE
                 }
             }
         }
-        if (createTransaction.isNotAllNull())
+        if (createTransaction.isNotAllNull()) {
             encodeAndPublish(createTransaction)
+            return
+        }
         val modifyProjectEditUnit = projectEditUnit.filter { it.operation == Operation.MODIFY.ordinal }
         for (it in modifyProjectEditUnit) {
             val operation = Operation.values()[it.operation]
             print("Op: $operation -> ")
             when (val entity = it.entity) {
                 is INodePresentation -> {
-                    when (val model = entity.model) {
-                        is IClass -> {
+                    when (val diagram = entity.diagram) {
+                        is IClassDiagram -> {
+                            when (val model = entity.model) {
+                                is IClass -> {
+                                    val location = Pair(entity.location.x, entity.location.y)
+                                    val size = Pair(entity.width, entity.height)
+                                    val resizeClassPresentation = ResizeClassPresentation(model.name, location, size, diagram.name)
+                                    modifyTransaction.resizeClassPresentation = resizeClassPresentation
+                                    println("${entity.label}(INodePresentation)::${model.name}(IClass, ${Pair(entity.width, entity.height)} at ${entity.location}) @ClassDiagram${diagram.name}")
+                                }
+                                else -> {
+                                    println("${entity.label}(INodePresentation) - $model(Unknown)")
+                                }
+                            }
+                        }
+                        is IMindMapDiagram -> {
+                            val ownerName = if (entity.parent != null) entity.parent.label else null
                             val location = Pair(entity.location.x, entity.location.y)
                             val size = Pair(entity.width, entity.height)
-                            val resizeClassPresentation = ResizeClassPresentation(model.name, location, size, entity.diagram.name)
-                            modifyTransaction.resizeClassPresentation = resizeClassPresentation
-                            println("${entity.label}(INodePresentation)::${model.name}(IClass, ${Pair(entity.width, entity.height)} at ${entity.location})")
+                            val resizeTopic = ResizeTopic(ownerName, entity.label, location, size, diagram.name)
+                            modifyTransaction.resizeTopic = resizeTopic
+                            println("${entity.label}(INodePresentation)::Topic(${Pair(entity.width, entity.height)} at ${entity.location}) @MindmapDiagram${diagram.name}")
+                            break
                         }
                         else -> {
-                            println("${entity.label}(INodePresentation) - $model(Unknown)")
+                            println("${entity.label}(INodePresentation) @UnknownDiagram")
                         }
                     }
                 }

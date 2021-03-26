@@ -50,6 +50,14 @@ class ReflectTransaction(private val projectChangedListener: ProjectChangedListe
                     if (parentPackageName.isNotEmpty() && name.isNotEmpty())
                         createClassModel(name, parentPackageName)
                 }
+                if (transaction.createAssociationModel != null) {
+                    val createAssociationModel = transaction.createAssociationModel as CreateAssociationModel
+                    val sourceClassName = createAssociationModel.sourceClassName
+                    val destinationClassName = createAssociationModel.destinationClassName
+                    val name = createAssociationModel.name
+                    if (sourceClassName.isNotEmpty() && destinationClassName.isNotEmpty())
+                        createAssociationModel(sourceClassName, destinationClassName, name)
+                }
                 if (transaction.createClassPresentation != null) {
                     val createClassPresentation = transaction.createClassPresentation as CreateClassPresentation
                     val className = createClassPresentation.className
@@ -58,6 +66,14 @@ class ReflectTransaction(private val projectChangedListener: ProjectChangedListe
                     val diagramName = createClassPresentation.diagramName
                     if (diagramName.isNotEmpty() && className.isNotEmpty())
                         createClassPresentation(className, location, diagramName)
+                }
+                if (transaction.createAssociationPresentation != null) {
+                    val createAssociationPresentation = transaction.createAssociationPresentation as CreateAssociationPresentation
+                    val sourceClassName = createAssociationPresentation.sourceClassName
+                    val targetClassName = createAssociationPresentation.targetClassName
+                    val diagramName = createAssociationPresentation.diagramName
+                    if (sourceClassName.isNotEmpty() && targetClassName.isNotEmpty() && diagramName.isNotEmpty())
+                        createAssociationPresentation(sourceClassName, targetClassName, diagramName)
                 }
                 if (transaction.createTopic != null) {
                     val createTopic = transaction.createTopic as CreateTopic
@@ -87,21 +103,16 @@ class ReflectTransaction(private val projectChangedListener: ProjectChangedListe
                     if (className.isNotEmpty() && diagramName.isNotEmpty())
                         resizeClassPresentation(className, location, size, diagramName)
                 }
-                if (transaction.createAssociationModel != null) {
-                    val createAssociationModel = transaction.createAssociationModel as CreateAssociationModel
-                    val sourceClassName = createAssociationModel.sourceClassName
-                    val destinationClassName = createAssociationModel.destinationClassName
-                    val name = createAssociationModel.name
-                    if (sourceClassName.isNotEmpty() && destinationClassName.isNotEmpty())
-                        createAssociationModel(sourceClassName, destinationClassName, name)
-                }
-                if (transaction.createAssociationPresentation != null) {
-                    val createAssociationPresentation = transaction.createAssociationPresentation as CreateAssociationPresentation
-                    val sourceClassName = createAssociationPresentation.sourceClassName
-                    val targetClassName = createAssociationPresentation.targetClassName
-                    val diagramName = createAssociationPresentation.diagramName
-                    if (sourceClassName.isNotEmpty() && targetClassName.isNotEmpty() && diagramName.isNotEmpty())
-                        createAssociationPresentation(sourceClassName, targetClassName, diagramName)
+                if (transaction.resizeTopic != null) {
+                    val resizeTopic = transaction.resizeTopic as ResizeTopic
+                    val ownerName = resizeTopic.ownerName
+                    val name = resizeTopic.name
+                    val locationPair = resizeTopic.location
+                    val location = Point2D.Double(locationPair.first, locationPair.second)
+                    val size = resizeTopic.size
+                    val diagramName = resizeTopic.diagramName
+                    if (name.isNotEmpty() && diagramName.isNotEmpty())
+                        resizeTopic(ownerName, name, location, size, diagramName)
                 }
                 if (transaction.deleteClassModel != null) {
                     val deleteClassModel = transaction.deleteClassModel as DeleteClassModel
@@ -145,6 +156,14 @@ class ReflectTransaction(private val projectChangedListener: ProjectChangedListe
         basicModelEditor.createClass(parentPackage, name)
     }
 
+    private fun createAssociationModel(sourceClassName: String, destinationClassName: String, associationName: String) {
+        val modelEditorFactory = projectAccessor.modelEditorFactory
+        val basicModelEditor = modelEditorFactory.basicModelEditor
+        val sourceClass = projectAccessor.findElements(IClass::class.java, sourceClassName).first() as IClass
+        val destinationClass = projectAccessor.findElements(IClass::class.java, destinationClassName).first() as IClass
+        basicModelEditor.createAssociation(sourceClass, destinationClass, associationName, "", "")
+    }
+
     private fun createClassPresentation(className: String, location: Point2D, diagramName: String) {
         val diagramEditorFactory = projectAccessor.diagramEditorFactory
         val classDiagramEditor = diagramEditorFactory.classDiagramEditor
@@ -152,60 +171,6 @@ class ReflectTransaction(private val projectChangedListener: ProjectChangedListe
         classDiagramEditor.diagram = diagram
         val clazz = projectAccessor.findElements(IClass::class.java, className).first() as IClass
         classDiagramEditor.createNodePresentation(clazz, location)
-    }
-
-    private fun searchTopic(name: String, topics: Array<INodePresentation>): INodePresentation? {
-        topics.forEach {
-            if (it.label == name) return it
-            else if (it.children.isNotEmpty()) {
-                return searchTopic(name, it.children)
-            }
-        }
-        return null
-    }
-
-    private fun createTopic(ownerName: String, name: String, diagramName: String) {
-        val diagramEditorFactory = projectAccessor.diagramEditorFactory
-        val mindmapEditor = diagramEditorFactory.mindmapEditor
-        val diagram = projectAccessor.findElements(IDiagram::class.java, diagramName).first() as IMindMapDiagram
-        mindmapEditor.diagram = diagram
-        val topics = diagram.floatingTopics + diagram.root
-        val parent = searchTopic(ownerName, topics) ?: return
-        mindmapEditor.createTopic(parent, name)
-    }
-
-    private fun createFloatingTopic(name: String, location: Point2D, size: Pair<Double, Double>, diagramName: String) {
-        val diagramEditorFactory = projectAccessor.diagramEditorFactory
-        val mindmapEditor = diagramEditorFactory.mindmapEditor
-        val diagram = projectAccessor.findElements(IDiagram::class.java, diagramName).first() as IMindMapDiagram
-        mindmapEditor.diagram = diagram
-        val parentTopic = diagram.root
-        val topic = mindmapEditor.createTopic(parentTopic, name)
-        mindmapEditor.changeToFloatingTopic(topic)
-        topic.location = location
-        topic.width = size.first
-        topic.height = size.second
-    }
-
-    private fun resizeClassPresentation(className: String, location: Point2D, size: Pair<Double, Double>, diagramName: String) {
-        val (width, height) = size
-        val diagramEditorFactory = projectAccessor.diagramEditorFactory
-        val classDiagramEditor = diagramEditorFactory.classDiagramEditor
-        val diagram = projectAccessor.findElements(IDiagram::class.java, diagramName).first() as IDiagram
-        classDiagramEditor.diagram = diagram
-        val clazz = projectAccessor.findElements(IClass::class.java, className).first() as IClass
-        val classPresentation = clazz.presentations.first { it.diagram == diagram } as INodePresentation
-        classPresentation.location = location
-        classPresentation.width = width
-        classPresentation.height =height
-    }
-
-    private fun createAssociationModel(sourceClassName: String, destinationClassName: String, associationName: String) {
-        val modelEditorFactory = projectAccessor.modelEditorFactory
-        val basicModelEditor = modelEditorFactory.basicModelEditor
-        val sourceClass = projectAccessor.findElements(IClass::class.java, sourceClassName).first() as IClass
-        val destinationClass = projectAccessor.findElements(IClass::class.java, destinationClassName).first() as IClass
-        basicModelEditor.createAssociation(sourceClass, destinationClass, associationName, "", "")
     }
 
     private fun createAssociationPresentation(sourceClassName: String, targetClassName: String, diagramName: String) {
@@ -234,6 +199,69 @@ class ReflectTransaction(private val projectChangedListener: ProjectChangedListe
             println("Association not found.")
             return
         }
+    }
+
+    private fun searchTopic(name: String, topics: Array<INodePresentation>): INodePresentation? {
+        topics.forEach {
+            if (it.label == name) return it
+            else if (it.children.isNotEmpty()) {
+                return searchTopic(name, it.children)
+            }
+        }
+        return null
+    }
+
+    private fun createTopic(ownerName: String, name: String, diagramName: String) {
+        val diagramEditorFactory = projectAccessor.diagramEditorFactory
+        val mindmapEditor = diagramEditorFactory.mindmapEditor
+        val diagram = projectAccessor.findElements(IDiagram::class.java, diagramName).first() as IMindMapDiagram
+        mindmapEditor.diagram = diagram
+        val topics = diagram.floatingTopics + diagram.root
+        val parent = searchTopic(ownerName, topics) ?: return
+        mindmapEditor.createTopic(parent, name)
+    }
+
+    private fun createFloatingTopic(name: String, location: Point2D, size: Pair<Double, Double>, diagramName: String) {
+        val (width, height) = size
+        val diagramEditorFactory = projectAccessor.diagramEditorFactory
+        val mindmapEditor = diagramEditorFactory.mindmapEditor
+        val diagram = projectAccessor.findElements(IDiagram::class.java, diagramName).first() as IMindMapDiagram
+        mindmapEditor.diagram = diagram
+        val parentTopic = diagram.root
+        val topic = mindmapEditor.createTopic(parentTopic, name)
+        mindmapEditor.changeToFloatingTopic(topic)
+        topic.location = location
+        topic.width = width
+        topic.height = height
+    }
+
+    private fun resizeClassPresentation(className: String, location: Point2D, size: Pair<Double, Double>, diagramName: String) {
+        val (width, height) = size
+        val diagramEditorFactory = projectAccessor.diagramEditorFactory
+        val classDiagramEditor = diagramEditorFactory.classDiagramEditor
+        val diagram = projectAccessor.findElements(IDiagram::class.java, diagramName).first() as IDiagram
+        classDiagramEditor.diagram = diagram
+        val clazz = projectAccessor.findElements(IClass::class.java, className).first() as IClass
+        val classPresentation = clazz.presentations.first { it.diagram == diagram } as INodePresentation
+        classPresentation.location = location
+        classPresentation.width = width
+        classPresentation.height = height
+    }
+
+    private fun resizeTopic(ownerName: String?, name: String, location: Point2D, size: Pair<Double, Double>, diagramName: String) {
+        val (width, height) = size
+        val diagramEditorFactory = projectAccessor.diagramEditorFactory
+        val mindmapEditor = diagramEditorFactory.mindmapEditor
+        val diagram = projectAccessor.findElements(IDiagram::class.java, diagramName).first() as IMindMapDiagram
+        mindmapEditor.diagram = diagram
+        val topics = diagram.floatingTopics + diagram.root
+        val topic = if (ownerName == null) diagram.floatingTopics.first { it.label == name } else {
+            val parent = searchTopic(ownerName, topics) ?: return
+            parent.children.first { it.label == name }
+        }
+        topic.location = location
+        topic.width = width
+        topic.height = height
     }
 
     private fun deleteClassModel(name: String) {

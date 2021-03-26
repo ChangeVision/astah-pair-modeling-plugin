@@ -15,17 +15,31 @@ data class Transaction (
     var createClassDiagram: CreateClassDiagram? = null,
     var createMindMapDiagram: CreateMindMapDiagram? = null,
     var createClassModel: CreateClassModel? = null,
+    var createAssociationModel: CreateAssociationModel? = null,
     var createClassPresentation: CreateClassPresentation? = null,
+    var createAssociationPresentation: CreateAssociationPresentation? = null,
     var createTopic: CreateTopic? = null,
     var createFloatingTopic: CreateFloatingTopic? = null,
     var resizeClassPresentation: ResizeClassPresentation? = null,
-    var createAssociationModel: CreateAssociationModel? = null,
-    var createAssociationPresentation: CreateAssociationPresentation? = null,
+    var resizeTopic: ResizeTopic? = null,
+    var deleteClassModel: DeleteClassModel? = null,
     var deleteAssociationPresentation: DeleteAssociationPresentation? = null,
-    var deleteClassModel: DeleteClassModel? = null
 ) {
     fun isNotAllNull(): Boolean {
-        val checkList = listOf(createClassDiagram, createMindMapDiagram, createClassModel, createClassPresentation, createTopic, createFloatingTopic, resizeClassPresentation, createAssociationModel, createAssociationPresentation, deleteAssociationPresentation, deleteClassModel)
+        val checkList = listOf(
+            createClassDiagram,
+            createMindMapDiagram,
+            createClassModel,
+            createAssociationModel,
+            createClassPresentation,
+            createAssociationPresentation,
+            createTopic,
+            createFloatingTopic,
+            resizeClassPresentation,
+            resizeTopic,
+            deleteClassModel,
+            deleteAssociationPresentation,
+        )
         return checkList.any { it != null }
     }
 }
@@ -40,7 +54,13 @@ data class CreateMindMapDiagram(val name: String, val ownerName: String)
 data class CreateClassModel(val name: String, val parentPackageName: String)
 
 @Serializable
+data class CreateAssociationModel(val sourceClassName: String, val destinationClassName: String, val name: String = "")
+
+@Serializable
 data class CreateClassPresentation(val className: String, val location: Pair<Double, Double>, val diagramName: String)
+
+@Serializable
+data class CreateAssociationPresentation(val sourceClassName: String, val targetClassName: String, val diagramName: String)
 
 @Serializable
 data class CreateTopic(val ownerName: String, val name: String, val diagramName: String)
@@ -52,10 +72,7 @@ data class CreateFloatingTopic(val name: String, val location: Pair<Double, Doub
 data class ResizeClassPresentation(val className: String, val location: Pair<Double, Double>, val size: Pair<Double, Double>, val diagramName: String)
 
 @Serializable
-data class CreateAssociationModel(val sourceClassName: String, val destinationClassName: String, val name: String = "")
-
-@Serializable
-data class CreateAssociationPresentation(val sourceClassName: String, val targetClassName: String, val diagramName: String)
+data class ResizeTopic(val ownerName: String? = null, val name: String, val location: Pair<Double, Double>, val size: Pair<Double, Double>, val diagramName: String)
 
 @Serializable
 data class DeleteAssociationPresentation(val sourceClassName: String, val targetClassName: String, val diagramName: String)
