@@ -75,6 +75,14 @@ class ReflectTransaction(private val projectChangedListener: ProjectChangedListe
                     if (sourceClassName.isNotEmpty() && targetClassName.isNotEmpty() && diagramName.isNotEmpty())
                         createAssociationPresentation(sourceClassName, targetClassName, diagramName)
                 }
+                if (transaction.createAttribute != null) {
+                    val createAttribute = transaction.createAttribute as CreateAttribute
+                    val ownerName = createAttribute.ownerName
+                    val name = createAttribute.name
+                    val typeExpression = createAttribute.typeExpression
+                    if (ownerName.isNotEmpty() && name.isNotEmpty() && typeExpression.isNotEmpty())
+                        createAttribute(ownerName, name, typeExpression)
+                }
                 if (transaction.createTopic != null) {
                     val createTopic = transaction.createTopic as CreateTopic
                     val ownerName = createTopic.ownerName
@@ -198,6 +206,13 @@ class ReflectTransaction(private val projectChangedListener: ProjectChangedListe
             println("Association not found.")
             return
         }
+    }
+
+    private fun createAttribute(ownerName: String, name: String, typeExpression: String) {
+        val modelEditorFactory = projectAccessor.modelEditorFactory
+        val basicModelEditor = modelEditorFactory.basicModelEditor
+        val ownerClass = projectAccessor.findElements(IClass::class.java, ownerName).first() as IClass
+        basicModelEditor.createAttribute(ownerClass, name, typeExpression)
     }
 
     private fun searchTopic(name: String, topics: Array<INodePresentation>): INodePresentation? {
