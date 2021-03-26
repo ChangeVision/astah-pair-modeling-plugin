@@ -161,6 +161,7 @@ class ReflectTransaction(private val projectChangedListener: ProjectChangedListe
                         deleteClassModel(name)
                 }
                 transactionManager.endTransaction()
+                api.viewManager.diagramViewManager.select(emptyArray())
             } catch (e: BadTransactionException) {
                 transactionManager.abortTransaction()
                 throw UnExpectedException()
