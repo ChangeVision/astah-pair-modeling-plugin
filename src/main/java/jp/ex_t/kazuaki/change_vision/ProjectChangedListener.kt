@@ -149,7 +149,7 @@ class ProjectChangedListener(private val mqttPublisher: MqttPublisher): ProjectE
                                 null -> {
                                     val location = Pair(entity.location.x, entity.location.y)
                                     val size = Pair(entity.width, entity.height)
-                                    val createFloatingTopic = CreateFloatingTopic(entity.label, location, size, entity.diagram.name)
+                                    val createFloatingTopic = CreateFloatingTopic(entity.label, location, size, diagram.name)
                                     createTransaction.createFloatingTopic = createFloatingTopic
                                     println("${entity.label}(INodePresentation, FloatingTopic)")
                                 }
