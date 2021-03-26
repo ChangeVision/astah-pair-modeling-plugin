@@ -111,6 +111,15 @@ class ReflectTransaction(private val projectChangedListener: ProjectChangedListe
                     if (className.isNotEmpty() && diagramName.isNotEmpty())
                         resizeClassPresentation(className, location, size, diagramName)
                 }
+                if (transaction.changeOperationNameAndReturnTypeExpression != null) {
+                    val changeOperationNameAndReturnTypeExpression = transaction.changeOperationNameAndReturnTypeExpression as ChangeOperationNameAndReturnTypeExpression
+                    val ownerName = changeOperationNameAndReturnTypeExpression.ownerName
+                    val brotherNameAndReturnTypeExpression = changeOperationNameAndReturnTypeExpression.brotherNameAndReturnTypeExpression
+                    val name = changeOperationNameAndReturnTypeExpression.name
+                    val returnTypeExpression = changeOperationNameAndReturnTypeExpression.returnTypeExpression
+                    if (ownerName.isNotEmpty() && name.isNotEmpty() && returnTypeExpression.isNotEmpty())
+                        changeOperationNameAndReturnTypeExpression(ownerName, brotherNameAndReturnTypeExpression, name, returnTypeExpression)
+                }
                 if (transaction.resizeTopic != null) {
                     val resizeTopic = transaction.resizeTopic as ResizeTopic
                     val name = resizeTopic.name
@@ -260,6 +269,13 @@ class ReflectTransaction(private val projectChangedListener: ProjectChangedListe
         classPresentation.location = location
         classPresentation.width = width
         classPresentation.height = height
+    }
+
+    private fun changeOperationNameAndReturnTypeExpression(ownerName: String, brotherNameAndReturnTypeExpression: List<Pair<String, String>>, name: String, returnTypeExpression: String) {
+        val ownerClass = projectAccessor.findElements(IClass::class.java, ownerName).first() as IClass
+        val operation = ownerClass.operations.filterNot { Pair(it.name, it.returnTypeExpression) in brotherNameAndReturnTypeExpression }.first()
+        operation.name = name
+        operation.returnTypeExpression = returnTypeExpression
     }
 
     private fun resizeTopic(name: String, location: Point2D, size: Pair<Double, Double>, diagramName: String) {
