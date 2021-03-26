@@ -147,7 +147,7 @@ class ReflectTransaction(private val projectChangedListener: ProjectChangedListe
     private fun searchTopic(name: String, topics: Array<INodePresentation>): INodePresentation? {
         topics.forEach {
             if (it.label == name) return it
-            else if (it.children != null) {
+            else if (it.children.isNotEmpty()) {
                 return searchTopic(name, it.children)
             }
         }
