@@ -72,7 +72,7 @@ data class CreateFloatingTopic(val name: String, val location: Pair<Double, Doub
 data class ResizeClassPresentation(val className: String, val location: Pair<Double, Double>, val size: Pair<Double, Double>, val diagramName: String)
 
 @Serializable
-data class ResizeTopic(val ownerName: String? = null, val name: String, val location: Pair<Double, Double>, val size: Pair<Double, Double>, val diagramName: String)
+data class ResizeTopic(val name: String, val location: Pair<Double, Double>, val size: Pair<Double, Double>, val diagramName: String)
 
 @Serializable
 data class DeleteAssociationPresentation(val sourceClassName: String, val targetClassName: String, val diagramName: String)

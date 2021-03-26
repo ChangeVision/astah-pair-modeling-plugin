@@ -105,14 +105,13 @@ class ReflectTransaction(private val projectChangedListener: ProjectChangedListe
                 }
                 if (transaction.resizeTopic != null) {
                     val resizeTopic = transaction.resizeTopic as ResizeTopic
-                    val ownerName = resizeTopic.ownerName
                     val name = resizeTopic.name
                     val locationPair = resizeTopic.location
                     val location = Point2D.Double(locationPair.first, locationPair.second)
                     val size = resizeTopic.size
                     val diagramName = resizeTopic.diagramName
                     if (name.isNotEmpty() && diagramName.isNotEmpty())
-                        resizeTopic(ownerName, name, location, size, diagramName)
+                        resizeTopic(name, location, size, diagramName)
                 }
                 if (transaction.deleteClassModel != null) {
                     val deleteClassModel = transaction.deleteClassModel as DeleteClassModel
@@ -248,17 +247,13 @@ class ReflectTransaction(private val projectChangedListener: ProjectChangedListe
         classPresentation.height = height
     }
 
-    private fun resizeTopic(ownerName: String?, name: String, location: Point2D, size: Pair<Double, Double>, diagramName: String) {
+    private fun resizeTopic(name: String, location: Point2D, size: Pair<Double, Double>, diagramName: String) {
         val (width, height) = size
         val diagramEditorFactory = projectAccessor.diagramEditorFactory
         val mindmapEditor = diagramEditorFactory.mindmapEditor
         val diagram = projectAccessor.findElements(IDiagram::class.java, diagramName).first() as IMindMapDiagram
         mindmapEditor.diagram = diagram
-        val topics = diagram.floatingTopics + diagram.root
-        val topic = if (ownerName == null) diagram.floatingTopics.first { it.label == name } else {
-            val parent = searchTopic(ownerName, topics) ?: return
-            parent.children.first { it.label == name }
-        }
+        val topic = diagram.floatingTopics.first { it.label == name }
         topic.location = location
         topic.width = width
         topic.height = height

@@ -217,10 +217,9 @@ class ProjectChangedListener(private val mqttPublisher: MqttPublisher): ProjectE
                             }
                         }
                         is IMindMapDiagram -> {
-                            val ownerName = if (entity.parent != null) entity.parent.label else null
                             val location = Pair(entity.location.x, entity.location.y)
                             val size = Pair(entity.width, entity.height)
-                            val resizeTopic = ResizeTopic(ownerName, entity.label, location, size, diagram.name)
+                            val resizeTopic = ResizeTopic(entity.label, location, size, diagram.name)
                             modifyTransaction.resizeTopic = resizeTopic
                             println("${entity.label}(INodePresentation)::Topic(${Pair(entity.width, entity.height)} at ${entity.location}) @MindmapDiagram${diagram.name}")
                             break
