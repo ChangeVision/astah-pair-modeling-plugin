@@ -25,7 +25,8 @@ class ProjectChangedListener(private val mqttPublisher: MqttPublisher): ProjectE
 //        val removeTransaction = Transaction()
         val createTransaction = Transaction()
         val modifyTransaction = Transaction()
-//        projectEditUnit.filter { it.operation == Operation.REMOVE.ordinal }.forEach {
+//        val removeProjectEditUnit = projectEditUnit.filter { it.operation == Operation.REMOVE.ordinal }
+//        for (it in removeProjectEditUnit){
 //            val operation = Operation.values()[it.operation]
 //            print("Op: $operation -> ")
 //            when (val entity = it.entity) {
@@ -70,50 +71,52 @@ class ProjectChangedListener(private val mqttPublisher: MqttPublisher): ProjectE
 //        }
 //        if (removeTransaction.isNotAllNull())
 //            encodeAndPublish(removeTransaction)
-        projectEditUnit.filter { it.operation == Operation.ADD.ordinal }
-            .forEach {
-                val operation = Operation.values()[it.operation]
-                print("Op: $operation -> ")
-                when (val entity = it.entity) {
-                    is IClassDiagram -> {
-                        val owner = entity.owner as INamedElement
-                        val createClassDiagram = CreateClassDiagram(entity.name, owner.name)
-                        createTransaction.createClassDiagram = createClassDiagram
-                        println("${entity.name}(IClassDiagram)")
-                    }
-                    is IMindMapDiagram -> {
-                        val owner = entity.owner as INamedElement
-                        val createMindMapDiagram = CreateMindMapDiagram(entity.name, owner.name)
-                        createTransaction.createMindMapDiagram = createMindMapDiagram
-                        println("${entity.name}(IMindMapDiagram)")
-                    }
-                    is IClass -> {
-                        val parentPackage = entity.owner as IPackage
-                        val createClassModel = CreateClassModel(entity.name, parentPackage.name)
-                        createTransaction.createClassModel = createClassModel
-                        println("${entity.name}(IClass)")
-                    }
-                    is IAssociation -> {
-                        val sourceClass = entity.memberEnds.first().owner
-                        val destinationClass = entity.memberEnds.last().owner
-                        when (sourceClass) {
-                            is IClass -> {
-                                when (destinationClass) {
-                                    is IClass -> {
-                                        val createAssociationModel = CreateAssociationModel(sourceClass.name, destinationClass.name, entity.name)
-                                        createTransaction.createAssociationModel = createAssociationModel
-                                        println("${sourceClass.name}(IClass) - ${entity.name}(IAssociation) - ${destinationClass.name}(IClass)")
-                                    }
-                                    else -> {
-                                        println("${sourceClass.name}(IClass) - ${entity.name}(IAssociation) - $destinationClass(Unknown)")
-                                    }
+        val addProjectEditUnit = projectEditUnit.filter { it.operation == Operation.ADD.ordinal }
+        for (it in addProjectEditUnit) {
+            val operation = Operation.values()[it.operation]
+            print("Op: $operation -> ")
+            when (val entity = it.entity) {
+                is IClassDiagram -> {
+                    val owner = entity.owner as INamedElement
+                    val createClassDiagram = CreateClassDiagram(entity.name, owner.name)
+                    createTransaction.createClassDiagram = createClassDiagram
+                    println("${entity.name}(IClassDiagram)")
+                    break
+                }
+                is IMindMapDiagram -> {
+                    val owner = entity.owner as INamedElement
+                    val createMindMapDiagram = CreateMindMapDiagram(entity.name, owner.name)
+                    createTransaction.createMindMapDiagram = createMindMapDiagram
+                    println("${entity.name}(IMindMapDiagram)")
+                    break
+                }
+                is IClass -> {
+                    val parentPackage = entity.owner as IPackage
+                    val createClassModel = CreateClassModel(entity.name, parentPackage.name)
+                    createTransaction.createClassModel = createClassModel
+                    println("${entity.name}(IClass)")
+                }
+                is IAssociation -> {
+                    val sourceClass = entity.memberEnds.first().owner
+                    val destinationClass = entity.memberEnds.last().owner
+                    when (sourceClass) {
+                        is IClass -> {
+                            when (destinationClass) {
+                                is IClass -> {
+                                    val createAssociationModel = CreateAssociationModel(sourceClass.name, destinationClass.name, entity.name)
+                                    createTransaction.createAssociationModel = createAssociationModel
+                                    println("${sourceClass.name}(IClass) - ${entity.name}(IAssociation) - ${destinationClass.name}(IClass)")
+                                }
+                                else -> {
+                                    println("${sourceClass.name}(IClass) - ${entity.name}(IAssociation) - $destinationClass(Unknown)")
                                 }
                             }
-                            else -> {
-                                println("$sourceClass(Unknown) - ${entity.name}(IAssociation) - $destinationClass(Unknown)")
-                            }
+                        }
+                        else -> {
+                            println("$sourceClass(Unknown) - ${entity.name}(IAssociation) - $destinationClass(Unknown)")
                         }
                     }
+                }
 //                    is IAttribute -> {
 //                        println("${entity.name}(IAttribute)")
 //                    }
@@ -126,58 +129,59 @@ class ProjectChangedListener(private val mqttPublisher: MqttPublisher): ProjectE
 //                    is IPresentation -> {
 //                        println("${entity.label}(IPresentation)")
 //                    }
-                    is INodePresentation -> {
-                        when (val diagram = entity.diagram) {
-                            is IClassDiagram -> {
-                                when (val model = entity.model) {
-                                    is IClass -> {
-                                        val location = Pair(entity.location.x, entity.location.y)
-                                        val createClassPresentation = CreateClassPresentation(model.name, location, diagram.name)
-                                        createTransaction.createClassPresentation = createClassPresentation
-                                        println("${entity.label}(INodePresentation)::${model.name}(IClass, ${Pair(entity.width, entity.height)} at ${entity.location})")
-                                    }
-                                    else -> {
-                                        println("${entity.label}(INodePresentation) - $model(Unknown)")
-                                    }
+                is INodePresentation -> {
+                    when (val diagram = entity.diagram) {
+                        is IClassDiagram -> {
+                            when (val model = entity.model) {
+                                is IClass -> {
+                                    val location = Pair(entity.location.x, entity.location.y)
+                                    val createClassPresentation = CreateClassPresentation(model.name, location, diagram.name)
+                                    createTransaction.createClassPresentation = createClassPresentation
+                                    println("${entity.label}(INodePresentation)::${model.name}(IClass, ${Pair(entity.width, entity.height)} at ${entity.location})")
+                                }
+                                else -> {
+                                    println("${entity.label}(INodePresentation) - $model(Unknown)")
                                 }
                             }
-                            is IMindMapDiagram -> {
-                                val owner = entity.parent
-                                val createTopic = CreateTopic(owner.label, entity.label, entity.diagram.name)
-                                createTransaction.createTopic = createTopic
-                                println("${owner.label}(INodePresentation) - ${entity.label}(INodePresentation)")
-                            }
                         }
-                    }
-                    is ILinkPresentation -> {
-                        val source = entity.source.model
-                        val target = entity.target.model
-                        when (source) {
-                            is IClass -> {
-                                when (target) {
-                                    is IClass -> {
-                                        val createAssociationPresentation = CreateAssociationPresentation(source.name, target.name, entity.diagram.name)
-                                        createTransaction.createAssociationPresentation = createAssociationPresentation
-                                        println("${source.name}(IClass) - ${entity.label}(ILinkPresentation) - ${target.name}(IClass)")
-                                    }
-                                    else -> {
-                                        println("${source.name}(IClass) - ${entity.label}(ILinkPresentation) - $target(Unknown)")
-                                    }
-                                }
-                            }
-                            else -> {
-                                println("$source(Unknown) - ${entity.label}(ILinkPresentation) - $target(Unknown)")
-                            }
+                        is IMindMapDiagram -> {
+                            val owner = entity.parent
+                            val createTopic = CreateTopic(owner.label, entity.label, entity.diagram.name)
+                            createTransaction.createTopic = createTopic
+                            println("${owner.label}(INodePresentation) - ${entity.label}(INodePresentation)")
                         }
-                    }
-                    else -> {
-                        println("$entity(Unknown)")
                     }
                 }
+                is ILinkPresentation -> {
+                    val source = entity.source.model
+                    val target = entity.target.model
+                    when (source) {
+                        is IClass -> {
+                            when (target) {
+                                is IClass -> {
+                                    val createAssociationPresentation = CreateAssociationPresentation(source.name, target.name, entity.diagram.name)
+                                    createTransaction.createAssociationPresentation = createAssociationPresentation
+                                    println("${source.name}(IClass) - ${entity.label}(ILinkPresentation) - ${target.name}(IClass)")
+                                }
+                                else -> {
+                                    println("${source.name}(IClass) - ${entity.label}(ILinkPresentation) - $target(Unknown)")
+                                }
+                            }
+                        }
+                        else -> {
+                            println("$source(Unknown) - ${entity.label}(ILinkPresentation) - $target(Unknown)")
+                        }
+                    }
+                }
+                else -> {
+                    println("$entity(Unknown)")
+                }
             }
+        }
         if (createTransaction.isNotAllNull())
             encodeAndPublish(createTransaction)
-        projectEditUnit.filter { it.operation == Operation.MODIFY.ordinal }.forEach {
+        val modifyProjectEditUnit = projectEditUnit.filter { it.operation == Operation.MODIFY.ordinal }
+        for (it in modifyProjectEditUnit) {
             val operation = Operation.values()[it.operation]
             print("Op: $operation -> ")
             when (val entity = it.entity) {
