@@ -154,7 +154,7 @@ class ProjectChangedListener(private val mqttPublisher: MqttPublisher): ProjectE
                                     println("${entity.label}(INodePresentation, FloatingTopic)")
                                 }
                                 else -> {
-                                    val createTopic = CreateTopic(owner.label, entity.label, entity.diagram.name)
+                                    val createTopic = CreateTopic(owner.label, entity.label, diagram.name)
                                     createTransaction.createTopic = createTopic
                                     println("${owner.label}(INodePresentation) - ${entity.label}(INodePresentation)")
                                 }
