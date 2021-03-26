@@ -19,9 +19,11 @@ data class Transaction (
     var createClassPresentation: CreateClassPresentation? = null,
     var createAssociationPresentation: CreateAssociationPresentation? = null,
     var createOperation: CreateOperation? = null,
+    var createAttribute: CreateAttribute? = null,
     var createTopic: CreateTopic? = null,
     var createFloatingTopic: CreateFloatingTopic? = null,
     var resizeClassPresentation: ResizeClassPresentation? = null,
+    var changeAttributeNameAndTypeExpression: ChangeAttributeNameAndTypeExpression? = null,
     var resizeTopic: ResizeTopic? = null,
     var deleteClassModel: DeleteClassModel? = null,
     var deleteAssociationPresentation: DeleteAssociationPresentation? = null,
@@ -35,9 +37,11 @@ data class Transaction (
             createClassPresentation,
             createAssociationPresentation,
             createOperation,
+            createAttribute,
             createTopic,
             createFloatingTopic,
             resizeClassPresentation,
+            changeAttributeNameAndTypeExpression,
             resizeTopic,
             deleteClassModel,
             deleteAssociationPresentation,
@@ -68,6 +72,9 @@ data class CreateAssociationPresentation(val sourceClassName: String, val target
 data class CreateOperation(val ownerName: String, val name: String, val returnTypeExpression: String)
 
 @Serializable
+data class CreateAttribute(val ownerName: String, val name: String, val typeExpression: String)
+
+@Serializable
 data class CreateTopic(val ownerName: String, val name: String, val diagramName: String)
 
 @Serializable
@@ -75,6 +82,9 @@ data class CreateFloatingTopic(val name: String, val location: Pair<Double, Doub
 
 @Serializable
 data class ResizeClassPresentation(val className: String, val location: Pair<Double, Double>, val size: Pair<Double, Double>, val diagramName: String)
+
+@Serializable
+data class ChangeAttributeNameAndTypeExpression(val ownerName: String, val brotherNameAndTypeExpression: List<Pair<String, String>>, val name: String, val typeExpression: String)
 
 @Serializable
 data class ResizeTopic(val name: String, val location: Pair<Double, Double>, val size: Pair<Double, Double>, val diagramName: String)
