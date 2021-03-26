@@ -18,6 +18,7 @@ data class Transaction (
     var createAssociationModel: CreateAssociationModel? = null,
     var createClassPresentation: CreateClassPresentation? = null,
     var createAssociationPresentation: CreateAssociationPresentation? = null,
+    var createOperation: CreateOperation? = null,
     var createTopic: CreateTopic? = null,
     var createFloatingTopic: CreateFloatingTopic? = null,
     var resizeClassPresentation: ResizeClassPresentation? = null,
@@ -33,6 +34,7 @@ data class Transaction (
             createAssociationModel,
             createClassPresentation,
             createAssociationPresentation,
+            createOperation,
             createTopic,
             createFloatingTopic,
             resizeClassPresentation,
@@ -61,6 +63,9 @@ data class CreateClassPresentation(val className: String, val location: Pair<Dou
 
 @Serializable
 data class CreateAssociationPresentation(val sourceClassName: String, val targetClassName: String, val diagramName: String)
+
+@Serializable
+data class CreateOperation(val ownerName: String, val name: String, val returnTypeExpression: String)
 
 @Serializable
 data class CreateTopic(val ownerName: String, val name: String, val diagramName: String)
