@@ -343,6 +343,7 @@ class ReflectTransaction(private val projectChangedListener: ProjectChangedListe
     }
 
     private fun deleteClassPresentation(name: String) {
+        logger.debug("Delete class model.")
         val diagramEditorFactory = projectAccessor.diagramEditorFactory
         val classDiagramEditor = diagramEditorFactory.classDiagramEditor
         val diagram = api.viewManager.diagramViewManager.currentDiagram
