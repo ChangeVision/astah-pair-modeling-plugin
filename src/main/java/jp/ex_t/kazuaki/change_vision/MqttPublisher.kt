@@ -27,16 +27,20 @@ class MqttPublisher(brokerAddress: String, private val topic: String, clientId: 
             mqttConnectOptions.isCleanSession = false
 
             mqttClient.connect(mqttConnectOptions)
-            println("Connected to broker $broker.")
+            logger.info("Connected to broker $broker.")
             val mqttMessage = MqttMessage(message)
             mqttMessage.qos = qos
             mqttClient.publish(topic, mqttMessage)
             mqttClient.disconnect()
             mqttClient.close()
-            println("Closed connection.")
+            logger.info("Closed connection.")
         } catch (e: MqttException) {
-            println(e.message)
+            logger.error("Publisher error.", e)
             throw e
         }
+    }
+
+    companion object: Logging {
+        private val logger = logger()
     }
 }
