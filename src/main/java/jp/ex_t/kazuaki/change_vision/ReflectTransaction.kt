@@ -222,6 +222,7 @@ class ReflectTransaction(private val projectChangedListener: ProjectChangedListe
         val ownerClass = projectAccessor.findElements(IClass::class.java, ownerName).first() as IClass
         basicModelEditor.createOperation(ownerClass, name, returnTypeExpression)
     }
+
     private fun createAttribute(ownerName: String, name: String, typeExpression: String) {
         val modelEditorFactory = projectAccessor.modelEditorFactory
         val basicModelEditor = modelEditorFactory.basicModelEditor
