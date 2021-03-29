@@ -240,15 +240,14 @@ class ReflectTransaction(private val projectChangedListener: ProjectChangedListe
         basicModelEditor.createAttribute(ownerClass, name, typeExpression)
     }
 
-    @Throws(ClassNotFoundException::class)
-    private fun searchTopic(name: String, topics: Array<INodePresentation>): INodePresentation {
+    private fun searchTopic(name: String, topics: Array<INodePresentation>): INodePresentation? {
         topics.forEach {
             if (it.label == name) return it
             else if (it.children.isNotEmpty()) {
                 return searchTopic(name, it.children)
             }
         }
-        throw ClassNotFoundException()
+        return null
     }
 
     private fun createTopic(ownerName: String, name: String, diagramName: String) {
@@ -258,13 +257,12 @@ class ReflectTransaction(private val projectChangedListener: ProjectChangedListe
         val diagram = projectAccessor.findElements(IDiagram::class.java, diagramName).first() as IMindMapDiagram
         mindmapEditor.diagram = diagram
         val topics = diagram.floatingTopics + diagram.root
-        try {
-            val parent = searchTopic(ownerName, topics)
-            mindmapEditor.createTopic(parent, name)
-        } catch (e: ClassNotFoundException) {
-            logger.error("Parent topic not found.", e)
+        val parent = searchTopic(ownerName, topics)
+        if (parent == null) {
+            logger.error("Parent topic not found.")
             return
         }
+        mindmapEditor.createTopic(parent, name)
     }
 
     private fun createFloatingTopic(name: String, location: Point2D, size: Pair<Double, Double>, diagramName: String) {
