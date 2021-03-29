@@ -241,15 +241,14 @@ class ReflectTransaction(private val projectChangedListener: ProjectChangedListe
         basicModelEditor.createAttribute(ownerClass, name, typeExpression)
     }
 
-    @Throws(ClassNotFoundException::class)
-    private fun searchTopic(name: String, topics: Array<INodePresentation>): INodePresentation {
+    private fun searchTopic(name: String, topics: Array<INodePresentation>): INodePresentation? {
         topics.forEach {
             if (it.label == name) return it
             else if (it.children.isNotEmpty()) {
                 return searchTopic(name, it.children)
             }
         }
-        throw ClassNotFoundException()
+        return null
     }
 
     private fun createTopic(ownerName: String, name: String, diagramName: String) {
