@@ -23,33 +23,37 @@ class PairModeling(topic: String, private val clientId: String, private val brok
         val api = AstahAPI.getAstahAPI()
         val projectAccessor = api.projectAccessor
 
-        println("Launching publisher...")
+        logger.debug("Launching publisher...")
         val topicTransactionPublisher = "$topicTransaction/$clientId"
         mqttPublisher = MqttPublisher(brokerAddress, topicTransactionPublisher, clientId)
         projectChangedListener = ProjectChangedListener(mqttPublisher)
         projectAccessor.addProjectEventListener(projectChangedListener)
-        println("Published: $brokerAddress:$topicTransaction ($clientId")
-        println("Launched publisher.")
+        logger.debug("Published: $brokerAddress:$topicTransaction ($clientId")
+        logger.info("Launched publisher.")
 
-        println("Launching subscriber...")
+        logger.debug("Launching subscriber...")
         val topicTransactionSubscriber = "$topicTransaction/#"
         reflectTransaction = ReflectTransaction(projectChangedListener)
         mqttSubscriber = MqttSubscriber(brokerAddress, topicTransactionSubscriber, clientId, reflectTransaction)
         mqttSubscriber.subscribe()
-        println("Subscribed: $brokerAddress:$topicTransaction ($clientId")
-        println("Launched subscriber.")
+        logger.debug("Subscribed: $brokerAddress:$topicTransaction ($clientId")
+        logger.info("Launched subscriber.")
     }
 
     fun end() {
         val api = AstahAPI.getAstahAPI()
         val projectAccessor = api.projectAccessor
 
-        println("Stopping subscriber...")
+        logger.debug("Stopping subscriber...")
         mqttSubscriber.close()
-        println("Stopped subscriber.")
+        logger.info("Stopped subscriber.")
 
-        println("Stopping publisher...")
+        logger.debug("Stopping publisher...")
         projectAccessor.removeProjectEventListener(projectChangedListener)
-        println("Stopped publisher.")
+        logger.info("Stopped publisher.")
+    }
+
+    companion object: Logging {
+        private val logger = logger()
     }
 }

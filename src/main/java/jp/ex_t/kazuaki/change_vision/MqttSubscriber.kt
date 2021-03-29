@@ -28,7 +28,7 @@ class MqttSubscriber(brokerAddress: String, private val topic: String, private v
         mqttConnectOptions.isCleanSession = false
 
         mqttClient.connect(mqttConnectOptions)
-        println("Connected to broker $broker")
+        logger.info("Connected to broker $broker")
 
         mqttClient.subscribe(topic, qos)
     }
@@ -36,12 +36,11 @@ class MqttSubscriber(brokerAddress: String, private val topic: String, private v
     fun close() {
         mqttClient.disconnect()
         mqttClient.close()
-        println("Closed connection.")
+        logger.info("Closed connection.")
     }
 
     override fun connectionLost(cause: Throwable) {
-        println("Connection lost.")
-        println(cause.message)
+        logger.error("Connection lost.", cause)
         throw cause
         // TODO: retry?
     }
@@ -52,11 +51,16 @@ class MqttSubscriber(brokerAddress: String, private val topic: String, private v
         val receivedClientId = topic.split("/").last()
         if (receivedClientId == clientId) return
         val receivedMessage = Cbor.decodeFromByteArray<Transaction>(message.payload)
-        println("Received: $receivedMessage ($topic)")
+        logger.debug("Received: $receivedMessage ($topic)")
         reflectTransaction.transact(receivedMessage)
     }
 
     override fun deliveryComplete(token: IMqttDeliveryToken) {
         TODO("Not yet implemented")
     }
+
+    companion object: Logging {
+        private val logger = logger()
+    }
+
 }

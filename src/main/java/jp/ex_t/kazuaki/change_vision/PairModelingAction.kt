@@ -33,8 +33,9 @@ class PairModelingAction: IPluginActionDelegate {
             }
             isLaunched = !isLaunched
         } catch (e: UnExpectedException) {
-            JOptionPane.showMessageDialog(window.parent, "Exception occurred.", "Alert", JOptionPane.ERROR_MESSAGE)
-            println(e.message)
+            val message = "Exception occurred."
+            JOptionPane.showMessageDialog(window.parent, message, "Alert", JOptionPane.ERROR_MESSAGE)
+            logger.error(message, e)
             throw e
         }
     }
@@ -48,4 +49,9 @@ class PairModelingAction: IPluginActionDelegate {
             return null
         }
         return ipAddress
-    }}
+    }
+
+    companion object: Logging {
+        private val logger = logger()
+    }
+}
