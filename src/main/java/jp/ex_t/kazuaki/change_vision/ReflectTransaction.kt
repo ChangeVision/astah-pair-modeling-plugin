@@ -11,13 +11,14 @@ package jp.ex_t.kazuaki.change_vision
 import com.change_vision.jude.api.inf.AstahAPI
 import com.change_vision.jude.api.inf.exception.BadTransactionException
 import com.change_vision.jude.api.inf.model.*
+import com.change_vision.jude.api.inf.presentation.ILinkPresentation
 import com.change_vision.jude.api.inf.presentation.INodePresentation
 import com.change_vision.jude.api.inf.project.ProjectAccessor
 import com.change_vision.jude.api.inf.ui.IPluginActionDelegate.UnExpectedException
 import java.awt.geom.Point2D
 import javax.swing.SwingUtilities
 
-class ReflectTransaction(private val projectChangedListener: ProjectChangedListener? = null) {
+class ReflectTransaction(private val projectChangedListener: ProjectChangedListener) {
     private val api: AstahAPI = AstahAPI.getAstahAPI()
     private val projectAccessor: ProjectAccessor = api.projectAccessor
 
@@ -26,139 +27,113 @@ class ReflectTransaction(private val projectChangedListener: ProjectChangedListe
         SwingUtilities.invokeLater {
             val transactionManager = projectAccessor.transactionManager
             try {
-                if (projectChangedListener != null)
-                    projectAccessor.removeProjectEventListener(projectChangedListener)
+                projectAccessor.removeProjectEventListener(projectChangedListener)
                 transactionManager.beginTransaction()
-                if (transaction.createClassDiagram != null) {
-                    val createClassDiagram = transaction.createClassDiagram as CreateClassDiagram
-                    val name = createClassDiagram.name
-                    val ownerName = createClassDiagram.ownerName
-                    if (name.isNotEmpty() && ownerName.isNotEmpty())
-                        createClassDiagram(name, ownerName)
-                }
-                if (transaction.createMindMapDiagram != null) {
-                    val createMindMapDiagram = transaction.createMindMapDiagram as CreateMindMapDiagram
-                    val name = createMindMapDiagram.name
-                    val ownerName = createMindMapDiagram.ownerName
-                    if (name.isNotEmpty() && ownerName.isNotEmpty())
-                        createMindMapDiagram(name, ownerName)
-                }
-                if (transaction.createClassModel != null) {
-                    val createClassModel = transaction.createClassModel as CreateClassModel
-                    val name = createClassModel.name
-                    val parentPackageName = createClassModel.parentPackageName
-                    if (parentPackageName.isNotEmpty() && name.isNotEmpty())
-                        createClassModel(name, parentPackageName)
-                }
-                if (transaction.createAssociationModel != null) {
-                    val createAssociationModel = transaction.createAssociationModel as CreateAssociationModel
-                    val sourceClassName = createAssociationModel.sourceClassName
-                    val destinationClassName = createAssociationModel.destinationClassName
-                    val name = createAssociationModel.name
-                    if (sourceClassName.isNotEmpty() && destinationClassName.isNotEmpty())
-                        createAssociationModel(sourceClassName, destinationClassName, name)
-                }
-                if (transaction.createClassPresentation != null) {
-                    val createClassPresentation = transaction.createClassPresentation as CreateClassPresentation
-                    val className = createClassPresentation.className
-                    val locationPair = createClassPresentation.location
-                    val location = Point2D.Double(locationPair.first, locationPair.second)
-                    val diagramName = createClassPresentation.diagramName
-                    if (diagramName.isNotEmpty() && className.isNotEmpty())
-                        createClassPresentation(className, location, diagramName)
-                }
-                if (transaction.createAssociationPresentation != null) {
-                    val createAssociationPresentation = transaction.createAssociationPresentation as CreateAssociationPresentation
-                    val sourceClassName = createAssociationPresentation.sourceClassName
-                    val targetClassName = createAssociationPresentation.targetClassName
-                    val diagramName = createAssociationPresentation.diagramName
-                    if (sourceClassName.isNotEmpty() && targetClassName.isNotEmpty() && diagramName.isNotEmpty())
-                        createAssociationPresentation(sourceClassName, targetClassName, diagramName)
-                }
-                if (transaction.createOperation != null) {
-                    val createOperation = transaction.createOperation as CreateOperation
-                    val ownerName = createOperation.ownerName
-                    val name = createOperation.name
-                    val returnTypeExpression = createOperation.returnTypeExpression
-                    if (ownerName.isNotEmpty() && name.isNotEmpty() && returnTypeExpression.isNotEmpty())
-                        createOperation(ownerName, name, returnTypeExpression)
-                }
-                if (transaction.createAttribute != null) {
-                    val createAttribute = transaction.createAttribute as CreateAttribute
-                    val ownerName = createAttribute.ownerName
-                    val name = createAttribute.name
-                    val typeExpression = createAttribute.typeExpression
-                    if (ownerName.isNotEmpty() && name.isNotEmpty() && typeExpression.isNotEmpty())
-                        createAttribute(ownerName, name, typeExpression)
-                }
-                if (transaction.createTopic != null) {
-                    val createTopic = transaction.createTopic as CreateTopic
-                    val ownerName = createTopic.ownerName
-                    val name = createTopic.name
-                    val diagramName = createTopic.diagramName
-                    if (ownerName.isNotEmpty() && name.isNotEmpty() && diagramName.isNotEmpty())
-                        createTopic(ownerName, name, diagramName)
-                }
-                if (transaction.createFloatingTopic != null) {
-                    val createFloatingTopic = transaction.createFloatingTopic as CreateFloatingTopic
-                    val name = createFloatingTopic.name
-                    val locationPair = createFloatingTopic.location
-                    val location = Point2D.Double(locationPair.first, locationPair.second)
-                    val size =createFloatingTopic.size
-                    val diagramName = createFloatingTopic.diagramName
-                    if (name.isNotEmpty() && diagramName.isNotEmpty())
-                        createFloatingTopic(name, location, size, diagramName)
-                }
-                if (transaction.resizeClassPresentation != null) {
-                    val resizeClassPresentation = transaction.resizeClassPresentation as ResizeClassPresentation
-                    val className = resizeClassPresentation.className
-                    val locationPair = resizeClassPresentation.location
-                    val location = Point2D.Double(locationPair.first, locationPair.second)
-                    val size = resizeClassPresentation.size
-                    val diagramName = resizeClassPresentation.diagramName
-                    if (className.isNotEmpty() && diagramName.isNotEmpty())
-                        resizeClassPresentation(className, location, size, diagramName)
-                }
-                if (transaction.changeOperationNameAndReturnTypeExpression != null) {
-                    val changeOperationNameAndReturnTypeExpression =
-                        transaction.changeOperationNameAndReturnTypeExpression as ChangeOperationNameAndReturnTypeExpression
-                    val ownerName = changeOperationNameAndReturnTypeExpression.ownerName
-                    val brotherNameAndReturnTypeExpression =
-                        changeOperationNameAndReturnTypeExpression.brotherNameAndReturnTypeExpression
-                    val name = changeOperationNameAndReturnTypeExpression.name
-                    val returnTypeExpression = changeOperationNameAndReturnTypeExpression.returnTypeExpression
-                    if (ownerName.isNotEmpty() && name.isNotEmpty() && returnTypeExpression.isNotEmpty())
-                        changeOperationNameAndReturnTypeExpression(
-                            ownerName,
-                            brotherNameAndReturnTypeExpression,
-                            name,
-                            returnTypeExpression
-                        )
-                }
-                if (transaction.changeAttributeNameAndTypeExpression != null) {
-                    val changeAttributeNameAndTypeExpression = transaction.changeAttributeNameAndTypeExpression as ChangeAttributeNameAndTypeExpression
-                    val ownerName = changeAttributeNameAndTypeExpression.ownerName
-                    val brotherNameAndTypeExpression = changeAttributeNameAndTypeExpression.brotherNameAndTypeExpression
-                    val name = changeAttributeNameAndTypeExpression.name
-                    val typeExpression = changeAttributeNameAndTypeExpression.typeExpression
-                    if (ownerName.isNotEmpty() && name.isNotEmpty() && typeExpression.isNotEmpty())
-                        changeAttributeNameAndTypeExpression(ownerName, brotherNameAndTypeExpression, name, typeExpression)
-                }
-                if (transaction.resizeTopic != null) {
-                    val resizeTopic = transaction.resizeTopic as ResizeTopic
-                    val name = resizeTopic.name
-                    val locationPair = resizeTopic.location
-                    val location = Point2D.Double(locationPair.first, locationPair.second)
-                    val size = resizeTopic.size
-                    val diagramName = resizeTopic.diagramName
-                    if (name.isNotEmpty() && diagramName.isNotEmpty())
-                        resizeTopic(name, location, size, diagramName)
-                }
-                if (transaction.deleteClassModel != null) {
-                    val deleteClassModel = transaction.deleteClassModel as DeleteClassModel
-                    val name = deleteClassModel.className
-                    if (name.isNotEmpty())
-                        deleteClassModel(name)
+                transaction.operations.forEach { it ->
+                    when (it) {
+                        is CreateClassDiagram -> {
+                            if (it.name.isNotEmpty() && it.ownerName.isNotEmpty())
+                                createClassDiagram(it.name, it.ownerName)
+                        }
+                        is CreateMindmapDiagram -> {
+                            if (it.name.isNotEmpty() && it.ownerName.isNotEmpty())
+                                createMindMapDiagram(it.name, it.ownerName)
+                        }
+                        is CreateClassModel -> {
+                            if (it.name.isNotEmpty() && it.parentPackageName.isNotEmpty())
+                                createClassModel(it.name, it.parentPackageName)
+                        }
+                        is CreateAssociationModel -> {
+                            if (it.sourceClassName.isNotEmpty()
+                                && it.destinationClassName.isNotEmpty())
+                                    createAssociationModel(
+                                        it.sourceClassName,
+                                        it.destinationClassName,
+                                        it.name
+                                    )
+                        }
+                        is CreateClassPresentation -> {
+                            val location = Point2D.Double(it.location.first, it.location.second)
+                            if (it.diagramName.isNotEmpty() && it.className.isNotEmpty())
+                                createClassPresentation(it.className, location, it.diagramName)
+                        }
+                        is CreateAssociationPresentation -> {
+                            if (it.sourceClassName.isNotEmpty()
+                                && it.targetClassName.isNotEmpty()
+                                && it.diagramName.isNotEmpty())
+                                    createAssociationPresentation(
+                                        it.sourceClassName,
+                                        it.targetClassName,
+                                        it.diagramName
+                                    )
+                        }
+                        is CreateOperation -> {
+                            if (it.ownerName.isNotEmpty()
+                                && it.name.isNotEmpty()
+                                && it.returnTypeExpression.isNotEmpty())
+                                    createOperation(it.ownerName, it.name, it.returnTypeExpression)
+                        }
+                        is CreateAttribute -> {
+                            if (it.ownerName.isNotEmpty()
+                                && it.name.isNotEmpty()
+                                && it.typeExpression.isNotEmpty())
+                                    createAttribute(it.ownerName, it.name, it.typeExpression)
+                        }
+                        is CreateTopic -> {
+                            if (it.ownerName.isNotEmpty()
+                                && it.name.isNotEmpty()
+                                && it.diagramName.isNotEmpty())
+                                    createTopic(it.ownerName, it.name, it.diagramName)
+                        }
+                        is CreateFloatingTopic -> {
+                            val location = Point2D.Double(it.location.first, it.location.second)
+                            if (it.name.isNotEmpty() && it.diagramName.isNotEmpty())
+                                createFloatingTopic(it.name, location, it.size, it.diagramName)
+                        }
+                        is ResizeClassPresentation -> {
+                            val location = Point2D.Double(it.location.first, it.location.second)
+                            if (it.className.isNotEmpty() && it.diagramName.isNotEmpty())
+                                resizeClassPresentation(it.className, location, it.size, it.diagramName)
+                        }
+                        is ChangeOperationNameAndReturnTypeExpression -> {
+                            if (it.ownerName.isNotEmpty()
+                                && it.name.isNotEmpty()
+                                && it.returnTypeExpression.isNotEmpty())
+                                    changeOperationNameAndReturnTypeExpression(
+                                        it.ownerName,
+                                        it.brotherNameAndReturnTypeExpression,
+                                        it.name,
+                                        it.returnTypeExpression
+                                    )
+                        }
+                        is ChangeAttributeNameAndTypeExpression -> {
+                            if (it.ownerName.isNotEmpty()
+                                && it.name.isNotEmpty()
+                                && it.typeExpression.isNotEmpty())
+                                changeAttributeNameAndTypeExpression(
+                                    it.ownerName,
+                                    it.brotherNameAndTypeExpression,
+                                    it.name,
+                                    it.typeExpression
+                                )
+                        }
+                        is ResizeTopic -> {
+                            val location = Point2D.Double(it.location.first, it.location.second)
+                            if (it.name.isNotEmpty() && it.diagramName.isNotEmpty())
+                                resizeTopic(it.name, location, it.size, it.diagramName)
+                        }
+                        is DeleteClassModel -> {
+                            if (it.className.isNotEmpty())
+                                deleteClassModel(it.className)
+                        }
+                        is DeleteAssociationPresentation -> {
+                            val receivedPoints = it.points.map { point
+                                -> Point2D.Double(point.first, point.second)
+                            }.toList()
+                            deleteAssociationPresentation(receivedPoints)
+                        }
+                        // TODO: DeleteAssociationModelを実装する
+                    }
                 }
                 transactionManager.endTransaction()
                 api.viewManager.diagramViewManager.select(emptyArray())
@@ -166,8 +141,7 @@ class ReflectTransaction(private val projectChangedListener: ProjectChangedListe
                 transactionManager.abortTransaction()
                 throw UnExpectedException()
             } finally {
-                if (projectChangedListener != null)
-                    projectAccessor.addProjectEventListener(projectChangedListener)
+                projectAccessor.addProjectEventListener(projectChangedListener)
             }
         }
     }
@@ -216,14 +190,12 @@ class ReflectTransaction(private val projectChangedListener: ProjectChangedListe
 
     private fun createAssociationPresentation(sourceClassName: String, targetClassName: String, diagramName: String) {
         @Throws(ClassNotFoundException::class)
-        fun searchAssociation(sourceClass: IClass, targetClass: IClass): IAssociation? {
-            sourceClass.attributes.forEach { sourceClassAttribute ->
-                targetClass.attributes.forEach {
-                    if (sourceClassAttribute.association == it.association)
-                        return it.association
+        fun searchAssociation(sourceClass: IClass, targetClass: IClass): IAssociation {
+            return sourceClass.attributes.first { sourceClassAttribute ->
+                targetClass.attributes.any { targetClassAttribute ->
+                    sourceClassAttribute.association == targetClassAttribute.association
                 }
-            }
-            throw ClassNotFoundException()
+            }.association ?: throw ClassNotFoundException()
         }
         val diagramEditorFactory = projectAccessor.diagramEditorFactory
         val classDiagramEditor = diagramEditorFactory.classDiagramEditor
@@ -233,8 +205,10 @@ class ReflectTransaction(private val projectChangedListener: ProjectChangedListe
         val sourceClassPresentation = sourceClass.presentations.first { it.diagram == diagram } as INodePresentation
         val targetClass = projectAccessor.findElements(IClass::class.java, targetClassName).first() as IClass
         val targetClassPresentation = targetClass.presentations.first { it.diagram == diagram } as INodePresentation
+        println("Source: ${sourceClass.attributes}, target: ${targetClass.attributes}")
         try {
             val association = searchAssociation(sourceClass, targetClass)
+            println("Association: $association")
             classDiagramEditor.createLinkPresentation(association, sourceClassPresentation, targetClassPresentation)
         } catch (e: ClassNotFoundException) {
             println("Association not found.")
@@ -255,14 +229,15 @@ class ReflectTransaction(private val projectChangedListener: ProjectChangedListe
         basicModelEditor.createAttribute(ownerClass, name, typeExpression)
     }
 
-    private fun searchTopic(name: String, topics: Array<INodePresentation>): INodePresentation? {
+    @Throws(ClassNotFoundException::class)
+    private fun searchTopic(name: String, topics: Array<INodePresentation>): INodePresentation {
         topics.forEach {
             if (it.label == name) return it
             else if (it.children.isNotEmpty()) {
                 return searchTopic(name, it.children)
             }
         }
-        return null
+        throw ClassNotFoundException()
     }
 
     private fun createTopic(ownerName: String, name: String, diagramName: String) {
@@ -271,8 +246,13 @@ class ReflectTransaction(private val projectChangedListener: ProjectChangedListe
         val diagram = projectAccessor.findElements(IDiagram::class.java, diagramName).first() as IMindMapDiagram
         mindmapEditor.diagram = diagram
         val topics = diagram.floatingTopics + diagram.root
-        val parent = searchTopic(ownerName, topics) ?: return
-        mindmapEditor.createTopic(parent, name)
+        try {
+            val parent = searchTopic(ownerName, topics)
+            mindmapEditor.createTopic(parent, name)
+        } catch (e: ClassNotFoundException) {
+            println("Parent topic not found.")
+            return
+        }
     }
 
     private fun createFloatingTopic(name: String, location: Point2D, size: Pair<Double, Double>, diagramName: String) {
@@ -337,5 +317,14 @@ class ReflectTransaction(private val projectChangedListener: ProjectChangedListe
         val basicModelEditor = modelEditorFactory.basicModelEditor
         val clazz = projectAccessor.findElements(IClass::class.java, name).first() as IClass
         basicModelEditor.delete(clazz)
+    }
+
+    private fun deleteAssociationPresentation(receivedPoints: List<Point2D>) {
+        val foundLink = api.viewManager.diagramViewManager.currentDiagram.presentations
+            .filterIsInstance<ILinkPresentation>().filter { entity -> entity.model is IAssociation }
+            .firstOrNull { link ->
+                link.points.all { receivedPoints.containsAll(link.points.toList()) }
+            }
+        foundLink?.let { link -> api.projectAccessor.modelEditorFactory.basicModelEditor.delete(link.model) }
     }
 }

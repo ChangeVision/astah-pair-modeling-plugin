@@ -11,91 +11,145 @@ package jp.ex_t.kazuaki.change_vision
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class Transaction (
-    var createClassDiagram: CreateClassDiagram? = null,
-    var createMindMapDiagram: CreateMindMapDiagram? = null,
-    var createClassModel: CreateClassModel? = null,
-    var createAssociationModel: CreateAssociationModel? = null,
-    var createClassPresentation: CreateClassPresentation? = null,
-    var createAssociationPresentation: CreateAssociationPresentation? = null,
-    var createOperation: CreateOperation? = null,
-    var createAttribute: CreateAttribute? = null,
-    var createTopic: CreateTopic? = null,
-    var createFloatingTopic: CreateFloatingTopic? = null,
-    var resizeClassPresentation: ResizeClassPresentation? = null,
-    var changeOperationNameAndReturnTypeExpression: ChangeOperationNameAndReturnTypeExpression? = null,
-    var changeAttributeNameAndTypeExpression: ChangeAttributeNameAndTypeExpression? = null,
-    var resizeTopic: ResizeTopic? = null,
-    var deleteClassModel: DeleteClassModel? = null,
-    var deleteAssociationPresentation: DeleteAssociationPresentation? = null,
-) {
-    fun isNotAllNull(): Boolean {
-        val checkList = listOf(
-            createClassDiagram,
-            createMindMapDiagram,
-            createClassModel,
-            createAssociationModel,
-            createClassPresentation,
-            createAssociationPresentation,
-            createOperation,
-            createAttribute,
-            createTopic,
-            createFloatingTopic,
-            resizeClassPresentation,
-            changeOperationNameAndReturnTypeExpression,
-            changeAttributeNameAndTypeExpression,
-            resizeTopic,
-            deleteClassModel,
-            deleteAssociationPresentation,
-        )
-        return checkList.any { it != null }
-    }
-}
+data class Transaction(val operations: MutableList<TransactionalOperation> = mutableListOf())
 
 @Serializable
-data class CreateClassDiagram(val name: String, val ownerName: String)
+sealed class TransactionalOperation
 
 @Serializable
-data class CreateMindMapDiagram(val name: String, val ownerName: String)
+sealed class ClassDiagramOperation: TransactionalOperation()
 
 @Serializable
-data class CreateClassModel(val name: String, val parentPackageName: String)
+sealed class MindmapDiagramOperation: TransactionalOperation()
 
 @Serializable
-data class CreateAssociationModel(val sourceClassName: String, val destinationClassName: String, val name: String = "")
+sealed class ClassOperation: TransactionalOperation()
 
 @Serializable
-data class CreateClassPresentation(val className: String, val location: Pair<Double, Double>, val diagramName: String)
+sealed class AssociationOperation: TransactionalOperation()
 
 @Serializable
-data class CreateAssociationPresentation(val sourceClassName: String, val targetClassName: String, val diagramName: String)
+sealed class AttributeOperation: TransactionalOperation()
 
 @Serializable
-data class CreateOperation(val ownerName: String, val name: String, val returnTypeExpression: String)
+sealed class OperationOperation: TransactionalOperation()
 
 @Serializable
-data class CreateAttribute(val ownerName: String, val name: String, val typeExpression: String)
+sealed class TopicOperation: TransactionalOperation()
 
 @Serializable
-data class CreateTopic(val ownerName: String, val name: String, val diagramName: String)
+sealed class FloatingTopicOperation: TransactionalOperation()
 
 @Serializable
-data class CreateFloatingTopic(val name: String, val location: Pair<Double, Double>, val size: Pair<Double, Double>, val diagramName: String)
+data class CreateClassDiagram(
+    val name: String,
+    val ownerName: String,
+): ClassDiagramOperation()
 
 @Serializable
-data class ResizeClassPresentation(val className: String, val location: Pair<Double, Double>, val size: Pair<Double, Double>, val diagramName: String)
+data class CreateMindmapDiagram(
+    val name: String,
+    val ownerName: String,
+): MindmapDiagramOperation()
 
 @Serializable
-data class ChangeOperationNameAndReturnTypeExpression(val ownerName: String, val brotherNameAndReturnTypeExpression: List<Pair<String, String>>, val name: String, val returnTypeExpression: String)
+data class CreateClassModel(
+    val name: String,
+    val parentPackageName: String,
+): ClassOperation()
 
 @Serializable
-data class ChangeAttributeNameAndTypeExpression(val ownerName: String, val brotherNameAndTypeExpression: List<Pair<String, String>>, val name: String, val typeExpression: String)
+data class CreateAssociationModel(
+    val sourceClassName: String,
+    val destinationClassName: String,
+    val name: String = "",
+): AssociationOperation()
 
 @Serializable
-data class ResizeTopic(val name: String, val location: Pair<Double, Double>, val size: Pair<Double, Double>, val diagramName: String)
+data class CreateClassPresentation(
+    val className: String,
+    val location: Pair<Double, Double>,
+    val diagramName: String,
+): ClassOperation()
 
 @Serializable
-data class DeleteAssociationPresentation(val sourceClassName: String, val targetClassName: String, val diagramName: String)
+data class CreateAssociationPresentation(
+    val sourceClassName: String,
+    val targetClassName: String,
+    val diagramName: String,
+): AssociationOperation()
 
 @Serializable
-data class DeleteClassModel(val className: String)
+data class CreateOperation(
+    val ownerName: String,
+    val name: String,
+    val returnTypeExpression: String,
+): OperationOperation()
+
+@Serializable
+data class CreateAttribute(
+    val ownerName: String,
+    val name: String,
+    val typeExpression: String,
+): AttributeOperation()
+
+@Serializable
+data class CreateTopic(
+    val ownerName: String,
+    val name: String,
+    val diagramName: String,
+): TopicOperation()
+
+@Serializable
+data class CreateFloatingTopic(
+    val name: String,
+    val location: Pair<Double, Double>,
+    val size: Pair<Double, Double>,
+    val diagramName: String,
+): FloatingTopicOperation()
+
+@Serializable
+data class ResizeClassPresentation(
+    val className: String,
+    val location: Pair<Double, Double>,
+    val size: Pair<Double, Double>,
+    val diagramName: String,
+): ClassOperation()
+
+@Serializable
+data class ChangeOperationNameAndReturnTypeExpression(
+    val ownerName: String,
+    val brotherNameAndReturnTypeExpression: List<Pair<String, String>>,
+    val name: String,
+    val returnTypeExpression: String,
+): OperationOperation()
+
+@Serializable
+data class ChangeAttributeNameAndTypeExpression(
+    val ownerName: String,
+    val brotherNameAndTypeExpression: List<Pair<String, String>>,
+    val name: String,
+    val typeExpression: String,
+): AttributeOperation()
+
+@Serializable
+data class ResizeTopic(
+    val name: String, val location: Pair<Double, Double>,
+    val size: Pair<Double, Double>,
+    val diagramName: String,
+): TopicOperation()
+
+@Serializable
+data class DeleteClassModel(
+    val className: String,
+): ClassOperation()
+
+@Serializable
+data class DeleteAssociationModel(
+    val isDeleteAssociationModel: Boolean = false
+): AssociationOperation()
+
+@Serializable
+data class DeleteAssociationPresentation(
+    val points: List<Pair<Double, Double>>
+): AssociationOperation()
