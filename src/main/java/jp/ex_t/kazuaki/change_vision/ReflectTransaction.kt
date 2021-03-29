@@ -200,11 +200,11 @@ class ReflectTransaction(private val projectChangedListener: ProjectChangedListe
         logger.debug("Create association presentation.")
         @Throws(ClassNotFoundException::class)
         fun searchAssociation(sourceClass: IClass, targetClass: IClass): IAssociation {
-            return sourceClass.attributes.first { sourceClassAttribute ->
-                targetClass.attributes.any { targetClassAttribute ->
+            return (sourceClass.attributes.filterNot { it.association == null }.find { sourceClassAttribute ->
+                targetClass.attributes.filterNot { it.association == null }.any { targetClassAttribute ->
                     sourceClassAttribute.association == targetClassAttribute.association
                 }
-            }.association ?: throw ClassNotFoundException()
+            } ?: throw ClassNotFoundException()).association
         }
         val diagramEditorFactory = projectAccessor.diagramEditorFactory
         val classDiagramEditor = diagramEditorFactory.classDiagramEditor
