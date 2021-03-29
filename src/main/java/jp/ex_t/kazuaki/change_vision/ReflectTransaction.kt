@@ -28,6 +28,7 @@ class ReflectTransaction(private val projectChangedListener: ProjectChangedListe
             val transactionManager = projectAccessor.transactionManager
             try {
                 projectAccessor.removeProjectEventListener(projectChangedListener)
+                logger.debug("Start transaction.")
                 transactionManager.beginTransaction()
                 transaction.operations.forEach { it ->
                     when (it) {
@@ -136,9 +137,11 @@ class ReflectTransaction(private val projectChangedListener: ProjectChangedListe
                     }
                 }
                 transactionManager.endTransaction()
+                logger.debug("Finished transaction.")
                 api.viewManager.diagramViewManager.select(emptyArray())
             } catch (e: BadTransactionException) {
                 transactionManager.abortTransaction()
+                logger.warn("Failed to transaction.", e)
                 throw UnExpectedException()
             } finally {
                 projectAccessor.addProjectEventListener(projectChangedListener)
@@ -147,6 +150,7 @@ class ReflectTransaction(private val projectChangedListener: ProjectChangedListe
     }
 
     private fun createClassDiagram(name: String, ownerName: String) {
+        logger.debug("Create class diagram.")
         val diagramEditorFactory = projectAccessor.diagramEditorFactory
         val classDiagramEditor = diagramEditorFactory.classDiagramEditor
         val diagramViewManager = api.viewManager.diagramViewManager
@@ -156,6 +160,7 @@ class ReflectTransaction(private val projectChangedListener: ProjectChangedListe
     }
 
     private fun createMindMapDiagram(name: String, ownerName: String) {
+        logger.debug("Create mindmap diagram.")
         val diagramEditorFactory = projectAccessor.diagramEditorFactory
         val mindmapEditor = diagramEditorFactory.mindmapEditor
         val diagramViewManager = api.viewManager.diagramViewManager
@@ -165,6 +170,7 @@ class ReflectTransaction(private val projectChangedListener: ProjectChangedListe
     }
 
     private fun createClassModel(name: String, parentPackageName: String) {
+        logger.debug("Create class model.")
         val modelEditorFactory = projectAccessor.modelEditorFactory
         val basicModelEditor = modelEditorFactory.basicModelEditor
         val parentPackage = projectAccessor.findElements(IPackage::class.java, parentPackageName).first() as IPackage
@@ -172,6 +178,7 @@ class ReflectTransaction(private val projectChangedListener: ProjectChangedListe
     }
 
     private fun createAssociationModel(sourceClassName: String, destinationClassName: String, associationName: String) {
+        logger.debug("Create association model.")
         val modelEditorFactory = projectAccessor.modelEditorFactory
         val basicModelEditor = modelEditorFactory.basicModelEditor
         val sourceClass = projectAccessor.findElements(IClass::class.java, sourceClassName).first() as IClass
@@ -180,6 +187,7 @@ class ReflectTransaction(private val projectChangedListener: ProjectChangedListe
     }
 
     private fun createClassPresentation(className: String, location: Point2D, diagramName: String) {
+        logger.debug("Create class presentation.")
         val diagramEditorFactory = projectAccessor.diagramEditorFactory
         val classDiagramEditor = diagramEditorFactory.classDiagramEditor
         val diagram = projectAccessor.findElements(IDiagram::class.java, diagramName).first() as IDiagram
@@ -189,6 +197,7 @@ class ReflectTransaction(private val projectChangedListener: ProjectChangedListe
     }
 
     private fun createAssociationPresentation(sourceClassName: String, targetClassName: String, diagramName: String) {
+        logger.debug("Create association presentation.")
         @Throws(ClassNotFoundException::class)
         fun searchAssociation(sourceClass: IClass, targetClass: IClass): IAssociation {
             return sourceClass.attributes.first { sourceClassAttribute ->
@@ -205,24 +214,26 @@ class ReflectTransaction(private val projectChangedListener: ProjectChangedListe
         val sourceClassPresentation = sourceClass.presentations.first { it.diagram == diagram } as INodePresentation
         val targetClass = projectAccessor.findElements(IClass::class.java, targetClassName).first() as IClass
         val targetClassPresentation = targetClass.presentations.first { it.diagram == diagram } as INodePresentation
-        println("Source: ${sourceClass.attributes}, target: ${targetClass.attributes}")
+        logger.debug("Source: ${sourceClass.attributes}, target: ${targetClass.attributes}")
         try {
             val association = searchAssociation(sourceClass, targetClass)
-            println("Association: $association")
+            logger.debug("Association: $association")
             classDiagramEditor.createLinkPresentation(association, sourceClassPresentation, targetClassPresentation)
         } catch (e: ClassNotFoundException) {
-            println("Association not found.")
+            logger.error("Association not found.", e)
             return
         }
     }
 
     private fun createOperation(ownerName: String, name: String, returnTypeExpression: String) {
+        logger.debug("Create operation.")
         val modelEditorFactory = projectAccessor.modelEditorFactory
         val basicModelEditor = modelEditorFactory.basicModelEditor
         val ownerClass = projectAccessor.findElements(IClass::class.java, ownerName).first() as IClass
         basicModelEditor.createOperation(ownerClass, name, returnTypeExpression)
     }
     private fun createAttribute(ownerName: String, name: String, typeExpression: String) {
+        logger.debug("Create attribute.")
         val modelEditorFactory = projectAccessor.modelEditorFactory
         val basicModelEditor = modelEditorFactory.basicModelEditor
         val ownerClass = projectAccessor.findElements(IClass::class.java, ownerName).first() as IClass
@@ -241,6 +252,7 @@ class ReflectTransaction(private val projectChangedListener: ProjectChangedListe
     }
 
     private fun createTopic(ownerName: String, name: String, diagramName: String) {
+        logger.debug("Create topic.")
         val diagramEditorFactory = projectAccessor.diagramEditorFactory
         val mindmapEditor = diagramEditorFactory.mindmapEditor
         val diagram = projectAccessor.findElements(IDiagram::class.java, diagramName).first() as IMindMapDiagram
@@ -250,12 +262,13 @@ class ReflectTransaction(private val projectChangedListener: ProjectChangedListe
             val parent = searchTopic(ownerName, topics)
             mindmapEditor.createTopic(parent, name)
         } catch (e: ClassNotFoundException) {
-            println("Parent topic not found.")
+            logger.error("Parent topic not found.", e)
             return
         }
     }
 
     private fun createFloatingTopic(name: String, location: Point2D, size: Pair<Double, Double>, diagramName: String) {
+        logger.debug("Create floating topic.")
         val (width, height) = size
         val diagramEditorFactory = projectAccessor.diagramEditorFactory
         val mindmapEditor = diagramEditorFactory.mindmapEditor
@@ -270,6 +283,7 @@ class ReflectTransaction(private val projectChangedListener: ProjectChangedListe
     }
 
     private fun resizeClassPresentation(className: String, location: Point2D, size: Pair<Double, Double>, diagramName: String) {
+        logger.debug("Resize class presentation.")
         val (width, height) = size
         val diagramEditorFactory = projectAccessor.diagramEditorFactory
         val classDiagramEditor = diagramEditorFactory.classDiagramEditor
@@ -283,6 +297,7 @@ class ReflectTransaction(private val projectChangedListener: ProjectChangedListe
     }
 
     private fun changeOperationNameAndReturnTypeExpression(ownerName: String, brotherNameAndReturnTypeExpression: List<Pair<String, String>>, name: String, returnTypeExpression: String) {
+        logger.debug("Change operation name and return type expression.")
         val ownerClass = projectAccessor.findElements(IClass::class.java, ownerName).first() as IClass
         val operation = ownerClass.operations.filterNot {
             Pair(
@@ -293,7 +308,9 @@ class ReflectTransaction(private val projectChangedListener: ProjectChangedListe
         operation.name = name
         operation.returnTypeExpression = returnTypeExpression
     }
-        private fun changeAttributeNameAndTypeExpression(ownerName: String, brotherNameAndTypeExpression: List<Pair<String, String>>, name: String, typeExpression: String) {
+
+    private fun changeAttributeNameAndTypeExpression(ownerName: String, brotherNameAndTypeExpression: List<Pair<String, String>>, name: String, typeExpression: String) {
+        logger.debug("Change attribute name and type expression.")
         val ownerClass = projectAccessor.findElements(IClass::class.java, ownerName).first() as IClass
         val attribute = ownerClass.attributes.filterNot { Pair(it.name, it.typeExpression) in brotherNameAndTypeExpression }.first()
         attribute.name = name
@@ -301,6 +318,7 @@ class ReflectTransaction(private val projectChangedListener: ProjectChangedListe
     }
 
     private fun resizeTopic(name: String, location: Point2D, size: Pair<Double, Double>, diagramName: String) {
+        logger.debug("Resize topic.")
         val (width, height) = size
         val diagramEditorFactory = projectAccessor.diagramEditorFactory
         val mindmapEditor = diagramEditorFactory.mindmapEditor
@@ -313,6 +331,7 @@ class ReflectTransaction(private val projectChangedListener: ProjectChangedListe
     }
 
     private fun deleteClassModel(name: String) {
+        logger.debug("Delete class model.")
         val modelEditorFactory = projectAccessor.modelEditorFactory
         val basicModelEditor = modelEditorFactory.basicModelEditor
         val clazz = projectAccessor.findElements(IClass::class.java, name).first() as IClass
@@ -320,11 +339,16 @@ class ReflectTransaction(private val projectChangedListener: ProjectChangedListe
     }
 
     private fun deleteAssociationPresentation(receivedPoints: List<Point2D>) {
+        logger.debug("Delete association presentation.")
         val foundLink = api.viewManager.diagramViewManager.currentDiagram.presentations
             .filterIsInstance<ILinkPresentation>().filter { entity -> entity.model is IAssociation }
             .firstOrNull { link ->
                 link.points.all { receivedPoints.containsAll(link.points.toList()) }
             }
         foundLink?.let { link -> api.projectAccessor.modelEditorFactory.basicModelEditor.delete(link.model) }
+    }
+
+    companion object: Logging {
+        private val logger = logger()
     }
 }

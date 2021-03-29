@@ -20,7 +20,7 @@ import kotlinx.serialization.encodeToByteArray
 class ProjectChangedListener(private val mqttPublisher: MqttPublisher): ProjectEventListener {
     @ExperimentalSerializationApi
     override fun projectChanged(e: ProjectEvent) {
-        println("===== Transaction detected =====")
+        logger.debug("===== Transaction detected =====")
         val projectEditUnit = e.projectEditUnit.filter { it.entity != null }
         val removeTransaction = Transaction()
         val createTransaction = Transaction()
@@ -28,18 +28,18 @@ class ProjectChangedListener(private val mqttPublisher: MqttPublisher): ProjectE
         val removeProjectEditUnit = projectEditUnit.filter { it.operation == Operation.REMOVE.ordinal }
         for (it in removeProjectEditUnit){
             val operation = Operation.values()[it.operation]
-            print("Op: $operation -> ")
+            logger.debug("Op: $operation -> ")
             when (val entity = it.entity) {
                 is IClass -> {
                     val deleteClassModel = DeleteClassModel(entity.name)
                     removeTransaction.operations.add(deleteClassModel)
-                    println("${entity.name}(IClass)")
+                    logger.debug("${entity.name}(IClass)")
                 }
                 is IAssociation -> {
                     if (entity.name.isNullOrBlank()) {
                         // TODO: 削除された関連モデルがどれなのか見分けられるようにする
                         removeTransaction.operations.add(DeleteAssociationModel(true))
-                        println("${entity.name}(IAssociation")
+                        logger.debug("${entity.name}(IAssociation")
                     }
                 }
                 is ILinkPresentation -> {
@@ -55,25 +55,25 @@ class ProjectChangedListener(private val mqttPublisher: MqttPublisher): ProjectE
                                             val serializablePoints = entity.points.map { point->Pair(point.x,point.y) }.toList()
                                             val deleteAssociationPresentation = DeleteAssociationPresentation(serializablePoints)
                                             removeTransaction.operations.add(deleteAssociationPresentation)
-                                            println("${source.name}(IClass) - ${entity.label}(ILinkPresentation) - ${target.name}(IClass)")
+                                            logger.debug("${source.name}(IClass) - ${entity.label}(ILinkPresentation) - ${target.name}(IClass)")
                                         }
                                         else -> {
-                                            println("${source.name}(IClass) - ${entity.label}(ILinkPresentation) - $target(Unknown)")
+                                            logger.debug("${source.name}(IClass) - ${entity.label}(ILinkPresentation) - $target(Unknown)")
                                         }
                                     }
                                 }
                                 else -> {
-                                    println("$source(Unknown) - ${entity.label}(ILinkPresentation) - $target(Unknown)")
+                                    logger.debug("$source(Unknown) - ${entity.label}(ILinkPresentation) - $target(Unknown)")
                                 }
                             }
                         }
                         else -> {
-                            println("$entity(INodePresentation)")
+                            logger.debug("$entity(INodePresentation)")
                         }
                     }
                 }
                 else -> {
-                    println("$entity(Unknown)")
+                    logger.debug("$entity(Unknown)")
                 }
             }
         }
@@ -82,27 +82,27 @@ class ProjectChangedListener(private val mqttPublisher: MqttPublisher): ProjectE
         val addProjectEditUnit = projectEditUnit.filter { it.operation == Operation.ADD.ordinal }
         for (it in addProjectEditUnit) {
             val operation = Operation.values()[it.operation]
-            print("Op: $operation -> ")
+            logger.debug("Op: $operation -> ")
             when (val entity = it.entity) {
                 is IClassDiagram -> {
                     val owner = entity.owner as INamedElement
                     val createClassDiagram = CreateClassDiagram(entity.name, owner.name)
                     createTransaction.operations.add(createClassDiagram)
-                    println("${entity.name}(IClassDiagram)")
+                    logger.debug("${entity.name}(IClassDiagram)")
                     break
                 }
                 is IMindMapDiagram -> {
                     val owner = entity.owner as INamedElement
                     val createMindMapDiagram = CreateMindmapDiagram(entity.name, owner.name)
                     createTransaction.operations.add(createMindMapDiagram)
-                    println("${entity.name}(IMindMapDiagram)")
+                    logger.debug("${entity.name}(IMindMapDiagram)")
                     break
                 }
                 is IClass -> {
                     val parentPackage = entity.owner as IPackage
                     val createClassModel = CreateClassModel(entity.name, parentPackage.name)
                     createTransaction.operations.add(createClassModel)
-                    println("${entity.name}(IClass)")
+                    logger.debug("${entity.name}(IClass)")
                 }
                 is IAssociation -> {
                     val sourceClass = entity.memberEnds.first().owner
@@ -113,15 +113,15 @@ class ProjectChangedListener(private val mqttPublisher: MqttPublisher): ProjectE
                                 is IClass -> {
                                     val createAssociationModel = CreateAssociationModel(sourceClass.name, destinationClass.name, entity.name)
                                     createTransaction.operations.add(createAssociationModel)
-                                    println("${sourceClass.name}(IClass) - ${entity.name}(IAssociation) - ${destinationClass.name}(IClass)")
+                                    logger.debug("${sourceClass.name}(IClass) - ${entity.name}(IAssociation) - ${destinationClass.name}(IClass)")
                                 }
                                 else -> {
-                                    println("${sourceClass.name}(IClass) - ${entity.name}(IAssociation) - $destinationClass(Unknown)")
+                                    logger.debug("${sourceClass.name}(IClass) - ${entity.name}(IAssociation) - $destinationClass(Unknown)")
                                 }
                             }
                         }
                         else -> {
-                            println("$sourceClass(Unknown) - ${entity.name}(IAssociation) - $destinationClass(Unknown)")
+                            logger.debug("$sourceClass(Unknown) - ${entity.name}(IAssociation) - $destinationClass(Unknown)")
                         }
                     }
                 }
@@ -130,10 +130,10 @@ class ProjectChangedListener(private val mqttPublisher: MqttPublisher): ProjectE
                         is IClass -> {
                             val createOperation = CreateOperation(owner.name, entity.name, entity.returnTypeExpression)
                             createTransaction.operations.add(createOperation)
-                            println("${entity.name}(IOperation) - $owner(IClass)")
+                            logger.debug("${entity.name}(IOperation) - $owner(IClass)")
                         }
                         else -> {
-                            println("${entity.name}(IOperation) - $owner(Unknown)")
+                            logger.debug("${entity.name}(IOperation) - $owner(Unknown)")
                         }
                     }
                 }
@@ -142,10 +142,10 @@ class ProjectChangedListener(private val mqttPublisher: MqttPublisher): ProjectE
                         is IClass -> {
                             val createAttribute = CreateAttribute(owner.name, entity.name, entity.typeExpression)
                             createTransaction.operations.add(createAttribute)
-                            println("${entity.name}(IAttribute) - ${owner}(IClass)")
+                            logger.debug("${entity.name}(IAttribute) - ${owner}(IClass)")
                         }
                         else -> {
-                            println("${entity.name}(IAttribute) - ${owner}(Unknown)")
+                            logger.debug("${entity.name}(IAttribute) - ${owner}(Unknown)")
                         }
                     }
                 }
@@ -163,10 +163,10 @@ class ProjectChangedListener(private val mqttPublisher: MqttPublisher): ProjectE
                                     val location = Pair(entity.location.x, entity.location.y)
                                     val createClassPresentation = CreateClassPresentation(model.name, location, diagram.name)
                                     createTransaction.operations.add(createClassPresentation)
-                                    println("${entity.label}(INodePresentation)::${model.name}(IClass, ${Pair(entity.width, entity.height)} at ${entity.location})")
+                                    logger.debug("${entity.label}(INodePresentation)::${model.name}(IClass, ${Pair(entity.width, entity.height)} at ${entity.location})")
                                 }
                                 else -> {
-                                    println("${entity.label}(INodePresentation) - $model(Unknown)")
+                                    logger.debug("${entity.label}(INodePresentation) - $model(Unknown)")
                                 }
                             }
                         }
@@ -177,17 +177,17 @@ class ProjectChangedListener(private val mqttPublisher: MqttPublisher): ProjectE
                                     val size = Pair(entity.width, entity.height)
                                     val createFloatingTopic = CreateFloatingTopic(entity.label, location, size, diagram.name)
                                     createTransaction.operations.add(createFloatingTopic)
-                                    println("${entity.label}(INodePresentation, FloatingTopic)")
+                                    logger.debug("${entity.label}(INodePresentation, FloatingTopic)")
                                 }
                                 else -> {
                                     val createTopic = CreateTopic(owner.label, entity.label, diagram.name)
                                     createTransaction.operations.add(createTopic)
-                                    println("${owner.label}(INodePresentation) - ${entity.label}(INodePresentation)")
+                                    logger.debug("${owner.label}(INodePresentation) - ${entity.label}(INodePresentation)")
                                 }
                             }
                         }
                         else -> {
-                            println("${entity.label}(Unknown)")
+                            logger.debug("${entity.label}(Unknown)")
                         }
                     }
                 }
@@ -200,20 +200,20 @@ class ProjectChangedListener(private val mqttPublisher: MqttPublisher): ProjectE
                                 is IClass -> {
                                     val createAssociationPresentation = CreateAssociationPresentation(source.name, target.name, entity.diagram.name)
                                     createTransaction.operations.add(createAssociationPresentation)
-                                    println("${source.name}(IClass) - ${entity.label}(ILinkPresentation) - ${target.name}(IClass)")
+                                    logger.debug("${source.name}(IClass) - ${entity.label}(ILinkPresentation) - ${target.name}(IClass)")
                                 }
                                 else -> {
-                                    println("${source.name}(IClass) - ${entity.label}(ILinkPresentation) - $target(Unknown)")
+                                    logger.debug("${source.name}(IClass) - ${entity.label}(ILinkPresentation) - $target(Unknown)")
                                 }
                             }
                         }
                         else -> {
-                            println("$source(Unknown) - ${entity.label}(ILinkPresentation) - $target(Unknown)")
+                            logger.debug("$source(Unknown) - ${entity.label}(ILinkPresentation) - $target(Unknown)")
                         }
                     }
                 }
                 else -> {
-                    println("$entity(Unknown)")
+                    logger.debug("$entity(Unknown)")
                 }
             }
         }
@@ -224,7 +224,7 @@ class ProjectChangedListener(private val mqttPublisher: MqttPublisher): ProjectE
         val modifyProjectEditUnit = projectEditUnit.filter { it.operation == Operation.MODIFY.ordinal }
         for (it in modifyProjectEditUnit) {
             val operation = Operation.values()[it.operation]
-            print("Op: $operation -> ")
+            logger.debug("Op: $operation -> ")
             when (val entity = it.entity) {
                 is INodePresentation -> {
                     when (val diagram = entity.diagram) {
@@ -235,10 +235,10 @@ class ProjectChangedListener(private val mqttPublisher: MqttPublisher): ProjectE
                                     val size = Pair(entity.width, entity.height)
                                     val resizeClassPresentation = ResizeClassPresentation(model.name, location, size, diagram.name)
                                     modifyTransaction.operations.add(resizeClassPresentation)
-                                    println("${entity.label}(INodePresentation)::${model.name}(IClass, ${Pair(entity.width, entity.height)} at ${entity.location}) @ClassDiagram${diagram.name}")
+                                    logger.debug("${entity.label}(INodePresentation)::${model.name}(IClass, ${Pair(entity.width, entity.height)} at ${entity.location}) @ClassDiagram${diagram.name}")
                                 }
                                 else -> {
-                                    println("${entity.label}(INodePresentation) - $model(Unknown)")
+                                    logger.debug("${entity.label}(INodePresentation) - $model(Unknown)")
                                 }
                             }
                         }
@@ -247,11 +247,11 @@ class ProjectChangedListener(private val mqttPublisher: MqttPublisher): ProjectE
                             val size = Pair(entity.width, entity.height)
                             val resizeTopic = ResizeTopic(entity.label, location, size, diagram.name)
                             modifyTransaction.operations.add(resizeTopic)
-                            println("${entity.label}(INodePresentation)::Topic(${Pair(entity.width, entity.height)} at ${entity.location}) @MindmapDiagram${diagram.name}")
+                            logger.debug("${entity.label}(INodePresentation)::Topic(${Pair(entity.width, entity.height)} at ${entity.location}) @MindmapDiagram${diagram.name}")
                             break
                         }
                         else -> {
-                            println("${entity.label}(INodePresentation) @UnknownDiagram")
+                            logger.debug("${entity.label}(INodePresentation) @UnknownDiagram")
                         }
                     }
                 }
@@ -268,11 +268,11 @@ class ProjectChangedListener(private val mqttPublisher: MqttPublisher): ProjectE
                                     entity.returnTypeExpression
                                 )
                             modifyTransaction.operations.add(changeOperationNameAndReturnTypeExpression)
-                            println("${entity.name}:${entity.returnTypeExpression}/${entity.returnType}(IOperation) - ${entity.owner}(IClass)")
+                            logger.debug("${entity.name}:${entity.returnTypeExpression}/${entity.returnType}(IOperation) - ${entity.owner}(IClass)")
                             break
                         }
                         else -> {
-                            println("$entity(IOperation) - ${entity.owner}(Unknown)")
+                            logger.debug("$entity(IOperation) - ${entity.owner}(Unknown)")
                         }
                     }
                 }
@@ -282,16 +282,16 @@ class ProjectChangedListener(private val mqttPublisher: MqttPublisher): ProjectE
                             val brotherNameAndTypeExpression = owner.attributes.filterNot { it == entity }.map { Pair(it.name, it.typeExpression) }.toList()
                             val changeAttributeNameAndTypeExpression = ChangeAttributeNameAndTypeExpression(owner.name, brotherNameAndTypeExpression, entity.name, entity.typeExpression)
                             modifyTransaction.operations.add(changeAttributeNameAndTypeExpression)
-                            println("${entity.name}:${entity.typeExpression}/${entity.type}(IAttribute) - ${entity.owner}(IClass)")
+                            logger.debug("${entity.name}:${entity.typeExpression}/${entity.type}(IAttribute) - ${entity.owner}(IClass)")
                             break
                         }
                         else -> {
-                            println("$entity(IAttribute) - ${entity.owner}(Unknown)")
+                            logger.debug("$entity(IAttribute) - ${entity.owner}(Unknown)")
                         }
                     }
                 }
                 else -> {
-                    println("$entity(Unknown)")
+                    logger.debug("$entity(Unknown)")
                 }
             }
         }
@@ -307,4 +307,8 @@ class ProjectChangedListener(private val mqttPublisher: MqttPublisher): ProjectE
 
     override fun projectOpened(p0: ProjectEvent) {}
     override fun projectClosed(p0: ProjectEvent) {}
+
+    companion object: Logging {
+        private val logger = logger()
+    }
 }
