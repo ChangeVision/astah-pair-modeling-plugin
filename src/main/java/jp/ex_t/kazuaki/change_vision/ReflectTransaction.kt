@@ -216,14 +216,12 @@ class ReflectTransaction(private val projectChangedListener: ProjectChangedListe
 
     private fun createAssociationPresentation(sourceClassName: String, targetClassName: String, diagramName: String) {
         @Throws(ClassNotFoundException::class)
-        fun searchAssociation(sourceClass: IClass, targetClass: IClass): IAssociation? {
-            sourceClass.attributes.forEach { sourceClassAttribute ->
-                targetClass.attributes.forEach {
-                    if (sourceClassAttribute.association == it.association)
-                        return it.association
+        fun searchAssociation(sourceClass: IClass, targetClass: IClass): IAssociation {
+            return (sourceClass.attributes.filterNot { it.association == null }.find { sourceClassAttribute ->
+                targetClass.attributes.filterNot { it.association == null }.any { targetClassAttribute ->
+                    sourceClassAttribute.association == targetClassAttribute.association
                 }
-            }
-            throw ClassNotFoundException()
+            } ?: throw ClassNotFoundException()).association
         }
         val diagramEditorFactory = projectAccessor.diagramEditorFactory
         val classDiagramEditor = diagramEditorFactory.classDiagramEditor
