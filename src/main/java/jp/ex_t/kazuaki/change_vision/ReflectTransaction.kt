@@ -127,6 +127,10 @@ class ReflectTransaction(private val projectChangedListener: ProjectChangedListe
                             if (it.className.isNotEmpty())
                                 deleteClassModel(it.className)
                         }
+                        is DeleteClassPresentation -> {
+                            if (it.className.isNotEmpty())
+                                deleteClassPresentation(it.className)
+                        }
                         is DeleteAssociationPresentation -> {
                             val receivedPoints = it.points.map { point
                                 -> Point2D.Double(point.first, point.second)
@@ -336,6 +340,16 @@ class ReflectTransaction(private val projectChangedListener: ProjectChangedListe
         val basicModelEditor = modelEditorFactory.basicModelEditor
         val clazz = projectAccessor.findElements(IClass::class.java, name).first() as IClass
         basicModelEditor.delete(clazz)
+    }
+
+    private fun deleteClassPresentation(name: String) {
+        val diagramEditorFactory = projectAccessor.diagramEditorFactory
+        val classDiagramEditor = diagramEditorFactory.classDiagramEditor
+        val diagram = api.viewManager.diagramViewManager.currentDiagram
+        classDiagramEditor.diagram = diagram
+        val clazz = projectAccessor.findElements(IClass::class.java, name).first() as IClass
+        val classPresentation = clazz.presentations.find { it.diagram == diagram } ?: return
+        classDiagramEditor.deletePresentation(classPresentation)
     }
 
     private fun deleteAssociationPresentation(receivedPoints: List<Point2D>) {
