@@ -43,6 +43,8 @@ class ProjectChangedListener(private val mqttPublisher: MqttPublisher): ProjectE
                     }
                 }
                 is ILinkPresentation -> {
+                    if (removeProjectEditUnit.any { it.entity is IClass })
+                        continue
                     when (val model = entity.model) {
                         is IAssociation -> {
                             val memberEnds = model.memberEnds
@@ -77,8 +79,10 @@ class ProjectChangedListener(private val mqttPublisher: MqttPublisher): ProjectE
                 }
             }
         }
-        if (removeTransaction.operations.isNotEmpty())
+        if (removeTransaction.operations.isNotEmpty()){
             encodeAndPublish(removeTransaction)
+            return
+        }
         val addProjectEditUnit = projectEditUnit.filter { it.operation == Operation.ADD.ordinal }
         for (it in addProjectEditUnit) {
             val operation = Operation.values()[it.operation]
