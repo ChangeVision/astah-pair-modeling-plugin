@@ -8,6 +8,7 @@
 
 package jp.ex_t.kazuaki.change_vision
 
+import jp.ex_t.kazuaki.change_vision.apply_transaction.ReflectTransaction
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.cbor.Cbor
 import kotlinx.serialization.decodeFromByteArray

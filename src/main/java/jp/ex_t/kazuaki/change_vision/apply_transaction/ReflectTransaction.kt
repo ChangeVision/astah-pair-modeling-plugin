@@ -6,15 +6,16 @@
  * see https://opensource.org/licenses/MIT
  */
 
-package jp.ex_t.kazuaki.change_vision
+package jp.ex_t.kazuaki.change_vision.apply_transaction
 
 import com.change_vision.jude.api.inf.AstahAPI
 import com.change_vision.jude.api.inf.exception.BadTransactionException
 import com.change_vision.jude.api.inf.project.ProjectAccessor
 import com.change_vision.jude.api.inf.ui.IPluginActionDelegate.UnExpectedException
-import jp.ex_t.kazuaki.change_vision.apply_transaction.ClassDiagramApplyTransaction
-import jp.ex_t.kazuaki.change_vision.apply_transaction.MindmapDiagramApplyTransaction
+import jp.ex_t.kazuaki.change_vision.Logging
+import jp.ex_t.kazuaki.change_vision.Transaction
 import jp.ex_t.kazuaki.change_vision.event_listener.ProjectChangedListener
+import jp.ex_t.kazuaki.change_vision.logger
 import javax.swing.SwingUtilities
 
 class ReflectTransaction(private val projectChangedListener: ProjectChangedListener) {
