@@ -13,17 +13,18 @@ import com.change_vision.jude.api.inf.exception.BadTransactionException
 import com.change_vision.jude.api.inf.model.*
 import com.change_vision.jude.api.inf.presentation.ILinkPresentation
 import com.change_vision.jude.api.inf.presentation.INodePresentation
-import jp.ex_t.kazuaki.change_vision.*
+import jp.ex_t.kazuaki.change_vision.Logging
+import jp.ex_t.kazuaki.change_vision.logger
 import jp.ex_t.kazuaki.change_vision.network.*
 import java.awt.geom.Point2D
 
-class ClassDiagramApplyTransaction: IApplyTransaction {
+class ClassDiagramApplyTransaction: IApplyTransaction<ClassDiagramOperation> {
     private val api = AstahAPI.getAstahAPI()
     private val projectAccessor = api.projectAccessor
 
     @Throws(BadTransactionException::class)
-    override fun apply(transaction: Transaction) {
-        transaction.operations.forEach { it ->
+    override fun apply(operations: List<ClassDiagramOperation>) {
+        operations.forEach { it ->
             when (it) {
                 is CreateClassDiagram -> {
                     if (it.name.isNotEmpty() && it.ownerName.isNotEmpty())
