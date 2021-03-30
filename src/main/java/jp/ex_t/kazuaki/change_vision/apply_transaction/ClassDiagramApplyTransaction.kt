@@ -210,7 +210,7 @@ class ClassDiagramApplyTransaction: IApplyTransaction<ClassDiagramOperation> {
         val classDiagramEditor = diagramEditorFactory.classDiagramEditor
         val diagram = projectAccessor.findElements(IDiagram::class.java, diagramName).first() as IDiagram
         classDiagramEditor.diagram = diagram
-        val clazz = projectAccessor.findElements(IClass::class.java, className).first() as IClass
+        val clazz = (projectAccessor.findElements(IClass::class.java, className).first() ?: return) as IClass
         val classPresentation = clazz.presentations.first { it.diagram == diagram } as INodePresentation
         classPresentation.location = location
         classPresentation.width = width
