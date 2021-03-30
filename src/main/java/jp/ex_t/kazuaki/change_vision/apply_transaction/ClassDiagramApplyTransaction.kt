@@ -72,8 +72,13 @@ class ClassDiagramApplyTransaction: IApplyTransaction<ClassDiagramOperation> {
                 }
                 is ResizeClassPresentation -> {
                     val location = Point2D.Double(it.location.first, it.location.second)
-                    if (it.className.isNotEmpty() && it.diagramName.isNotEmpty())
+                    if (!operations.any { it is ChangeClassModelName }
+                        && it.className.isNotEmpty() && it.diagramName.isNotEmpty())
                         resizeClassPresentation(it.className, location, it.size, it.diagramName)
+                }
+                is ChangeClassModelName -> {
+                    if (it.name.isNotEmpty())
+                        changeClassModelName(it.name, it.brotherClassNameList)
                 }
                 is ChangeOperationNameAndReturnTypeExpression -> {
                     if (it.ownerName.isNotEmpty()
@@ -206,11 +211,20 @@ class ClassDiagramApplyTransaction: IApplyTransaction<ClassDiagramOperation> {
         val classDiagramEditor = diagramEditorFactory.classDiagramEditor
         val diagram = projectAccessor.findElements(IDiagram::class.java, diagramName).first() as IDiagram
         classDiagramEditor.diagram = diagram
-        val clazz = projectAccessor.findElements(IClass::class.java, className).first() as IClass
+        val clazz = (projectAccessor.findElements(IClass::class.java, className).first() ?: return) as IClass
         val classPresentation = clazz.presentations.first { it.diagram == diagram } as INodePresentation
         classPresentation.location = location
         classPresentation.width = width
         classPresentation.height = height
+    }
+
+    private fun changeClassModelName(name: String, brotherClassModelNameList: List<String?>) {
+        logger.debug("Change class model name.")
+        if (brotherClassModelNameList.isNullOrEmpty())
+            projectAccessor.findElements(IClass::class.java).first().name = name
+        else
+            projectAccessor.findElements(IClass::class.java)
+                .filterNot { it.name in brotherClassModelNameList }.first().name = name
     }
 
     private fun changeOperationNameAndReturnTypeExpression(ownerName: String, brotherNameAndReturnTypeExpression: List<Pair<String, String>>, name: String, returnTypeExpression: String) {

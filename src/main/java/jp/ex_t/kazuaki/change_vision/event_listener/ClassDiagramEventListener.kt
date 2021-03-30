@@ -8,6 +8,7 @@
 
 package jp.ex_t.kazuaki.change_vision.event_listener
 
+import com.change_vision.jude.api.inf.AstahAPI
 import com.change_vision.jude.api.inf.model.*
 import com.change_vision.jude.api.inf.presentation.ILinkPresentation
 import com.change_vision.jude.api.inf.presentation.INodePresentation
@@ -217,6 +218,14 @@ class ClassDiagramEventListener(private val mqttPublisher: MqttPublisher): IEven
             val operation = Operation.values()[it.operation]
             logger.debug("Op: $operation -> ")
             when (val entity = it.entity) {
+                is IClass -> {
+                    val api = AstahAPI.getAstahAPI()
+                    val brotherClassNameList = api.projectAccessor.findElements(IClass::class.java)
+                        .filterNot { it.name == entity.name }.map { it?.name }.toList()
+                    val changeClassModelName = ChangeClassModelName(entity.name, brotherClassNameList)
+                    modifyTransaction.operations.add(changeClassModelName)
+                    logger.debug("${entity.name}(IClass) maybe new name")
+                }
                 is INodePresentation -> {
                     when (val diagram = entity.diagram) {
                         is IClassDiagram -> {

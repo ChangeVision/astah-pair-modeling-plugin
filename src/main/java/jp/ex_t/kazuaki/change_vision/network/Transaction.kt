@@ -99,6 +99,12 @@ data class ResizeClassPresentation(
 ): ClassDiagramOperation()
 
 @Serializable
+data class ChangeClassModelName(
+    val name: String,
+    val brotherClassNameList: List<String?> = mutableListOf(),
+): ClassDiagramOperation()
+
+@Serializable
 data class ChangeOperationNameAndReturnTypeExpression(
     val ownerName: String,
     val brotherNameAndReturnTypeExpression: List<Pair<String, String>>,
