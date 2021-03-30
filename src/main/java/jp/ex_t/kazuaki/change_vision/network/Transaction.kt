@@ -130,7 +130,7 @@ data class DeleteClassModel(
 @Serializable
 data class DeleteClassPresentation(
     val className: String,
-): ClassOperation()
+): ClassDiagramOperation()
 
 @Serializable
 data class DeleteAssociationModel(
