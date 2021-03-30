@@ -12,8 +12,8 @@ import com.change_vision.jude.api.inf.AstahAPI
 import com.change_vision.jude.api.inf.exception.BadTransactionException
 import com.change_vision.jude.api.inf.project.ProjectAccessor
 import com.change_vision.jude.api.inf.ui.IPluginActionDelegate.UnExpectedException
-import jp.ex_t.kazuaki.change_vision.diagram.ClassDiagramApplyTransaction
-import jp.ex_t.kazuaki.change_vision.diagram.MindmapDiagramApplyTransaction
+import jp.ex_t.kazuaki.change_vision.apply_transaction.ClassDiagramApplyTransaction
+import jp.ex_t.kazuaki.change_vision.apply_transaction.MindmapDiagramApplyTransaction
 import javax.swing.SwingUtilities
 
 class ReflectTransaction(private val projectChangedListener: ProjectChangedListener) {

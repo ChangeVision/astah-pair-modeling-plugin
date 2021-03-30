@@ -6,7 +6,7 @@
  * see https://opensource.org/licenses/MIT
  */
 
-package jp.ex_t.kazuaki.change_vision.diagram
+package jp.ex_t.kazuaki.change_vision.apply_transaction
 
 import jp.ex_t.kazuaki.change_vision.Transaction
 
