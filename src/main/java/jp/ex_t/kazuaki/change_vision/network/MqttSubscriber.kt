@@ -6,9 +6,11 @@
  * see https://opensource.org/licenses/MIT
  */
 
-package jp.ex_t.kazuaki.change_vision
+package jp.ex_t.kazuaki.change_vision.network
 
+import jp.ex_t.kazuaki.change_vision.Logging
 import jp.ex_t.kazuaki.change_vision.apply_transaction.ReflectTransaction
+import jp.ex_t.kazuaki.change_vision.logger
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.cbor.Cbor
 import kotlinx.serialization.decodeFromByteArray

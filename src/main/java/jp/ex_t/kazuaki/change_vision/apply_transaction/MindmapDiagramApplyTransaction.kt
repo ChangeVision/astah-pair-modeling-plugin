@@ -15,6 +15,7 @@ import com.change_vision.jude.api.inf.model.IMindMapDiagram
 import com.change_vision.jude.api.inf.model.INamedElement
 import com.change_vision.jude.api.inf.presentation.INodePresentation
 import jp.ex_t.kazuaki.change_vision.*
+import jp.ex_t.kazuaki.change_vision.network.*
 import java.awt.geom.Point2D
 
 class MindmapDiagramApplyTransaction: IApplyTransaction {

@@ -6,7 +6,7 @@
  * see https://opensource.org/licenses/MIT
  */
 
-package jp.ex_t.kazuaki.change_vision
+package jp.ex_t.kazuaki.change_vision.network
 
 import kotlinx.serialization.Serializable
 

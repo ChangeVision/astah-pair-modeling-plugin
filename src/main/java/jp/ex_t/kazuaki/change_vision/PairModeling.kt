@@ -11,6 +11,8 @@ package jp.ex_t.kazuaki.change_vision
 import com.change_vision.jude.api.inf.AstahAPI
 import jp.ex_t.kazuaki.change_vision.apply_transaction.ReflectTransaction
 import jp.ex_t.kazuaki.change_vision.event_listener.ProjectChangedListener
+import jp.ex_t.kazuaki.change_vision.network.MqttPublisher
+import jp.ex_t.kazuaki.change_vision.network.MqttSubscriber
 
 class PairModeling(topic: String, private val clientId: String, private val brokerAddress: String) {
     private val topicTransaction = "$topic/transaction"

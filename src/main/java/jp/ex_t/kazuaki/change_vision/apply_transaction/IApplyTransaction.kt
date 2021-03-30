@@ -8,7 +8,7 @@
 
 package jp.ex_t.kazuaki.change_vision.apply_transaction
 
-import jp.ex_t.kazuaki.change_vision.Transaction
+import jp.ex_t.kazuaki.change_vision.network.Transaction
 
 interface IApplyTransaction {
     fun apply(transaction: Transaction)
