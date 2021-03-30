@@ -78,7 +78,7 @@ class ProjectChangedListener(private val mqttPublisher: MqttPublisher): ProjectE
             }
         }
         if (removeTransaction.operations.isNotEmpty())
-            encodeAndPublish(removeTransaction)
+            encodeAndPublish(removeTransaction, mqttPublisher)
         val addProjectEditUnit = projectEditUnit.filter { it.operation == Operation.ADD.ordinal }
         for (it in addProjectEditUnit) {
             val operation = Operation.values()[it.operation]
@@ -218,7 +218,7 @@ class ProjectChangedListener(private val mqttPublisher: MqttPublisher): ProjectE
             }
         }
         if (createTransaction.operations.isNotEmpty()) {
-            encodeAndPublish(createTransaction)
+            encodeAndPublish(createTransaction, mqttPublisher)
             return
         }
         val modifyProjectEditUnit = projectEditUnit.filter { it.operation == Operation.MODIFY.ordinal }
@@ -296,13 +296,7 @@ class ProjectChangedListener(private val mqttPublisher: MqttPublisher): ProjectE
             }
         }
         if (modifyTransaction.operations.isNotEmpty())
-            encodeAndPublish(modifyTransaction)
-    }
-
-    @ExperimentalSerializationApi
-    private fun encodeAndPublish(transaction: Transaction) {
-        val byteArray = Cbor.encodeToByteArray(transaction)
-        mqttPublisher.publish(byteArray)
+            encodeAndPublish(modifyTransaction, mqttPublisher)
     }
 
     override fun projectOpened(p0: ProjectEvent) {}
@@ -310,5 +304,11 @@ class ProjectChangedListener(private val mqttPublisher: MqttPublisher): ProjectE
 
     companion object: Logging {
         private val logger = logger()
+
+        @ExperimentalSerializationApi
+        fun encodeAndPublish(transaction: Transaction, mqttPublisher: MqttPublisher) {
+            val byteArray = Cbor.encodeToByteArray(transaction)
+            mqttPublisher.publish(byteArray)
+        }
     }
 }
