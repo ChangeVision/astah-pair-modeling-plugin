@@ -75,6 +75,10 @@ class ClassDiagramApplyTransaction: IApplyTransaction<ClassDiagramOperation> {
                     if (it.className.isNotEmpty() && it.diagramName.isNotEmpty())
                         resizeClassPresentation(it.className, location, it.size, it.diagramName)
                 }
+                is ChangeClassModelName -> {
+                    if (it.name.isNotEmpty())
+                        changeClassModelName(it.name, it.brotherClassNameList)
+                }
                 is ChangeOperationNameAndReturnTypeExpression -> {
                     if (it.ownerName.isNotEmpty()
                         && it.name.isNotEmpty()
@@ -211,6 +215,15 @@ class ClassDiagramApplyTransaction: IApplyTransaction<ClassDiagramOperation> {
         classPresentation.location = location
         classPresentation.width = width
         classPresentation.height = height
+    }
+
+    private fun changeClassModelName(name: String, brotherClassModelNameList: List<String?>) {
+        logger.debug("Change class model name.")
+        if (brotherClassModelNameList.isNullOrEmpty())
+            projectAccessor.findElements(IClass::class.java).first().name = name
+        else
+            projectAccessor.findElements(IClass::class.java)
+                .filterNot { it.name in brotherClassModelNameList }.first().name = name
     }
 
     private fun changeOperationNameAndReturnTypeExpression(ownerName: String, brotherNameAndReturnTypeExpression: List<Pair<String, String>>, name: String, returnTypeExpression: String) {
