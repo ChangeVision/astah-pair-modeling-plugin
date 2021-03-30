@@ -12,7 +12,8 @@ import com.change_vision.jude.api.inf.model.*
 import com.change_vision.jude.api.inf.presentation.ILinkPresentation
 import com.change_vision.jude.api.inf.presentation.INodePresentation
 import com.change_vision.jude.api.inf.project.ProjectEditUnit
-import jp.ex_t.kazuaki.change_vision.*
+import jp.ex_t.kazuaki.change_vision.Logging
+import jp.ex_t.kazuaki.change_vision.logger
 import jp.ex_t.kazuaki.change_vision.network.*
 import kotlinx.serialization.ExperimentalSerializationApi
 
@@ -41,6 +42,8 @@ class ClassDiagramEventListener(private val mqttPublisher: MqttPublisher): IEven
                     }
                 }
                 is ILinkPresentation -> {
+                    if (removeProjectEditUnit.any { it.entity is IClass })
+                        continue
                     when (val model = entity.model) {
                         is IAssociation -> {
                             val memberEnds = model.memberEnds
@@ -66,7 +69,16 @@ class ClassDiagramEventListener(private val mqttPublisher: MqttPublisher): IEven
                             }
                         }
                         else -> {
-                            logger.debug("$entity(INodePresentation)")
+                            logger.debug("$entity(ILinkPresentation)")
+                        }
+                    }
+                }
+                is INodePresentation -> {
+                    when (val model = entity.model) {
+                        is IClass -> {
+                            val deleteClassPresentation = DeleteClassPresentation(model.name)
+                            removeTransaction.operations.add(deleteClassPresentation)
+                            logger.debug("${model.name}(INodePresentation, IClass)")
                         }
                     }
                 }
