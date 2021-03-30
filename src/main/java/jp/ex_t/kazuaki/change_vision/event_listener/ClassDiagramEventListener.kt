@@ -1,27 +1,26 @@
 /*
- * ProjectChangedListener.kt - pair-modeling-prototype
+ * ClassDiagramEventListener.kt - pair-modeling-prototype
  * Copyright © 2021 HyodaKazuaki.
  *
  * Released under the MIT License.
  * see https://opensource.org/licenses/MIT
  */
 
-package jp.ex_t.kazuaki.change_vision
+package jp.ex_t.kazuaki.change_vision.event_listener
 
 import com.change_vision.jude.api.inf.model.*
 import com.change_vision.jude.api.inf.presentation.ILinkPresentation
 import com.change_vision.jude.api.inf.presentation.INodePresentation
-import com.change_vision.jude.api.inf.project.ProjectEvent
-import com.change_vision.jude.api.inf.project.ProjectEventListener
+import com.change_vision.jude.api.inf.project.ProjectEditUnit
+import jp.ex_t.kazuaki.change_vision.Logging
+import jp.ex_t.kazuaki.change_vision.logger
+import jp.ex_t.kazuaki.change_vision.network.*
 import kotlinx.serialization.ExperimentalSerializationApi
-import kotlinx.serialization.cbor.Cbor
-import kotlinx.serialization.encodeToByteArray
 
-class ProjectChangedListener(private val mqttPublisher: MqttPublisher): ProjectEventListener {
+class ClassDiagramEventListener(private val mqttPublisher: MqttPublisher): IEventListener {
     @ExperimentalSerializationApi
-    override fun projectChanged(e: ProjectEvent) {
-        logger.debug("===== Transaction detected =====")
-        val projectEditUnit = e.projectEditUnit.filter { it.entity != null }
+    override fun process(projectEditUnit: List<ProjectEditUnit>) {
+        logger.debug("Start process")
         val removeTransaction = Transaction()
         val createTransaction = Transaction()
         val modifyTransaction = Transaction()
@@ -81,9 +80,6 @@ class ProjectChangedListener(private val mqttPublisher: MqttPublisher): ProjectE
                             removeTransaction.operations.add(deleteClassPresentation)
                             logger.debug("${model.name}(INodePresentation, IClass)")
                         }
-                        else -> {
-                            logger.debug("$entity(INodePresentation)")
-                        }
                     }
                 }
                 else -> {
@@ -91,10 +87,11 @@ class ProjectChangedListener(private val mqttPublisher: MqttPublisher): ProjectE
                 }
             }
         }
-        if (removeTransaction.operations.isNotEmpty()){
-            encodeAndPublish(removeTransaction)
+        if (removeTransaction.operations.isNotEmpty()) {
+            ProjectChangedListener.encodeAndPublish(removeTransaction, mqttPublisher)
             return
         }
+
         val addProjectEditUnit = projectEditUnit.filter { it.operation == Operation.ADD.ordinal }
         for (it in addProjectEditUnit) {
             val operation = Operation.values()[it.operation]
@@ -105,13 +102,6 @@ class ProjectChangedListener(private val mqttPublisher: MqttPublisher): ProjectE
                     val createClassDiagram = CreateClassDiagram(entity.name, owner.name)
                     createTransaction.operations.add(createClassDiagram)
                     logger.debug("${entity.name}(IClassDiagram)")
-                    break
-                }
-                is IMindMapDiagram -> {
-                    val owner = entity.owner as INamedElement
-                    val createMindMapDiagram = CreateMindmapDiagram(entity.name, owner.name)
-                    createTransaction.operations.add(createMindMapDiagram)
-                    logger.debug("${entity.name}(IMindMapDiagram)")
                     break
                 }
                 is IClass -> {
@@ -186,22 +176,6 @@ class ProjectChangedListener(private val mqttPublisher: MqttPublisher): ProjectE
                                 }
                             }
                         }
-                        is IMindMapDiagram -> {
-                            when (val owner = entity.parent) {
-                                null -> {
-                                    val location = Pair(entity.location.x, entity.location.y)
-                                    val size = Pair(entity.width, entity.height)
-                                    val createFloatingTopic = CreateFloatingTopic(entity.label, location, size, diagram.name)
-                                    createTransaction.operations.add(createFloatingTopic)
-                                    logger.debug("${entity.label}(INodePresentation, FloatingTopic)")
-                                }
-                                else -> {
-                                    val createTopic = CreateTopic(owner.label, entity.label, diagram.name)
-                                    createTransaction.operations.add(createTopic)
-                                    logger.debug("${owner.label}(INodePresentation) - ${entity.label}(INodePresentation)")
-                                }
-                            }
-                        }
                         else -> {
                             logger.debug("${entity.label}(Unknown)")
                         }
@@ -234,9 +208,10 @@ class ProjectChangedListener(private val mqttPublisher: MqttPublisher): ProjectE
             }
         }
         if (createTransaction.operations.isNotEmpty()) {
-            encodeAndPublish(createTransaction)
+            ProjectChangedListener.encodeAndPublish(createTransaction, mqttPublisher)
             return
         }
+
         val modifyProjectEditUnit = projectEditUnit.filter { it.operation == Operation.MODIFY.ordinal }
         for (it in modifyProjectEditUnit) {
             val operation = Operation.values()[it.operation]
@@ -257,14 +232,6 @@ class ProjectChangedListener(private val mqttPublisher: MqttPublisher): ProjectE
                                     logger.debug("${entity.label}(INodePresentation) - $model(Unknown)")
                                 }
                             }
-                        }
-                        is IMindMapDiagram -> {
-                            val location = Pair(entity.location.x, entity.location.y)
-                            val size = Pair(entity.width, entity.height)
-                            val resizeTopic = ResizeTopic(entity.label, location, size, diagram.name)
-                            modifyTransaction.operations.add(resizeTopic)
-                            logger.debug("${entity.label}(INodePresentation)::Topic(${Pair(entity.width, entity.height)} at ${entity.location}) @MindmapDiagram${diagram.name}")
-                            break
                         }
                         else -> {
                             logger.debug("${entity.label}(INodePresentation) @UnknownDiagram")
@@ -312,17 +279,8 @@ class ProjectChangedListener(private val mqttPublisher: MqttPublisher): ProjectE
             }
         }
         if (modifyTransaction.operations.isNotEmpty())
-            encodeAndPublish(modifyTransaction)
+            ProjectChangedListener.encodeAndPublish(modifyTransaction, mqttPublisher)
     }
-
-    @ExperimentalSerializationApi
-    private fun encodeAndPublish(transaction: Transaction) {
-        val byteArray = Cbor.encodeToByteArray(transaction)
-        mqttPublisher.publish(byteArray)
-    }
-
-    override fun projectOpened(p0: ProjectEvent) {}
-    override fun projectClosed(p0: ProjectEvent) {}
 
     companion object: Logging {
         private val logger = logger()

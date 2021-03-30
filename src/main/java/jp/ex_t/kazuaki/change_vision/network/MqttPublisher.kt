@@ -6,8 +6,10 @@
  * see https://opensource.org/licenses/MIT
  */
 
-package jp.ex_t.kazuaki.change_vision
+package jp.ex_t.kazuaki.change_vision.network
 
+import jp.ex_t.kazuaki.change_vision.Logging
+import jp.ex_t.kazuaki.change_vision.logger
 import org.eclipse.paho.client.mqttv3.MqttClient
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions
 import org.eclipse.paho.client.mqttv3.MqttException
