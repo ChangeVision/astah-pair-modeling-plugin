@@ -14,17 +14,18 @@ import com.change_vision.jude.api.inf.model.IDiagram
 import com.change_vision.jude.api.inf.model.IMindMapDiagram
 import com.change_vision.jude.api.inf.model.INamedElement
 import com.change_vision.jude.api.inf.presentation.INodePresentation
-import jp.ex_t.kazuaki.change_vision.*
+import jp.ex_t.kazuaki.change_vision.Logging
+import jp.ex_t.kazuaki.change_vision.logger
 import jp.ex_t.kazuaki.change_vision.network.*
 import java.awt.geom.Point2D
 
-class MindmapDiagramApplyTransaction: IApplyTransaction {
+class MindmapDiagramApplyTransaction: IApplyTransaction<MindmapDiagramOperation> {
     private val api = AstahAPI.getAstahAPI()
     private val projectAccessor = api.projectAccessor
 
     @Throws(BadTransactionException::class)
-    override fun apply(transaction: Transaction) {
-        transaction.operations.forEach { it ->
+    override fun apply(operations: List<MindmapDiagramOperation>) {
+        operations.forEach { it ->
             when (it) {
                 is CreateMindmapDiagram -> {
                     if (it.name.isNotEmpty() && it.ownerName.isNotEmpty())
