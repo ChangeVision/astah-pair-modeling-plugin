@@ -134,7 +134,8 @@ data class ChangeAttributeNameAndTypeExpression(
 
 @Serializable
 data class ResizeTopic(
-    val name: String, val location: Pair<Double, Double>,
+    val name: String,
+    val location: Pair<Double, Double>,
     val size: Pair<Double, Double>,
     val diagramName: String,
 ): TopicOperation()
@@ -146,10 +147,10 @@ data class DeleteClassModel(
 
 @Serializable
 data class DeleteAssociationModel(
-    val isDeleteAssociationModel: Boolean = false
+    val isDeleteAssociationModel: Boolean = false,
 ): AssociationOperation()
 
 @Serializable
 data class DeleteAssociationPresentation(
-    val points: List<Pair<Double, Double>>
+    val points: List<Pair<Double, Double>>,
 ): AssociationOperation()
