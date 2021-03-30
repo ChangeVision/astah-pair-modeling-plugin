@@ -13,9 +13,11 @@ import com.change_vision.jude.api.inf.exception.BadTransactionException
 import com.change_vision.jude.api.inf.project.ProjectAccessor
 import com.change_vision.jude.api.inf.ui.IPluginActionDelegate.UnExpectedException
 import jp.ex_t.kazuaki.change_vision.Logging
-import jp.ex_t.kazuaki.change_vision.network.Transaction
 import jp.ex_t.kazuaki.change_vision.event_listener.ProjectChangedListener
 import jp.ex_t.kazuaki.change_vision.logger
+import jp.ex_t.kazuaki.change_vision.network.ClassDiagramOperation
+import jp.ex_t.kazuaki.change_vision.network.MindmapDiagramOperation
+import jp.ex_t.kazuaki.change_vision.network.Transaction
 import javax.swing.SwingUtilities
 
 class ReflectTransaction(private val projectChangedListener: ProjectChangedListener) {
@@ -32,8 +34,10 @@ class ReflectTransaction(private val projectChangedListener: ProjectChangedListe
                 projectAccessor.removeProjectEventListener(projectChangedListener)
                 logger.debug("Start transaction.")
                 transactionManager.beginTransaction()
-                classDiagramApplyTransaction.apply(transaction)
-                mindmapDiagramApplyTransaction.apply(transaction)
+                classDiagramApplyTransaction.apply(
+                    transaction.operations.filterIsInstance<ClassDiagramOperation>())
+                mindmapDiagramApplyTransaction.apply(
+                    transaction.operations.filterIsInstance<MindmapDiagramOperation>())
                 transactionManager.endTransaction()
                 logger.debug("Finished transaction.")
                 api.viewManager.diagramViewManager.select(emptyArray())
