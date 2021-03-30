@@ -72,7 +72,8 @@ class ClassDiagramApplyTransaction: IApplyTransaction<ClassDiagramOperation> {
                 }
                 is ResizeClassPresentation -> {
                     val location = Point2D.Double(it.location.first, it.location.second)
-                    if (it.className.isNotEmpty() && it.diagramName.isNotEmpty())
+                    if (!operations.any { it is ChangeClassModelName }
+                        && it.className.isNotEmpty() && it.diagramName.isNotEmpty())
                         resizeClassPresentation(it.className, location, it.size, it.diagramName)
                 }
                 is ChangeClassModelName -> {
