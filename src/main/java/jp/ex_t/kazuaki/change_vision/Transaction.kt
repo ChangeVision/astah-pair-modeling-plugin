@@ -145,6 +145,11 @@ data class DeleteClassModel(
 ): ClassOperation()
 
 @Serializable
+data class DeleteClassPresentation(
+    val className: String,
+): ClassOperation()
+
+@Serializable
 data class DeleteAssociationModel(
     val isDeleteAssociationModel: Boolean = false
 ): AssociationOperation()

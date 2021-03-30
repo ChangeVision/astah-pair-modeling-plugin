@@ -70,6 +70,18 @@ class ProjectChangedListener(private val mqttPublisher: MqttPublisher): ProjectE
                             }
                         }
                         else -> {
+                            logger.debug("$entity(ILinkPresentation)")
+                        }
+                    }
+                }
+                is INodePresentation -> {
+                    when (val model = entity.model) {
+                        is IClass -> {
+                            val deleteClassPresentation = DeleteClassPresentation(model.name)
+                            removeTransaction.operations.add(deleteClassPresentation)
+                            logger.debug("${model.name}(INodePresentation, IClass)")
+                        }
+                        else -> {
                             logger.debug("$entity(INodePresentation)")
                         }
                     }
