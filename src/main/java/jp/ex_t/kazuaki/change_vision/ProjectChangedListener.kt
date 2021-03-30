@@ -10,8 +10,8 @@ package jp.ex_t.kazuaki.change_vision
 
 import com.change_vision.jude.api.inf.project.ProjectEvent
 import com.change_vision.jude.api.inf.project.ProjectEventListener
-import jp.ex_t.kazuaki.change_vision.diagram.ClassDiagramEventListener
-import jp.ex_t.kazuaki.change_vision.diagram.MindmapDiagramEventListener
+import jp.ex_t.kazuaki.change_vision.event_listener.ClassDiagramEventListener
+import jp.ex_t.kazuaki.change_vision.event_listener.MindmapDiagramEventListener
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.cbor.Cbor
 import kotlinx.serialization.encodeToByteArray

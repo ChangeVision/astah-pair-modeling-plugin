@@ -6,7 +6,7 @@
  * see https://opensource.org/licenses/MIT
  */
 
-package jp.ex_t.kazuaki.change_vision.diagram
+package jp.ex_t.kazuaki.change_vision.event_listener
 
 import com.change_vision.jude.api.inf.model.IMindMapDiagram
 import com.change_vision.jude.api.inf.model.INamedElement
