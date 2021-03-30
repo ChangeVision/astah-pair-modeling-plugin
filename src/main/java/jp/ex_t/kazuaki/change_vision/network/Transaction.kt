@@ -23,24 +23,6 @@ sealed class ClassDiagramOperation: TransactionalOperation()
 sealed class MindmapDiagramOperation: TransactionalOperation()
 
 @Serializable
-sealed class ClassOperation: TransactionalOperation()
-
-@Serializable
-sealed class AssociationOperation: TransactionalOperation()
-
-@Serializable
-sealed class AttributeOperation: TransactionalOperation()
-
-@Serializable
-sealed class OperationOperation: TransactionalOperation()
-
-@Serializable
-sealed class TopicOperation: TransactionalOperation()
-
-@Serializable
-sealed class FloatingTopicOperation: TransactionalOperation()
-
-@Serializable
 data class CreateClassDiagram(
     val name: String,
     val ownerName: String,
@@ -56,49 +38,49 @@ data class CreateMindmapDiagram(
 data class CreateClassModel(
     val name: String,
     val parentPackageName: String,
-): ClassOperation()
+): ClassDiagramOperation()
 
 @Serializable
 data class CreateAssociationModel(
     val sourceClassName: String,
     val destinationClassName: String,
     val name: String = "",
-): AssociationOperation()
+): ClassDiagramOperation()
 
 @Serializable
 data class CreateClassPresentation(
     val className: String,
     val location: Pair<Double, Double>,
     val diagramName: String,
-): ClassOperation()
+): ClassDiagramOperation()
 
 @Serializable
 data class CreateAssociationPresentation(
     val sourceClassName: String,
     val targetClassName: String,
     val diagramName: String,
-): AssociationOperation()
+): ClassDiagramOperation()
 
 @Serializable
 data class CreateOperation(
     val ownerName: String,
     val name: String,
     val returnTypeExpression: String,
-): OperationOperation()
+): ClassDiagramOperation()
 
 @Serializable
 data class CreateAttribute(
     val ownerName: String,
     val name: String,
     val typeExpression: String,
-): AttributeOperation()
+): ClassDiagramOperation()
 
 @Serializable
 data class CreateTopic(
     val ownerName: String,
     val name: String,
     val diagramName: String,
-): TopicOperation()
+): MindmapDiagramOperation()
 
 @Serializable
 data class CreateFloatingTopic(
@@ -106,7 +88,7 @@ data class CreateFloatingTopic(
     val location: Pair<Double, Double>,
     val size: Pair<Double, Double>,
     val diagramName: String,
-): FloatingTopicOperation()
+): MindmapDiagramOperation()
 
 @Serializable
 data class ResizeClassPresentation(
@@ -114,7 +96,7 @@ data class ResizeClassPresentation(
     val location: Pair<Double, Double>,
     val size: Pair<Double, Double>,
     val diagramName: String,
-): ClassOperation()
+): ClassDiagramOperation()
 
 @Serializable
 data class ChangeOperationNameAndReturnTypeExpression(
@@ -122,7 +104,7 @@ data class ChangeOperationNameAndReturnTypeExpression(
     val brotherNameAndReturnTypeExpression: List<Pair<String, String>>,
     val name: String,
     val returnTypeExpression: String,
-): OperationOperation()
+): ClassDiagramOperation()
 
 @Serializable
 data class ChangeAttributeNameAndTypeExpression(
@@ -130,7 +112,7 @@ data class ChangeAttributeNameAndTypeExpression(
     val brotherNameAndTypeExpression: List<Pair<String, String>>,
     val name: String,
     val typeExpression: String,
-): AttributeOperation()
+): ClassDiagramOperation()
 
 @Serializable
 data class ResizeTopic(
@@ -138,19 +120,19 @@ data class ResizeTopic(
     val location: Pair<Double, Double>,
     val size: Pair<Double, Double>,
     val diagramName: String,
-): TopicOperation()
+): MindmapDiagramOperation()
 
 @Serializable
 data class DeleteClassModel(
     val className: String,
-): ClassOperation()
+): ClassDiagramOperation()
 
 @Serializable
 data class DeleteAssociationModel(
     val isDeleteAssociationModel: Boolean = false,
-): AssociationOperation()
+): ClassDiagramOperation()
 
 @Serializable
 data class DeleteAssociationPresentation(
     val points: List<Pair<Double, Double>>,
-): AssociationOperation()
+): ClassDiagramOperation()
