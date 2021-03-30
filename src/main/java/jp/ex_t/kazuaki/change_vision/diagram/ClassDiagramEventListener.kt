@@ -18,6 +18,7 @@ import kotlinx.serialization.ExperimentalSerializationApi
 class ClassDiagramEventListener(private val mqttPublisher: MqttPublisher): IEventListener {
     @ExperimentalSerializationApi
     override fun process(projectEditUnit: List<ProjectEditUnit>) {
+        logger.debug("Start process")
         val removeTransaction = Transaction()
         val createTransaction = Transaction()
         val modifyTransaction = Transaction()
