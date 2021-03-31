@@ -130,7 +130,7 @@ data class ResizeTopic(
 
 @Serializable
 data class DeleteClassModel(
-    val className: String,
+    val brotherClassNameList: List<String?> = mutableListOf(),
 ): ClassDiagramOperation()
 
 @Serializable
