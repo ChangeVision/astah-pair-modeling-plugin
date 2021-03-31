@@ -43,6 +43,15 @@ class ClassDiagramApplyTransaction: IApplyTransaction<ClassDiagramOperation> {
                             it.name
                         )
                 }
+                is CreateGeneralizationModel -> {
+                    if (it.superClassName.isNotEmpty()
+                        && it.subClassName.isNotEmpty())
+                            createGeneralizationModel(
+                                it.superClassName,
+                                it.subClassName,
+                                it.name,
+                            )
+                }
                 is CreateClassPresentation -> {
                     val location = Point2D.Double(it.location.first, it.location.second)
                     if (it.diagramName.isNotEmpty() && it.className.isNotEmpty())
@@ -146,6 +155,15 @@ class ClassDiagramApplyTransaction: IApplyTransaction<ClassDiagramOperation> {
         val sourceClass = projectAccessor.findElements(IClass::class.java, sourceClassName).first() as IClass
         val destinationClass = projectAccessor.findElements(IClass::class.java, destinationClassName).first() as IClass
         basicModelEditor.createAssociation(sourceClass, destinationClass, associationName, "", "")
+    }
+
+    private fun createGeneralizationModel(superClassName: String, subClassName: String, name: String) {
+        logger.debug("Create generalization model.")
+        val modelEditorFactory = projectAccessor.modelEditorFactory
+        val basicModelEditor = modelEditorFactory.basicModelEditor
+        val superClass = projectAccessor.findElements(IClass::class.java, superClassName).first() as IClass
+        val subClass = projectAccessor.findElements(IClass::class.java, subClassName).first() as IClass
+        basicModelEditor.createGeneralization(superClass, subClass, name)
     }
 
     private fun createClassPresentation(className: String, location: Point2D, diagramName: String) {
