@@ -103,8 +103,7 @@ class ClassDiagramApplyTransaction: IApplyTransaction<ClassDiagramOperation> {
                         )
                 }
                 is DeleteClassModel -> {
-                    if (it.className.isNotEmpty())
-                        deleteClassModel(it.className)
+                    deleteClassModel(it.brotherClassNameList)
                 }
                 is DeleteClassPresentation -> {
                     if (it.className.isNotEmpty())
@@ -248,11 +247,16 @@ class ClassDiagramApplyTransaction: IApplyTransaction<ClassDiagramOperation> {
         attribute.typeExpression = typeExpression
     }
 
-    private fun deleteClassModel(name: String) {
+    private fun deleteClassModel(brotherClassModelNameList: List<String?>) {
         logger.debug("Delete class model.")
         val modelEditorFactory = projectAccessor.modelEditorFactory
         val basicModelEditor = modelEditorFactory.basicModelEditor
-        val clazz = projectAccessor.findElements(IClass::class.java, name).first() as IClass
+        val clazz = if (brotherClassModelNameList.isNullOrEmpty()) {
+            projectAccessor.findElements(IClass::class.java).first()
+        } else {
+            projectAccessor.findElements(IClass::class.java)
+                .filterNot { it.name in brotherClassModelNameList }.first()
+        }
         basicModelEditor.delete(clazz)
     }
 

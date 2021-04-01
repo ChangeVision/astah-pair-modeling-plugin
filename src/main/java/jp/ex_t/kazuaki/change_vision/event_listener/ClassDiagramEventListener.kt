@@ -31,7 +31,10 @@ class ClassDiagramEventListener(private val mqttPublisher: MqttPublisher): IEven
             logger.debug("Op: $operation -> ")
             when (val entity = it.entity) {
                 is IClass -> {
-                    val deleteClassModel = DeleteClassModel(entity.name)
+                    val api = AstahAPI.getAstahAPI()
+                    val brotherClassNameList = api.projectAccessor.findElements(IClass::class.java)
+                        .filterNot { it == entity }.map { it?.name }.toList()
+                    val deleteClassModel = DeleteClassModel(brotherClassNameList)
                     removeTransaction.operations.add(deleteClassModel)
                     logger.debug("${entity.name}(IClass)")
                 }
