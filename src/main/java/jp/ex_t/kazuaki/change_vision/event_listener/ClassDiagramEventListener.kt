@@ -52,7 +52,7 @@ class ClassDiagramEventListener(private val mqttPublisher: MqttPublisher): IEven
                 is ILinkPresentation -> {
                     if (removeProjectEditUnit.any { it.entity is IClass })
                         continue
-                    when (entity.model) {
+                    when (val model = entity.model) {
                         is IAssociation -> {
                             val serializablePoints = entity.points.map { point->Pair(point.x,point.y) }.toList()
                             val deleteAssociationPresentation = DeleteAssociationPresentation(serializablePoints)
