@@ -57,13 +57,15 @@ class ClassDiagramApplyTransaction: IApplyTransaction<ClassDiagramOperation> {
                     if (it.diagramName.isNotEmpty() && it.className.isNotEmpty())
                         createClassPresentation(it.className, location, it.diagramName)
                 }
-                is CreateAssociationPresentation -> {
+                is CreateLinkPresentation -> {
                     if (it.sourceClassName.isNotEmpty()
                         && it.targetClassName.isNotEmpty()
+                        && it.linkType.isNotEmpty()
                         && it.diagramName.isNotEmpty())
-                        createAssociationPresentation(
+                        createLinkPresentation(
                             it.sourceClassName,
                             it.targetClassName,
+                            it.linkType,
                             it.diagramName
                         )
                 }
@@ -176,15 +178,27 @@ class ClassDiagramApplyTransaction: IApplyTransaction<ClassDiagramOperation> {
         classDiagramEditor.createNodePresentation(clazz, location)
     }
 
-    private fun createAssociationPresentation(sourceClassName: String, targetClassName: String, diagramName: String) {
-        logger.debug("Create association presentation.")
+    private fun createLinkPresentation(sourceClassName: String, targetClassName: String, linkType: String, diagramName: String) {
+        logger.debug("Create link presentation.")
         @Throws(ClassNotFoundException::class)
-        fun searchAssociation(sourceClass: IClass, targetClass: IClass): IAssociation {
-            return (sourceClass.attributes.filterNot { it.association == null }.find { sourceClassAttribute ->
-                targetClass.attributes.filterNot { it.association == null }.any { targetClassAttribute ->
-                    sourceClassAttribute.association == targetClassAttribute.association
+        fun searchModel(linkType: String, sourceClass: IClass, targetClass: IClass): IElement {
+            when (linkType) {
+                "Association" -> {
+                    return (sourceClass.attributes.filterNot { it.association == null }.find { sourceClassAttribute ->
+                        targetClass.attributes.filterNot { it.association == null }.any { targetClassAttribute ->
+                            sourceClassAttribute.association == targetClassAttribute.association
+                        }
+                    } ?: throw ClassNotFoundException()).association
                 }
-            } ?: throw ClassNotFoundException()).association
+                "Generalization" -> {
+                    return sourceClass.generalizations.find {
+                        it.superType == targetClass
+                    } ?: throw ClassNotFoundException()
+                }
+                else -> {
+                    throw NotImplementedError()
+                }
+            }
         }
         val diagramEditorFactory = projectAccessor.diagramEditorFactory
         val classDiagramEditor = diagramEditorFactory.classDiagramEditor
@@ -196,12 +210,14 @@ class ClassDiagramApplyTransaction: IApplyTransaction<ClassDiagramOperation> {
         val targetClassPresentation = targetClass.presentations.first { it.diagram == diagram } as INodePresentation
         logger.debug("Source: ${sourceClass.attributes}, target: ${targetClass.attributes}")
         try {
-            val association = searchAssociation(sourceClass, targetClass)
-            logger.debug("Association: $association")
-            classDiagramEditor.createLinkPresentation(association, sourceClassPresentation, targetClassPresentation)
+            val element = searchModel(linkType, sourceClass, targetClass)
+            logger.debug("Link: $element")
+            classDiagramEditor.createLinkPresentation(element, sourceClassPresentation, targetClassPresentation)
         } catch (e: ClassNotFoundException) {
-            logger.error("Association not found.", e)
+            logger.error("Link model not found.", e)
             return
+        } catch (e: NotImplementedError) {
+            logger.error("Not implemented.", e)
         }
     }
 

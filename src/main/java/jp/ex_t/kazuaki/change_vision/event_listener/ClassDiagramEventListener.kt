@@ -195,13 +195,26 @@ class ClassDiagramEventListener(private val mqttPublisher: MqttPublisher): IEven
                 is ILinkPresentation -> {
                     val source = entity.source.model
                     val target = entity.target.model
+                    logger.debug("Model: ${entity.model::class.java}")
                     when (source) {
                         is IClass -> {
                             when (target) {
                                 is IClass -> {
-                                    val createAssociationPresentation = CreateAssociationPresentation(source.name, target.name, entity.diagram.name)
-                                    createTransaction.operations.add(createAssociationPresentation)
-                                    logger.debug("${source.name}(IClass) - ${entity.label}(ILinkPresentation) - ${target.name}(IClass)")
+                                    when (entity.model) {
+                                        is IAssociation -> {
+                                            val createLinkPresentation = CreateLinkPresentation(source.name, target.name, "Association", entity.diagram.name)
+                                            createTransaction.operations.add(createLinkPresentation)
+                                            logger.debug("${source.name}(IClass) - ${entity.label}(ILinkPresentation::IAssociation) - ${target.name}(IClass)")
+                                        }
+                                        is IGeneralization -> {
+                                            val createLinkPresentation = CreateLinkPresentation(source.name, target.name, "Generalization", entity.diagram.name)
+                                            createTransaction.operations.add(createLinkPresentation)
+                                            logger.debug("${source.name}(IClass) - ${entity.label}(ILinkPresentation::IGeneralization) - ${target.name}(IClass)")
+                                        }
+                                        else -> {
+                                            logger.debug("${source.name}(IClass) - ${entity.label}(ILinkPresentation::Unknown) - ${target.name}(IClass)")
+                                        }
+                                    }
                                 }
                                 else -> {
                                     logger.debug("${source.name}(IClass) - ${entity.label}(ILinkPresentation) - $target(Unknown)")

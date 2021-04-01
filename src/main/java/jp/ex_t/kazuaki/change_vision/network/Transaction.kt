@@ -62,9 +62,10 @@ data class CreateClassPresentation(
 ): ClassDiagramOperation()
 
 @Serializable
-data class CreateAssociationPresentation(
+data class CreateLinkPresentation(
     val sourceClassName: String,
     val targetClassName: String,
+    val linkType: String,
     val diagramName: String,
 ): ClassDiagramOperation()
 
