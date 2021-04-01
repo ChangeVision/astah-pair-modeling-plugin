@@ -31,7 +31,7 @@ class MindmapDiagramEventListener(private val mqttPublisher: MqttPublisher): IEv
             logger.debug("Op: $operation -> ")
             when (val entity = it.entity) {
                 is ILinkPresentation -> {
-                    when (val model = entity.model) {
+                    when (entity.model) {
                         else -> {
                             logger.debug("$entity(INodePresentation)")
                         }
@@ -85,11 +85,7 @@ class MindmapDiagramEventListener(private val mqttPublisher: MqttPublisher): IEv
                 is ILinkPresentation -> {
                     val source = entity.source.model
                     val target = entity.target.model
-                    when (source) {
-                        else -> {
-                            logger.debug("$source(Unknown) - ${entity.label}(ILinkPresentation) - $target(Unknown)")
-                        }
-                    }
+                    logger.debug("$source(Unknown) - ${entity.label}(ILinkPresentation) - $target(Unknown)")
                 }
                 else -> {
                     logger.debug("$entity(Unknown)")
