@@ -109,17 +109,27 @@ class ClassDiagramApplyTransaction: IApplyTransaction<ClassDiagramOperation> {
                 is DeleteClassModel -> {
                     deleteClassModel(it.brotherClassNameList)
                 }
+                is DeleteAssociationModel -> {
+                    val deleteAssociationPresentation = (operations.find {
+                        it is DeleteAssociationPresentation
+                    } ?: return) as DeleteAssociationPresentation
+                    val receivedPoints = deleteAssociationPresentation.points.map { point
+                        -> Point2D.Double(point.first, point.second)
+                    }.toList()
+                    deleteAssociationModel(receivedPoints)
+                }
                 is DeleteClassPresentation -> {
                     if (it.className.isNotEmpty())
                         deleteClassPresentation(it.className)
                 }
                 is DeleteAssociationPresentation -> {
-                    val receivedPoints = it.points.map { point
-                        -> Point2D.Double(point.first, point.second)
-                    }.toList()
-                    deleteAssociationPresentation(receivedPoints)
+                    if (!operations.any { it is DeleteAssociationModel }) {
+                        val receivedPoints = it.points.map { point
+                            -> Point2D.Double(point.first, point.second)
+                        }.toList()
+                        deleteAssociationPresentation(receivedPoints)
+                    }
                 }
-                // TODO: DeleteAssociationModelを実装する
             }
         }
     }
@@ -264,6 +274,20 @@ class ClassDiagramApplyTransaction: IApplyTransaction<ClassDiagramOperation> {
                 .filterNot { it.name in brotherClassModelNameList }.first()
         }
         basicModelEditor.delete(clazz)
+    }
+
+    private fun deleteAssociationModel(receivedPoints: List<Point2D>) {
+        logger.debug("Delete association model.")
+        val diagramEditorFactory = projectAccessor.diagramEditorFactory
+        val classDiagramEditor = diagramEditorFactory.classDiagramEditor
+        val diagram = api.viewManager.diagramViewManager.currentDiagram
+        classDiagramEditor.diagram = diagram
+        val foundLink = diagram.presentations
+            .filterIsInstance<ILinkPresentation>().filter { entity -> entity.model is IAssociation }
+            .firstOrNull { link ->
+                link.points.all { receivedPoints.containsAll(link.points.toList()) }
+            }
+        foundLink?.let { projectAccessor.modelEditorFactory.basicModelEditor.delete(it.model) }
     }
 
     private fun deleteClassPresentation(name: String) {

@@ -39,38 +39,25 @@ class ClassDiagramEventListener(private val mqttPublisher: MqttPublisher): IEven
                     logger.debug("${entity.name}(IClass)")
                 }
                 is IAssociation -> {
-                    if (entity.name.isNullOrBlank()) {
-                        // TODO: 削除された関連モデルがどれなのか見分けられるようにする
+                    // TODO: 関連モデルだけで削除された場合に、どの関連モデルが削除されたか認識できるようにする
+                    if (removeProjectEditUnit.any { it.entity is ILinkPresentation  && (it.entity as ILinkPresentation).model is IAssociation }) {
                         removeTransaction.operations.add(DeleteAssociationModel(true))
                         logger.debug("${entity.name}(IAssociation")
+                    } else {
+                        logger.debug("$entity(IAssociation)")
+                        logger.warn("This operation does not support because plugin can't detect what association model delete.")
+                        return
                     }
                 }
                 is ILinkPresentation -> {
                     if (removeProjectEditUnit.any { it.entity is IClass })
                         continue
-                    when (val model = entity.model) {
+                    when (entity.model) {
                         is IAssociation -> {
-                            val memberEnds = model.memberEnds
-                            val source = memberEnds.first().owner
-                            val target = memberEnds.last().owner
-                            when (source) {
-                                is IClass -> {
-                                    when (target) {
-                                        is IClass -> {
-                                            val serializablePoints = entity.points.map { point->Pair(point.x,point.y) }.toList()
-                                            val deleteAssociationPresentation = DeleteAssociationPresentation(serializablePoints)
-                                            removeTransaction.operations.add(deleteAssociationPresentation)
-                                            logger.debug("${source.name}(IClass) - ${entity.label}(ILinkPresentation) - ${target.name}(IClass)")
-                                        }
-                                        else -> {
-                                            logger.debug("${source.name}(IClass) - ${entity.label}(ILinkPresentation) - $target(Unknown)")
-                                        }
-                                    }
-                                }
-                                else -> {
-                                    logger.debug("$source(Unknown) - ${entity.label}(ILinkPresentation) - $target(Unknown)")
-                                }
-                            }
+                            val serializablePoints = entity.points.map { point->Pair(point.x,point.y) }.toList()
+                            val deleteAssociationPresentation = DeleteAssociationPresentation(serializablePoints)
+                            removeTransaction.operations.add(deleteAssociationPresentation)
+                            logger.debug("${entity.label}(ILinkPresentation, IAssociation)")
                         }
                         else -> {
                             logger.debug("$entity(ILinkPresentation)")
