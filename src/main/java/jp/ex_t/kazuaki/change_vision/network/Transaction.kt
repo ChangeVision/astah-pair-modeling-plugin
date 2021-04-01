@@ -48,6 +48,13 @@ data class CreateAssociationModel(
 ): ClassDiagramOperation()
 
 @Serializable
+data class CreateGeneralizationModel(
+    val superClassName: String,
+    val subClassName: String,
+    val name: String = "",
+): ClassDiagramOperation()
+
+@Serializable
 data class CreateClassPresentation(
     val className: String,
     val location: Pair<Double, Double>,
@@ -55,9 +62,10 @@ data class CreateClassPresentation(
 ): ClassDiagramOperation()
 
 @Serializable
-data class CreateAssociationPresentation(
+data class CreateLinkPresentation(
     val sourceClassName: String,
     val targetClassName: String,
+    val linkType: String,
     val diagramName: String,
 ): ClassDiagramOperation()
 
