@@ -26,7 +26,7 @@ class ClassDiagramEventListener(private val mqttPublisher: MqttPublisher): IEven
         val createTransaction = Transaction()
         val modifyTransaction = Transaction()
         val removeProjectEditUnit = projectEditUnit.filter { it.operation == Operation.REMOVE.ordinal }
-        for (it in removeProjectEditUnit){
+        for (it in removeProjectEditUnit) {
             val operation = Operation.values()[it.operation]
             logger.debug("Op: $operation -> ")
             when (val entity = it.entity) {
@@ -50,8 +50,9 @@ class ClassDiagramEventListener(private val mqttPublisher: MqttPublisher): IEven
                     }
                 }
                 is ILinkPresentation -> {
-                    if (removeProjectEditUnit.any { it.entity is IClass })
+                    if (removeProjectEditUnit.any { it.entity is IClass }) {
                         continue
+                    }
                     when (val model = entity.model) {
                         is IAssociation -> {
                             val serializablePoints = entity.points.map { point->Pair(point.x,point.y) }.toList()
