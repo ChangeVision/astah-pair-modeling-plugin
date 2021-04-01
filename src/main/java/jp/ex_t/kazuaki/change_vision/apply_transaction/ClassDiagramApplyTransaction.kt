@@ -279,12 +279,16 @@ class ClassDiagramApplyTransaction: IApplyTransaction<ClassDiagramOperation> {
 
     private fun deleteAssociationPresentation(receivedPoints: List<Point2D>) {
         logger.debug("Delete association presentation.")
-        val foundLink = api.viewManager.diagramViewManager.currentDiagram.presentations
+        val diagramEditorFactory = projectAccessor.diagramEditorFactory
+        val classDiagramEditor = diagramEditorFactory.classDiagramEditor
+        val diagram = api.viewManager.diagramViewManager.currentDiagram
+        classDiagramEditor.diagram = diagram
+        val foundLink = diagram.presentations
             .filterIsInstance<ILinkPresentation>().filter { entity -> entity.model is IAssociation }
             .firstOrNull { link ->
                 link.points.all { receivedPoints.containsAll(link.points.toList()) }
             }
-        foundLink?.let { link -> api.projectAccessor.modelEditorFactory.basicModelEditor.delete(link.model) }
+        foundLink?.let { classDiagramEditor.deletePresentation(it) }
     }
 
     companion object: Logging {
