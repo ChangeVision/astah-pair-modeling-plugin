@@ -36,11 +36,15 @@ class ClassDiagramApplyTransaction: IApplyTransaction<ClassDiagramOperation> {
                 }
                 is CreateAssociationModel -> {
                     if (it.sourceClassName.isNotEmpty()
-                        && it.destinationClassName.isNotEmpty())
+                        && it.sourceClassNavigability.isNotEmpty()
+                        && it.destinationClassName.isNotEmpty()
+                        && it.destinationClassNavigability.isNotEmpty())
                         createAssociationModel(
                             it.sourceClassName,
+                            it.sourceClassNavigability,
                             it.destinationClassName,
-                            it.name
+                            it.destinationClassNavigability,
+                            it.name,
                         )
                 }
                 is CreateGeneralizationModel -> {
@@ -150,13 +154,15 @@ class ClassDiagramApplyTransaction: IApplyTransaction<ClassDiagramOperation> {
         basicModelEditor.createClass(parentPackage, name)
     }
 
-    private fun createAssociationModel(sourceClassName: String, destinationClassName: String, associationName: String) {
+    private fun createAssociationModel(sourceClassName: String, sourceClassNavigability: String, destinationClassName: String, destinationClassNavigability: String, associationName: String) {
         logger.debug("Create association model.")
         val modelEditorFactory = projectAccessor.modelEditorFactory
         val basicModelEditor = modelEditorFactory.basicModelEditor
         val sourceClass = projectAccessor.findElements(IClass::class.java, sourceClassName).first() as IClass
         val destinationClass = projectAccessor.findElements(IClass::class.java, destinationClassName).first() as IClass
-        basicModelEditor.createAssociation(sourceClass, destinationClass, associationName, "", "")
+        val association = basicModelEditor.createAssociation(sourceClass, destinationClass, associationName, "", "")
+        sourceClass.attributes.filterNot { it.association == null }.find { it.association == association }?.navigability = sourceClassNavigability
+        destinationClass.attributes.filterNot { it.association == null }.find { it.association == association }?.navigability = destinationClassNavigability
     }
 
     private fun createGeneralizationModel(superClassName: String, subClassName: String, name: String) {

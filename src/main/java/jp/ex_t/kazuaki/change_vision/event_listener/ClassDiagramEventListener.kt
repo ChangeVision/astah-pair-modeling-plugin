@@ -127,9 +127,17 @@ class ClassDiagramEventListener(private val mqttPublisher: MqttPublisher): IEven
                         is IClass -> {
                             when (destinationClass) {
                                 is IClass -> {
-                                    val createAssociationModel = CreateAssociationModel(sourceClass.name, destinationClass.name, entity.name)
+                                    val sourceClassNavigability = entity.memberEnds.first().navigability
+                                    val destinationClassNavigability = entity.memberEnds.last().navigability
+                                    val createAssociationModel = CreateAssociationModel(
+                                        sourceClass.name,
+                                        sourceClassNavigability,
+                                        destinationClass.name,
+                                        destinationClassNavigability,
+                                        entity.name,
+                                    )
                                     createTransaction.operations.add(createAssociationModel)
-                                    logger.debug("${sourceClass.name}(IClass) - ${entity.name}(IAssociation) - ${destinationClass.name}(IClass)")
+                                    logger.debug("${sourceClass.name}(IClass, $sourceClassNavigability) - ${entity.name}(IAssociation) - ${destinationClass.name}(IClass, $destinationClassNavigability)")
                                 }
                                 else -> {
                                     logger.debug("${sourceClass.name}(IClass) - ${entity.name}(IAssociation) - $destinationClass(Unknown)")
