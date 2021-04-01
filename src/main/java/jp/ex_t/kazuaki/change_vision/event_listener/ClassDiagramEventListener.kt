@@ -84,6 +84,9 @@ class ClassDiagramEventListener(private val mqttPublisher: MqttPublisher): IEven
                             removeTransaction.operations.add(deleteClassPresentation)
                             logger.debug("${model.name}(INodePresentation, IClass)")
                         }
+                        else -> {
+                            logger.debug("${model}(INodePresentation, Unknown)")
+                        }
                     }
                 }
                 else -> {
