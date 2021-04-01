@@ -163,7 +163,7 @@ class ClassDiagramApplyTransaction: IApplyTransaction<ClassDiagramOperation> {
         val basicModelEditor = modelEditorFactory.basicModelEditor
         val superClass = projectAccessor.findElements(IClass::class.java, superClassName).first() as IClass
         val subClass = projectAccessor.findElements(IClass::class.java, subClassName).first() as IClass
-        basicModelEditor.createGeneralization(superClass, subClass, name)
+        basicModelEditor.createGeneralization(subClass, superClass, name)
     }
 
     private fun createClassPresentation(className: String, location: Point2D, diagramName: String) {
