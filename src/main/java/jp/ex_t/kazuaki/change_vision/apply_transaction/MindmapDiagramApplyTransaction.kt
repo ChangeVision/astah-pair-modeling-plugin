@@ -28,24 +28,28 @@ class MindmapDiagramApplyTransaction: IApplyTransaction<MindmapDiagramOperation>
         operations.forEach { it ->
             when (it) {
                 is CreateMindmapDiagram -> {
-                    if (it.name.isNotEmpty() && it.ownerName.isNotEmpty())
+                    if (it.name.isNotEmpty() && it.ownerName.isNotEmpty()) {
                         createMindMapDiagram(it.name, it.ownerName)
+                    }
                 }
                 is CreateTopic -> {
                     if (it.ownerName.isNotEmpty()
                         && it.name.isNotEmpty()
-                        && it.diagramName.isNotEmpty())
+                        && it.diagramName.isNotEmpty()) {
                         createTopic(it.ownerName, it.name, it.diagramName)
+                    }
                 }
                 is CreateFloatingTopic -> {
                     val location = Point2D.Double(it.location.first, it.location.second)
-                    if (it.name.isNotEmpty() && it.diagramName.isNotEmpty())
+                    if (it.name.isNotEmpty() && it.diagramName.isNotEmpty()) {
                         createFloatingTopic(it.name, location, it.size, it.diagramName)
+                    }
                 }
                 is ResizeTopic -> {
                     val location = Point2D.Double(it.location.first, it.location.second)
-                    if (it.name.isNotEmpty() && it.diagramName.isNotEmpty())
+                    if (it.name.isNotEmpty() && it.diagramName.isNotEmpty()) {
                         resizeTopic(it.name, location, it.size, it.diagramName)
+                    }
                 }
             }
         }
@@ -63,7 +67,9 @@ class MindmapDiagramApplyTransaction: IApplyTransaction<MindmapDiagramOperation>
 
     private fun searchTopic(name: String, topics: Array<INodePresentation>): INodePresentation? {
         topics.forEach {
-            if (it.label == name) return it
+            if (it.label == name) {
+                return it
+            }
             else if (it.children.isNotEmpty()) {
                 return searchTopic(name, it.children)
             }

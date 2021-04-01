@@ -52,7 +52,9 @@ class MqttSubscriber(brokerAddress: String, private val topic: String, private v
     override fun messageArrived(topic: String, message: MqttMessage) {
         // If the message was send by myself,  ignore this one.
         val receivedClientId = topic.split("/").last()
-        if (receivedClientId == clientId) return
+        if (receivedClientId == clientId) {
+            return
+        }
         val receivedMessage = Cbor.decodeFromByteArray<Transaction>(message.payload)
         logger.debug("Received: $receivedMessage ($topic)")
         reflectTransaction.transact(receivedMessage)
