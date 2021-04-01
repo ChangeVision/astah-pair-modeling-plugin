@@ -72,6 +72,9 @@ class ClassDiagramEventListener(private val mqttPublisher: MqttPublisher): IEven
                                 }
                             }
                         }
+                        is IGeneralization -> {
+                            logger.debug("${model.name}(ILinkPresentation, IGeneralization)")
+                        }
                         else -> {
                             logger.debug("$entity(ILinkPresentation)")
                         }
