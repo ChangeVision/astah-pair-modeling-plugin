@@ -43,7 +43,9 @@ data class CreateClassModel(
 @Serializable
 data class CreateAssociationModel(
     val sourceClassName: String,
+    val sourceClassNavigability: String,
     val destinationClassName: String,
+    val destinationClassNavigability: String,
     val name: String = "",
 ): ClassDiagramOperation()
 
