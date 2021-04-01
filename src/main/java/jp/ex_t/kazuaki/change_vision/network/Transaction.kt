@@ -58,7 +58,6 @@ data class CreateClassPresentation(
 data class CreateAssociationPresentation(
     val sourceClassName: String,
     val targetClassName: String,
-    val properties: List<Pair<String, String>>,
     val diagramName: String,
 ): ClassDiagramOperation()
 

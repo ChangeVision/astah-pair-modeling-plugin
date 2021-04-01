@@ -192,9 +192,7 @@ class ClassDiagramEventListener(private val mqttPublisher: MqttPublisher): IEven
                         is IClass -> {
                             when (target) {
                                 is IClass -> {
-                                    // TODO: Modifyで矢印プロパティが追加されている?
-                                    val properties = entity.properties.filterValues { it.toString() != "null" }.map { (key, value) -> Pair(key.toString(), value.toString()) }.toList()
-                                    val createAssociationPresentation = CreateAssociationPresentation(source.name, target.name, properties, entity.diagram.name)
+                                    val createAssociationPresentation = CreateAssociationPresentation(source.name, target.name, entity.diagram.name)
                                     createTransaction.operations.add(createAssociationPresentation)
                                     logger.debug("${source.name}(IClass) - ${entity.label}(ILinkPresentation) - ${target.name}(IClass)")
                                 }

@@ -55,7 +55,6 @@ class ClassDiagramApplyTransaction: IApplyTransaction<ClassDiagramOperation> {
                         createAssociationPresentation(
                             it.sourceClassName,
                             it.targetClassName,
-                            it.properties,
                             it.diagramName
                         )
                 }
@@ -159,7 +158,7 @@ class ClassDiagramApplyTransaction: IApplyTransaction<ClassDiagramOperation> {
         classDiagramEditor.createNodePresentation(clazz, location)
     }
 
-    private fun createAssociationPresentation(sourceClassName: String, targetClassName: String, properties: List<Pair<String, String>>, diagramName: String) {
+    private fun createAssociationPresentation(sourceClassName: String, targetClassName: String, diagramName: String) {
         logger.debug("Create association presentation.")
         @Throws(ClassNotFoundException::class)
         fun searchAssociation(sourceClass: IClass, targetClass: IClass): IAssociation {
@@ -181,11 +180,7 @@ class ClassDiagramApplyTransaction: IApplyTransaction<ClassDiagramOperation> {
         try {
             val association = searchAssociation(sourceClass, targetClass)
             logger.debug("Association: $association")
-            val associationPresentation = classDiagramEditor.createLinkPresentation(association, sourceClassPresentation, targetClassPresentation)
-            properties.forEach { (key, value) ->
-                logger.debug("$key: $value")
-                associationPresentation.setProperty(key, value)
-            }
+            classDiagramEditor.createLinkPresentation(association, sourceClassPresentation, targetClassPresentation)
         } catch (e: ClassNotFoundException) {
             logger.error("Association not found.", e)
             return
