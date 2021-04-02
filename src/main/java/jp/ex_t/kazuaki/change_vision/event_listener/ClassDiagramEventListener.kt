@@ -104,7 +104,7 @@ class ClassDiagramEventListener(private val mqttPublisher: MqttPublisher): IEven
                 }
                 is IClass -> {
                     val parentPackage = entity.owner as IPackage
-                    val createClassModel = CreateClassModel(entity.name, parentPackage.name)
+                    val createClassModel = CreateClassModel(entity.name, parentPackage.name, entity.stereotypes.toList())
                     createTransaction.operations.add(createClassModel)
                     logger.debug("${entity.name}(IClass)")
                 }
@@ -179,6 +179,7 @@ class ClassDiagramEventListener(private val mqttPublisher: MqttPublisher): IEven
                         is IClassDiagram -> {
                             when (val model = entity.model) {
                                 is IClass -> {
+                                    // TODO: クラスとインタフェースをINodePresentationのプロパティで見分ける
                                     val location = Pair(entity.location.x, entity.location.y)
                                     val createClassPresentation = CreateClassPresentation(model.name, location, diagram.name)
                                     createTransaction.operations.add(createClassPresentation)
@@ -247,9 +248,9 @@ class ClassDiagramEventListener(private val mqttPublisher: MqttPublisher): IEven
                     val api = AstahAPI.getAstahAPI()
                     val brotherClassNameList = api.projectAccessor.findElements(IClass::class.java)
                         .filterNot { it.name == entity.name }.map { it?.name }.toList()
-                    val changeClassModelName = ChangeClassModelName(entity.name, brotherClassNameList)
-                    modifyTransaction.operations.add(changeClassModelName)
-                    logger.debug("${entity.name}(IClass) maybe new name")
+                    val changeClassModel = ChangeClassModel(entity.name, brotherClassNameList, entity.stereotypes.toList())
+                    modifyTransaction.operations.add(changeClassModel)
+                    logger.debug("${entity.name}(IClass) which maybe new name has ${entity.stereotypes.toList()} stereotype")
                 }
                 is INodePresentation -> {
                     when (val diagram = entity.diagram) {
