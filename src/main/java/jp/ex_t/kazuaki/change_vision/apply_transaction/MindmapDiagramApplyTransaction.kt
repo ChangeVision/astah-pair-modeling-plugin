@@ -22,6 +22,7 @@ import java.awt.geom.Point2D
 class MindmapDiagramApplyTransaction: IApplyTransaction<MindmapDiagramOperation> {
     private val api = AstahAPI.getAstahAPI()
     private val projectAccessor = api.projectAccessor
+    private val mindmapEditor = projectAccessor.diagramEditorFactory.mindmapEditor
 
     @Throws(BadTransactionException::class)
     override fun apply(operations: List<MindmapDiagramOperation>) {
@@ -57,8 +58,6 @@ class MindmapDiagramApplyTransaction: IApplyTransaction<MindmapDiagramOperation>
 
     private fun createMindMapDiagram(name: String, ownerName: String) {
         logger.debug("Create mindmap diagram.")
-        val diagramEditorFactory = projectAccessor.diagramEditorFactory
-        val mindmapEditor = diagramEditorFactory.mindmapEditor
         val diagramViewManager = api.viewManager.diagramViewManager
         val owner = projectAccessor.findElements(INamedElement::class.java, ownerName).first() as INamedElement
         val diagram = mindmapEditor.createMindmapDiagram(owner, name)
@@ -79,8 +78,6 @@ class MindmapDiagramApplyTransaction: IApplyTransaction<MindmapDiagramOperation>
 
     private fun createTopic(ownerName: String, name: String, diagramName: String) {
         logger.debug("Create topic.")
-        val diagramEditorFactory = projectAccessor.diagramEditorFactory
-        val mindmapEditor = diagramEditorFactory.mindmapEditor
         val diagram = projectAccessor.findElements(IDiagram::class.java, diagramName).first() as IMindMapDiagram
         mindmapEditor.diagram = diagram
         val topics = diagram.floatingTopics + diagram.root
@@ -95,8 +92,6 @@ class MindmapDiagramApplyTransaction: IApplyTransaction<MindmapDiagramOperation>
     private fun createFloatingTopic(name: String, location: Point2D, size: Pair<Double, Double>, diagramName: String) {
         logger.debug("Create floating topic.")
         val (width, height) = size
-        val diagramEditorFactory = projectAccessor.diagramEditorFactory
-        val mindmapEditor = diagramEditorFactory.mindmapEditor
         val diagram = projectAccessor.findElements(IDiagram::class.java, diagramName).first() as IMindMapDiagram
         mindmapEditor.diagram = diagram
         val parentTopic = diagram.root
@@ -110,8 +105,6 @@ class MindmapDiagramApplyTransaction: IApplyTransaction<MindmapDiagramOperation>
     private fun resizeTopic(name: String, location: Point2D, size: Pair<Double, Double>, diagramName: String) {
         logger.debug("Resize topic.")
         val (width, height) = size
-        val diagramEditorFactory = projectAccessor.diagramEditorFactory
-        val mindmapEditor = diagramEditorFactory.mindmapEditor
         val diagram = projectAccessor.findElements(IDiagram::class.java, diagramName).first() as IMindMapDiagram
         mindmapEditor.diagram = diagram
         val topic = diagram.floatingTopics.first { it.label == name }
