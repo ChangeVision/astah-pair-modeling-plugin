@@ -372,6 +372,11 @@ class ClassDiagramApplyTransaction: IApplyTransaction<ClassDiagramOperation> {
                 presentations.filter { entity -> entity.model is IAssociation }
                     .firstOrNull { link -> link.points.all { receivedPoints.containsAll(link.points.toList()) } }
             }
+            "Generalization" -> {
+                logger.debug("Search generalization link presentation.")
+                presentations.filter { entity -> entity.model is IGeneralization }
+                    .firstOrNull { link -> link.points.all { receivedPoints.containsAll(link.points.toList()) } }
+            }
             "Realization" -> {
                 logger.debug("Search realization link presentation.")
                 presentations.filter { entity -> entity.model is IRealization }
