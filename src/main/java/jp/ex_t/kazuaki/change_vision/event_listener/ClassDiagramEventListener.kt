@@ -31,85 +31,39 @@ class ClassDiagramEventListener(private val mqttPublisher: MqttPublisher): IEven
             logger.debug("Op: $operation -> ")
             when (val entity = it.entity) {
                 is IClass -> {
-                    val api = AstahAPI.getAstahAPI()
-                    val brotherClassNameList = api.projectAccessor.findElements(IClass::class.java)
-                        .filterNot { it == entity }.map { it?.name }.toList()
-                    val deleteClassModel = DeleteClassModel(brotherClassNameList)
-                    removeTransaction.operations.add(deleteClassModel)
-                    logger.debug("${entity.name}(IClass)")
+                    removeTransaction.operations.add(
+                        deleteClassModel(entity)
+                    )
                 }
                 is IAssociation -> {
-                    // TODO: 関連モデルだけで削除された場合に、どの関連モデルが削除されたか認識できるようにする
-                    if (removeProjectEditUnit.any { it.entity is ILinkPresentation  && (it.entity as ILinkPresentation).model is IAssociation }) {
-                        removeTransaction.operations.add(DeleteLinkModel(true))
-                        logger.debug("${entity.name}(IAssociation")
-                    } else {
-                        logger.debug("$entity(IAssociation)")
-                        logger.warn("This operation does not support because plugin can't detect what association model delete.")
-                        return
-                    }
+                    removeTransaction.operations.add(
+                        deleteAssociationModel(entity, removeProjectEditUnit)
+                            ?: continue
+                    )
                 }
                 is IGeneralization -> {
-                    // TODO: 汎化モデルだけで削除された場合に、どの汎化モデルが削除されたか認識できるようにする
-                    if (removeProjectEditUnit.any { it.entity is ILinkPresentation  && (it.entity as ILinkPresentation).model is IGeneralization }) {
-                        removeTransaction.operations.add(DeleteLinkModel(true))
-                        logger.debug("${entity.name}(IGeneralization")
-                    } else {
-                        logger.debug("$entity(IGeneralization)")
-                        logger.warn("This operation does not support because plugin can't detect what generalization model delete.")
-                        return
-                    }
+                    removeTransaction.operations.add(
+                        deleteGeneralizationModel(entity, removeProjectEditUnit)
+                            ?: continue
+                    )
                 }
                 is IRealization -> {
-                    // TODO: 実現モデルだけで削除された場合に、どの実現モデルが削除されたか認識できるようにする
-                    if (removeProjectEditUnit.any { it.entity is ILinkPresentation  && (it.entity as ILinkPresentation).model is IRealization }) {
-                        removeTransaction.operations.add(DeleteLinkModel(true))
-                        logger.debug("${entity.name}(IRealization")
-                    } else {
-                        logger.debug("$entity(IRealization)")
-                        logger.warn("This operation does not support because plugin can't detect what realization model delete.")
-                        return
-                    }
+                    removeTransaction.operations.add(
+                        deleteRealizationModel(entity, removeProjectEditUnit)
+                            ?: continue
+                    )
                 }
                 is ILinkPresentation -> {
-                    if (removeProjectEditUnit.any { it.entity is IClass }) {
-                        continue
-                    }
-                    when (val model = entity.model) {
-                        is IAssociation -> {
-                            val serializablePoints = entity.points.map { point->Pair(point.x,point.y) }.toList()
-                            val deleteAssociationPresentation = DeleteLinkPresentation(serializablePoints, "Association")
-                            removeTransaction.operations.add(deleteAssociationPresentation)
-                            logger.debug("${entity.label}(ILinkPresentation, IAssociation)")
-                        }
-                        is IGeneralization -> {
-                            val serializablePoints = entity.points.map { point->Pair(point.x,point.y) }.toList()
-                            val deleteAssociationPresentation = DeleteLinkPresentation(serializablePoints, "Generalization")
-                            removeTransaction.operations.add(deleteAssociationPresentation)
-                            logger.debug("${model.name}(ILinkPresentation, IGeneralization)")
-                        }
-                        is IRealization -> {
-                            val serializablePoints = entity.points.map { point->Pair(point.x,point.y) }.toList()
-                            val deleteAssociationPresentation = DeleteLinkPresentation(serializablePoints, "Realization")
-                            removeTransaction.operations.add(deleteAssociationPresentation)
-                            logger.debug("${model.name}(ILinkPresentation, IRealization)")
-                        }
-                        else -> {
-                            logger.debug("$entity(ILinkPresentation)")
-                        }
-                    }
+                    removeTransaction.operations.add(
+                        deleteLinkPresentation(entity, removeProjectEditUnit)
+                            ?: continue
+                    )
                 }
                 is INodePresentation -> {
-                    when (val model = entity.model) {
-                        is IClass -> {
-                            val deleteClassPresentation = DeleteClassPresentation(model.name)
-                            removeTransaction.operations.add(deleteClassPresentation)
-                            logger.debug("${model.name}(INodePresentation, IClass)")
-                        }
-                        else -> {
-                            logger.debug("${model}(INodePresentation, Unknown)")
-                        }
-                    }
+                    removeTransaction.operations.add(
+                        deleteNodePresentation(entity)
+                            ?: continue
+                    )
                 }
                 else -> {
                     logger.debug("$entity(Unknown)")
@@ -358,6 +312,90 @@ class ClassDiagramEventListener(private val mqttPublisher: MqttPublisher): IEven
         }
         if (modifyTransaction.operations.isNotEmpty())
             ProjectChangedListener.encodeAndPublish(modifyTransaction, mqttPublisher)
+    }
+
+    private fun deleteClassModel(entity: IClass): DeleteClassModel {
+        val api = AstahAPI.getAstahAPI()
+        val brotherClassNameList = api.projectAccessor.findElements(IClass::class.java)
+            .filterNot { it == entity }.map { it?.name }.toList()
+        logger.debug("${entity.name}(IClass)")
+        return DeleteClassModel(brotherClassNameList)
+    }
+
+    private fun deleteAssociationModel(entity: IAssociation, removeProjectEditUnit: List<ProjectEditUnit>): DeleteLinkModel? {
+        // TODO: 関連モデルだけで削除された場合に、どの関連モデルが削除されたか認識できるようにする
+        return if (removeProjectEditUnit.any { it.entity is ILinkPresentation  && (it.entity as ILinkPresentation).model is IAssociation }) {
+            logger.debug("${entity.name}(IAssociation")
+            DeleteLinkModel(true)
+        } else {
+            logger.debug("$entity(IAssociation)")
+            logger.warn("This operation does not support because plugin can't detect what association model delete.")
+            null
+        }
+    }
+
+    private fun deleteGeneralizationModel(entity: IGeneralization, removeProjectEditUnit: List<ProjectEditUnit>): DeleteLinkModel? {
+        // TODO: 汎化モデルだけで削除された場合に、どの汎化モデルが削除されたか認識できるようにする
+        return if (removeProjectEditUnit.any { it.entity is ILinkPresentation  && (it.entity as ILinkPresentation).model is IGeneralization }) {
+            logger.debug("${entity.name}(IGeneralization")
+            DeleteLinkModel(true)
+        } else {
+            logger.debug("$entity(IGeneralization)")
+            logger.warn("This operation does not support because plugin can't detect what generalization model delete.")
+            null
+        }
+    }
+
+    private fun deleteRealizationModel(entity: IRealization, removeProjectEditUnit: List<ProjectEditUnit>): DeleteLinkModel? {
+        // TODO: 実現モデルだけで削除された場合に、どの実現モデルが削除されたか認識できるようにする
+        return if (removeProjectEditUnit.any { it.entity is ILinkPresentation  && (it.entity as ILinkPresentation).model is IRealization }) {
+            logger.debug("${entity.name}(IRealization")
+            DeleteLinkModel(true)
+        } else {
+            logger.debug("$entity(IRealization)")
+            logger.warn("This operation does not support because plugin can't detect what realization model delete.")
+            null
+        }
+    }
+
+    private fun deleteLinkPresentation(entity: ILinkPresentation, removeProjectEditUnit: List<ProjectEditUnit>): DeleteLinkPresentation? {
+        if (removeProjectEditUnit.any { it.entity is IClass }) {
+            return null
+        }
+        return when (val model = entity.model) {
+            is IAssociation -> {
+                val serializablePoints = entity.points.map { point->Pair(point.x,point.y) }.toList()
+                logger.debug("${entity.label}(ILinkPresentation, IAssociation)")
+                DeleteLinkPresentation(serializablePoints, "Association")
+            }
+            is IGeneralization -> {
+                val serializablePoints = entity.points.map { point->Pair(point.x,point.y) }.toList()
+                logger.debug("${model.name}(ILinkPresentation, IGeneralization)")
+                DeleteLinkPresentation(serializablePoints, "Generalization")
+            }
+            is IRealization -> {
+                val serializablePoints = entity.points.map { point->Pair(point.x,point.y) }.toList()
+                logger.debug("${model.name}(ILinkPresentation, IRealization)")
+                DeleteLinkPresentation(serializablePoints, "Realization")
+            }
+            else -> {
+                logger.debug("$entity(ILinkPresentation)")
+                null
+            }
+        }
+    }
+
+    private fun deleteNodePresentation(entity: INodePresentation): DeleteClassPresentation? {
+        return when (val model = entity.model) {
+            is IClass -> {
+                logger.debug("${model.name}(INodePresentation, IClass)")
+                DeleteClassPresentation(model.name)
+            }
+            else -> {
+                logger.debug("${model}(INodePresentation, Unknown)")
+                null
+            }
+        }
     }
 
     companion object: Logging {
