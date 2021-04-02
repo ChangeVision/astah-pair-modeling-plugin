@@ -401,7 +401,7 @@ class ClassDiagramApplyTransaction: IApplyTransaction<ClassDiagramOperation> {
     }
 
     private fun deleteLinkPresentation(receivedPoints: List<Point2D>, linkType: String) {
-        logger.debug("Delete association presentation.")
+        logger.debug("Delete link presentation.")
         val diagramEditorFactory = projectAccessor.diagramEditorFactory
         val classDiagramEditor = diagramEditorFactory.classDiagramEditor
         val diagram = api.viewManager.diagramViewManager.currentDiagram
