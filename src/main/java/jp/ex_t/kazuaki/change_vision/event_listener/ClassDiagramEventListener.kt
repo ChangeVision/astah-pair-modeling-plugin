@@ -38,19 +38,19 @@ class ClassDiagramEventListener(private val mqttPublisher: MqttPublisher): IEven
                 is IAssociation -> {
                     removeTransaction.operations.add(
                         deleteAssociationModel(entity, removeProjectEditUnit)
-                            ?: continue
+                            ?: return
                     )
                 }
                 is IGeneralization -> {
                     removeTransaction.operations.add(
                         deleteGeneralizationModel(entity, removeProjectEditUnit)
-                            ?: continue
+                            ?: return
                     )
                 }
                 is IRealization -> {
                     removeTransaction.operations.add(
                         deleteRealizationModel(entity, removeProjectEditUnit)
-                            ?: continue
+                            ?: return
                     )
                 }
                 is ILinkPresentation -> {
