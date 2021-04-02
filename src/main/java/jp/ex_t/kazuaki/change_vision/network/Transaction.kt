@@ -109,9 +109,10 @@ data class ResizeClassPresentation(
 ): ClassDiagramOperation()
 
 @Serializable
-data class ChangeClassModelName(
+data class ChangeClassModel(
     val name: String,
     val brotherClassNameList: List<String?> = mutableListOf(),
+    val stereotypes: List<String?> = mutableListOf(),
 ): ClassDiagramOperation()
 
 @Serializable
