@@ -58,6 +58,13 @@ data class CreateGeneralizationModel(
 ): ClassDiagramOperation()
 
 @Serializable
+data class CreateRealizationModel(
+    val supplierClassName: String,
+    val clientClassName: String,
+    val name: String = "",
+): ClassDiagramOperation()
+
+@Serializable
 data class CreateClassPresentation(
     val className: String,
     val location: Pair<Double, Double>,
@@ -151,11 +158,12 @@ data class DeleteClassPresentation(
 ): ClassDiagramOperation()
 
 @Serializable
-data class DeleteAssociationModel(
-    val isDeleteAssociationModel: Boolean = false,
+data class DeleteLinkModel(
+    val isDelete: Boolean = false,
 ): ClassDiagramOperation()
 
 @Serializable
-data class DeleteAssociationPresentation(
+data class DeleteLinkPresentation(
     val points: List<Pair<Double, Double>>,
+    val linkType: String,
 ): ClassDiagramOperation()

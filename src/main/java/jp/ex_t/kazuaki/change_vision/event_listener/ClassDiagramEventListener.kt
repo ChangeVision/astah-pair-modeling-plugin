@@ -41,11 +41,22 @@ class ClassDiagramEventListener(private val mqttPublisher: MqttPublisher): IEven
                 is IAssociation -> {
                     // TODO: 関連モデルだけで削除された場合に、どの関連モデルが削除されたか認識できるようにする
                     if (removeProjectEditUnit.any { it.entity is ILinkPresentation  && (it.entity as ILinkPresentation).model is IAssociation }) {
-                        removeTransaction.operations.add(DeleteAssociationModel(true))
+                        removeTransaction.operations.add(DeleteLinkModel(true))
                         logger.debug("${entity.name}(IAssociation")
                     } else {
                         logger.debug("$entity(IAssociation)")
                         logger.warn("This operation does not support because plugin can't detect what association model delete.")
+                        return
+                    }
+                }
+                is IRealization -> {
+                    // TODO: 実現モデルだけで削除された場合に、どの実現モデルが削除されたか認識できるようにする
+                    if (removeProjectEditUnit.any { it.entity is ILinkPresentation  && (it.entity as ILinkPresentation).model is IRealization }) {
+                        removeTransaction.operations.add(DeleteLinkModel(true))
+                        logger.debug("${entity.name}(IRealization")
+                    } else {
+                        logger.debug("$entity(IRealization)")
+                        logger.warn("This operation does not support because plugin can't detect what realization model delete.")
                         return
                     }
                 }
@@ -56,12 +67,18 @@ class ClassDiagramEventListener(private val mqttPublisher: MqttPublisher): IEven
                     when (val model = entity.model) {
                         is IAssociation -> {
                             val serializablePoints = entity.points.map { point->Pair(point.x,point.y) }.toList()
-                            val deleteAssociationPresentation = DeleteAssociationPresentation(serializablePoints)
+                            val deleteAssociationPresentation = DeleteLinkPresentation(serializablePoints, "Association")
                             removeTransaction.operations.add(deleteAssociationPresentation)
                             logger.debug("${entity.label}(ILinkPresentation, IAssociation)")
                         }
                         is IGeneralization -> {
                             logger.debug("${model.name}(ILinkPresentation, IGeneralization)")
+                        }
+                        is IRealization -> {
+                            val serializablePoints = entity.points.map { point->Pair(point.x,point.y) }.toList()
+                            val deleteAssociationPresentation = DeleteLinkPresentation(serializablePoints, "Realization")
+                            removeTransaction.operations.add(deleteAssociationPresentation)
+                            logger.debug("${model.name}(ILinkPresentation, IRealization)")
                         }
                         else -> {
                             logger.debug("$entity(ILinkPresentation)")
@@ -144,6 +161,13 @@ class ClassDiagramEventListener(private val mqttPublisher: MqttPublisher): IEven
                     createTransaction.operations.add(createGeneralizationModel)
                     logger.debug("${superClass.name}(IClass) -> ${entity.name}(IGeneralization) - ${subClass.name}(IClass)")
                 }
+                is IRealization -> {
+                    val supplierClass = entity.supplier
+                    val clientClass = entity.client
+                    val createRealizationModel = CreateRealizationModel(supplierClass.name, clientClass.name, entity.name)
+                    createTransaction.operations.add(createRealizationModel)
+                    logger.debug("${supplierClass.name}(IClass) -> ${entity.name}(IRealization) -> ${clientClass.name}(IClass)")
+                }
                 is IOperation -> {
                     when (val owner = entity.owner) {
                         is IClass -> {
@@ -213,6 +237,11 @@ class ClassDiagramEventListener(private val mqttPublisher: MqttPublisher): IEven
                                             val createLinkPresentation = CreateLinkPresentation(source.name, target.name, "Generalization", entity.diagram.name)
                                             createTransaction.operations.add(createLinkPresentation)
                                             logger.debug("${source.name}(IClass) - ${entity.label}(ILinkPresentation::IGeneralization) - ${target.name}(IClass)")
+                                        }
+                                        is IRealization -> {
+                                            val createLinkPresentation = CreateLinkPresentation(source.name, target.name, "Realization", entity.diagram.name)
+                                            createTransaction.operations.add(createLinkPresentation)
+                                            logger.debug("${source.name}(IClass, interface) - ${entity.label}(ILinkPresentation::IRealization) - ${target.name}(IClass)")
                                         }
                                         else -> {
                                             logger.debug("${source.name}(IClass) - ${entity.label}(ILinkPresentation::Unknown) - ${target.name}(IClass)")
