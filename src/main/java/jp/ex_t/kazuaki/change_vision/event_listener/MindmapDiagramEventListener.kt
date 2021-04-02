@@ -22,30 +22,30 @@ class MindmapDiagramEventListener(private val mqttPublisher: MqttPublisher): IEv
     @ExperimentalSerializationApi
     override fun process(projectEditUnit: List<ProjectEditUnit>) {
         logger.debug("Start process")
-        val removeTransaction = Transaction()
+//        val removeTransaction = Transaction()
         val createTransaction = Transaction()
         val modifyTransaction = Transaction()
-        val removeProjectEditUnit = projectEditUnit.filter { it.operation == Operation.REMOVE.ordinal }
-        for (it in removeProjectEditUnit) {
-            val operation = Operation.values()[it.operation]
-            logger.debug("Op: $operation -> ")
-            when (val entity = it.entity) {
-                is ILinkPresentation -> {
-                    when (entity.model) {
-                        else -> {
-                            logger.debug("$entity(INodePresentation)")
-                        }
-                    }
-                }
-                else -> {
-                    logger.debug("$entity(Unknown)")
-                }
-            }
-        }
-        if (removeTransaction.operations.isNotEmpty()) {
-            ProjectChangedListener.encodeAndPublish(removeTransaction, mqttPublisher)
-            return
-        }
+//        val removeProjectEditUnit = projectEditUnit.filter { it.operation == Operation.REMOVE.ordinal }
+//        for (it in removeProjectEditUnit) {
+//            val operation = Operation.values()[it.operation]
+//            logger.debug("Op: $operation -> ")
+//            when (val entity = it.entity) {
+//                is ILinkPresentation -> {
+//                    when (entity.model) {
+//                        else -> {
+//                            logger.debug("$entity(INodePresentation)")
+//                        }
+//                    }
+//                }
+//                else -> {
+//                    logger.debug("$entity(Unknown)")
+//                }
+//            }
+//        }
+//        if (removeTransaction.operations.isNotEmpty()) {
+//            ProjectChangedListener.encodeAndPublish(removeTransaction, mqttPublisher)
+//            return
+//        }
 
         val addProjectEditUnit = projectEditUnit.filter { it.operation == Operation.ADD.ordinal }
         for (it in addProjectEditUnit) {
@@ -53,27 +53,21 @@ class MindmapDiagramEventListener(private val mqttPublisher: MqttPublisher): IEv
             logger.debug("Op: $operation -> ")
             when (val entity = it.entity) {
                 is IMindMapDiagram -> {
-                    val owner = entity.owner as INamedElement
-                    val createMindMapDiagram = CreateMindmapDiagram(entity.name, owner.name)
-                    createTransaction.operations.add(createMindMapDiagram)
-                    logger.debug("${entity.name}(IMindMapDiagram)")
+                    modifyTransaction.operations
+                        .add(createMindMapDiagram(entity))
                     break
                 }
                 is INodePresentation -> {
-                    when (val diagram = entity.diagram) {
+                    when (entity.diagram) {
                         is IMindMapDiagram -> {
-                            when (val owner = entity.parent) {
+                            when (entity.parent) {
                                 null -> {
-                                    val location = Pair(entity.location.x, entity.location.y)
-                                    val size = Pair(entity.width, entity.height)
-                                    val createFloatingTopic = CreateFloatingTopic(entity.label, location, size, diagram.name)
-                                    createTransaction.operations.add(createFloatingTopic)
-                                    logger.debug("${entity.label}(INodePresentation, FloatingTopic)")
+                                    modifyTransaction.operations
+                                        .add(createFloatingTopic(entity))
                                 }
                                 else -> {
-                                    val createTopic = CreateTopic(owner.label, entity.label, diagram.name)
-                                    createTransaction.operations.add(createTopic)
-                                    logger.debug("${owner.label}(INodePresentation) - ${entity.label}(INodePresentation)")
+                                    modifyTransaction.operations
+                                        .add(createTopic(entity))
                                 }
                             }
                         }
@@ -125,6 +119,24 @@ class MindmapDiagramEventListener(private val mqttPublisher: MqttPublisher): IEv
         if (modifyTransaction.operations.isNotEmpty()) {
             ProjectChangedListener.encodeAndPublish(modifyTransaction, mqttPublisher)
         }
+    }
+
+    private fun createMindMapDiagram(entity: IMindMapDiagram): CreateMindmapDiagram {
+        val owner = entity.owner as INamedElement
+        logger.debug("${entity.name}(IMindMapDiagram)")
+        return CreateMindmapDiagram(entity.name, owner.name)
+    }
+
+    private fun createFloatingTopic(entity: INodePresentation): CreateFloatingTopic {
+        val location = Pair(entity.location.x, entity.location.y)
+        val size = Pair(entity.width, entity.height)
+        logger.debug("${entity.label}(INodePresentation, FloatingTopic)")
+        return CreateFloatingTopic(entity.label, location, size, entity.diagram.name)
+    }
+
+    private fun createTopic(entity: INodePresentation): CreateTopic {
+        logger.debug("${entity.parent.label}(INodePresentation) - ${entity.label}(INodePresentation)")
+        return CreateTopic(entity.parent.label, entity.label, entity.diagram.name)
     }
 
     companion object: Logging {
