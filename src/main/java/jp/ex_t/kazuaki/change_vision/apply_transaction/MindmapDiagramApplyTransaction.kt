@@ -29,34 +29,50 @@ class MindmapDiagramApplyTransaction: IApplyTransaction<MindmapDiagramOperation>
         operations.forEach { it ->
             when (it) {
                 is CreateMindmapDiagram -> {
-                    if (it.name.isNotEmpty() && it.ownerName.isNotEmpty()) {
-                        createMindMapDiagram(it.name, it.ownerName)
-                    }
+                    validateAndCreateMindmapDiagram(it)
                 }
                 is CreateTopic -> {
-                    if (it.ownerName.isNotEmpty()
-                        && it.name.isNotEmpty()
-                        && it.diagramName.isNotEmpty()) {
-                        createTopic(it.ownerName, it.name, it.diagramName)
-                    }
+                    validateAndCreateTopic(it)
                 }
                 is CreateFloatingTopic -> {
-                    val location = Point2D.Double(it.location.first, it.location.second)
-                    if (it.name.isNotEmpty() && it.diagramName.isNotEmpty()) {
-                        createFloatingTopic(it.name, location, it.size, it.diagramName)
-                    }
+                    validateAndCreateFloatingTopic(it)
                 }
                 is ResizeTopic -> {
-                    val location = Point2D.Double(it.location.first, it.location.second)
-                    if (it.name.isNotEmpty() && it.diagramName.isNotEmpty()) {
-                        resizeTopic(it.name, location, it.size, it.diagramName)
-                    }
+                    validateAndResizeTopic(it)
                 }
             }
         }
     }
 
-    private fun createMindMapDiagram(name: String, ownerName: String) {
+    private fun validateAndCreateMindmapDiagram(operation: CreateMindmapDiagram) {
+        if (operation.name.isNotEmpty() && operation.ownerName.isNotEmpty()) {
+            createMindmapDiagram(operation.name, operation.ownerName)
+        }
+    }
+
+    private fun validateAndCreateTopic(operation: CreateTopic) {
+        if (operation.ownerName.isNotEmpty()
+            && operation.name.isNotEmpty()
+            && operation.diagramName.isNotEmpty()) {
+                createTopic(operation.ownerName, operation.name, operation.diagramName)
+        }
+    }
+
+    private fun validateAndCreateFloatingTopic(operation: CreateFloatingTopic) {
+        val location = Point2D.Double(operation.location.first, operation.location.second)
+        if (operation.name.isNotEmpty() && operation.diagramName.isNotEmpty()) {
+            createFloatingTopic(operation.name, location, operation.size, operation.diagramName)
+        }
+    }
+
+    private fun validateAndResizeTopic(operation: ResizeTopic) {
+        val location = Point2D.Double(operation.location.first, operation.location.second)
+        if (operation.name.isNotEmpty() && operation.diagramName.isNotEmpty()) {
+            resizeTopic(operation.name, location, operation.size, operation.diagramName)
+        }
+    }
+
+    private fun createMindmapDiagram(name: String, ownerName: String) {
         logger.debug("Create mindmap diagram.")
         val diagramViewManager = api.viewManager.diagramViewManager
         val owner = projectAccessor.findElements(INamedElement::class.java, ownerName).first() as INamedElement
