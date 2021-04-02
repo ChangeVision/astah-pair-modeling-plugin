@@ -27,18 +27,20 @@ class ClassDiagramApplyTransaction: IApplyTransaction<ClassDiagramOperation> {
         operations.forEach { it ->
             when (it) {
                 is CreateClassDiagram -> {
-                    if (it.name.isNotEmpty() && it.ownerName.isNotEmpty())
+                    if (it.name.isNotEmpty() && it.ownerName.isNotEmpty()) {
                         createClassDiagram(it.name, it.ownerName)
+                    }
                 }
                 is CreateClassModel -> {
-                    if (it.name.isNotEmpty() && it.parentPackageName.isNotEmpty())
+                    if (it.name.isNotEmpty() && it.parentPackageName.isNotEmpty()) {
                         createClassModel(it.name, it.parentPackageName)
+                    }
                 }
                 is CreateAssociationModel -> {
                     if (it.sourceClassName.isNotEmpty()
                         && it.sourceClassNavigability.isNotEmpty()
                         && it.destinationClassName.isNotEmpty()
-                        && it.destinationClassNavigability.isNotEmpty())
+                        && it.destinationClassNavigability.isNotEmpty()) {
                         createAssociationModel(
                             it.sourceClassName,
                             it.sourceClassNavigability,
@@ -46,76 +48,86 @@ class ClassDiagramApplyTransaction: IApplyTransaction<ClassDiagramOperation> {
                             it.destinationClassNavigability,
                             it.name,
                         )
+                    }
                 }
                 is CreateGeneralizationModel -> {
                     if (it.superClassName.isNotEmpty()
-                        && it.subClassName.isNotEmpty())
-                            createGeneralizationModel(
-                                it.superClassName,
-                                it.subClassName,
-                                it.name,
-                            )
+                        && it.subClassName.isNotEmpty()) {
+                        createGeneralizationModel(
+                            it.superClassName,
+                            it.subClassName,
+                            it.name,
+                        )
+                    }
                 }
                 is CreateClassPresentation -> {
                     val location = Point2D.Double(it.location.first, it.location.second)
-                    if (it.diagramName.isNotEmpty() && it.className.isNotEmpty())
+                    if (it.diagramName.isNotEmpty() && it.className.isNotEmpty()) {
                         createClassPresentation(it.className, location, it.diagramName)
+                    }
                 }
                 is CreateLinkPresentation -> {
                     if (it.sourceClassName.isNotEmpty()
                         && it.targetClassName.isNotEmpty()
                         && it.linkType.isNotEmpty()
-                        && it.diagramName.isNotEmpty())
+                        && it.diagramName.isNotEmpty()) {
                         createLinkPresentation(
                             it.sourceClassName,
                             it.targetClassName,
                             it.linkType,
                             it.diagramName
                         )
+                    }
                 }
                 is CreateOperation -> {
                     if (it.ownerName.isNotEmpty()
                         && it.name.isNotEmpty()
-                        && it.returnTypeExpression.isNotEmpty())
+                        && it.returnTypeExpression.isNotEmpty()) {
                         createOperation(it.ownerName, it.name, it.returnTypeExpression)
+                    }
                 }
                 is CreateAttribute -> {
                     if (it.ownerName.isNotEmpty()
                         && it.name.isNotEmpty()
-                        && it.typeExpression.isNotEmpty())
+                        && it.typeExpression.isNotEmpty()) {
                         createAttribute(it.ownerName, it.name, it.typeExpression)
+                    }
                 }
                 is ResizeClassPresentation -> {
                     val location = Point2D.Double(it.location.first, it.location.second)
                     if (!operations.any { it is ChangeClassModelName }
-                        && it.className.isNotEmpty() && it.diagramName.isNotEmpty())
+                        && it.className.isNotEmpty() && it.diagramName.isNotEmpty()) {
                         resizeClassPresentation(it.className, location, it.size, it.diagramName)
+                    }
                 }
                 is ChangeClassModelName -> {
-                    if (it.name.isNotEmpty())
+                    if (it.name.isNotEmpty()) {
                         changeClassModelName(it.name, it.brotherClassNameList)
+                    }
                 }
                 is ChangeOperationNameAndReturnTypeExpression -> {
                     if (it.ownerName.isNotEmpty()
                         && it.name.isNotEmpty()
-                        && it.returnTypeExpression.isNotEmpty())
+                        && it.returnTypeExpression.isNotEmpty()) {
                         changeOperationNameAndReturnTypeExpression(
                             it.ownerName,
                             it.brotherNameAndReturnTypeExpression,
                             it.name,
                             it.returnTypeExpression
                         )
+                    }
                 }
                 is ChangeAttributeNameAndTypeExpression -> {
                     if (it.ownerName.isNotEmpty()
                         && it.name.isNotEmpty()
-                        && it.typeExpression.isNotEmpty())
+                        && it.typeExpression.isNotEmpty()) {
                         changeAttributeNameAndTypeExpression(
                             it.ownerName,
                             it.brotherNameAndTypeExpression,
                             it.name,
                             it.typeExpression
                         )
+                    }
                 }
                 is DeleteClassModel -> {
                     deleteClassModel(it.brotherClassNameList)
@@ -130,8 +142,9 @@ class ClassDiagramApplyTransaction: IApplyTransaction<ClassDiagramOperation> {
                     deleteAssociationModel(receivedPoints)
                 }
                 is DeleteClassPresentation -> {
-                    if (it.className.isNotEmpty())
+                    if (it.className.isNotEmpty()) {
                         deleteClassPresentation(it.className)
+                    }
                 }
                 is DeleteAssociationPresentation -> {
                     if (!operations.any { it is DeleteAssociationModel }) {
@@ -269,11 +282,12 @@ class ClassDiagramApplyTransaction: IApplyTransaction<ClassDiagramOperation> {
 
     private fun changeClassModelName(name: String, brotherClassModelNameList: List<String?>) {
         logger.debug("Change class model name.")
-        if (brotherClassModelNameList.isNullOrEmpty())
+        if (brotherClassModelNameList.isNullOrEmpty()) {
             projectAccessor.findElements(IClass::class.java).first().name = name
-        else
+        } else {
             projectAccessor.findElements(IClass::class.java)
                 .filterNot { it.name in brotherClassModelNameList }.first().name = name
+        }
     }
 
     private fun changeOperationNameAndReturnTypeExpression(ownerName: String, brotherNameAndReturnTypeExpression: List<Pair<String, String>>, name: String, returnTypeExpression: String) {

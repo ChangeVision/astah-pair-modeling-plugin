@@ -13,7 +13,8 @@ import com.change_vision.jude.api.inf.model.INamedElement
 import com.change_vision.jude.api.inf.presentation.ILinkPresentation
 import com.change_vision.jude.api.inf.presentation.INodePresentation
 import com.change_vision.jude.api.inf.project.ProjectEditUnit
-import jp.ex_t.kazuaki.change_vision.*
+import jp.ex_t.kazuaki.change_vision.Logging
+import jp.ex_t.kazuaki.change_vision.logger
 import jp.ex_t.kazuaki.change_vision.network.*
 import kotlinx.serialization.ExperimentalSerializationApi
 
@@ -25,12 +26,12 @@ class MindmapDiagramEventListener(private val mqttPublisher: MqttPublisher): IEv
         val createTransaction = Transaction()
         val modifyTransaction = Transaction()
         val removeProjectEditUnit = projectEditUnit.filter { it.operation == Operation.REMOVE.ordinal }
-        for (it in removeProjectEditUnit){
+        for (it in removeProjectEditUnit) {
             val operation = Operation.values()[it.operation]
             logger.debug("Op: $operation -> ")
             when (val entity = it.entity) {
                 is ILinkPresentation -> {
-                    when (val model = entity.model) {
+                    when (entity.model) {
                         else -> {
                             logger.debug("$entity(INodePresentation)")
                         }
@@ -84,11 +85,7 @@ class MindmapDiagramEventListener(private val mqttPublisher: MqttPublisher): IEv
                 is ILinkPresentation -> {
                     val source = entity.source.model
                     val target = entity.target.model
-                    when (source) {
-                        else -> {
-                            logger.debug("$source(Unknown) - ${entity.label}(ILinkPresentation) - $target(Unknown)")
-                        }
-                    }
+                    logger.debug("$source(Unknown) - ${entity.label}(ILinkPresentation) - $target(Unknown)")
                 }
                 else -> {
                     logger.debug("$entity(Unknown)")
@@ -125,8 +122,9 @@ class MindmapDiagramEventListener(private val mqttPublisher: MqttPublisher): IEv
                 }
             }
         }
-        if (modifyTransaction.operations.isNotEmpty())
+        if (modifyTransaction.operations.isNotEmpty()) {
             ProjectChangedListener.encodeAndPublish(modifyTransaction, mqttPublisher)
+        }
     }
 
     companion object: Logging {
