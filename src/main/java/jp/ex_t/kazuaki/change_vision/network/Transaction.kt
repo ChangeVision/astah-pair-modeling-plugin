@@ -61,7 +61,7 @@ data class CreateGeneralizationModel(
 data class CreateRealizationModel(
     val supplierClassName: String,
     val clientClassName: String,
-    val name: String,
+    val name: String = "",
 ): ClassDiagramOperation()
 
 @Serializable
