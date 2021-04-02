@@ -95,14 +95,14 @@ class ClassDiagramApplyTransaction: IApplyTransaction<ClassDiagramOperation> {
                 }
                 is ResizeClassPresentation -> {
                     val location = Point2D.Double(it.location.first, it.location.second)
-                    if (!operations.any { it is ChangeClassModelName }
+                    if (!operations.any { it is ChangeClassModel }
                         && it.className.isNotEmpty() && it.diagramName.isNotEmpty()) {
                         resizeClassPresentation(it.className, location, it.size, it.diagramName)
                     }
                 }
-                is ChangeClassModelName -> {
+                is ChangeClassModel -> {
                     if (it.name.isNotEmpty()) {
-                        changeClassModelName(it.name, it.brotherClassNameList)
+                        changeClassModel(it.name, it.brotherClassNameList, it.stereotypes)
                     }
                 }
                 is ChangeOperationNameAndReturnTypeExpression -> {
@@ -280,13 +280,23 @@ class ClassDiagramApplyTransaction: IApplyTransaction<ClassDiagramOperation> {
         classPresentation.height = height
     }
 
-    private fun changeClassModelName(name: String, brotherClassModelNameList: List<String?>) {
-        logger.debug("Change class model name.")
-        if (brotherClassModelNameList.isNullOrEmpty()) {
-            projectAccessor.findElements(IClass::class.java).first().name = name
-        } else {
-            projectAccessor.findElements(IClass::class.java)
-                .filterNot { it.name in brotherClassModelNameList }.first().name = name
+    private fun changeClassModel(name: String, brotherClassModelNameList: List<String?>, stereotypes: List<String?>) {
+        logger.debug("Change class model name and stereotypes.")
+        val clazz = (
+                if (brotherClassModelNameList.isNullOrEmpty())
+                    projectAccessor.findElements(IClass::class.java).first()
+                else projectAccessor.findElements(IClass::class.java)
+                    .filterNot { it.name in brotherClassModelNameList }.first()
+                ) as IClass
+        clazz.name = name
+        val clazzStereotypes = clazz.stereotypes.toList()
+        logger.debug("Add stereotypes.")
+        stereotypes.filterNot { it in clazzStereotypes }.forEach {
+            clazz.addStereotype(it)
+        }
+        logger.debug("Remove stereotypes.")
+        clazzStereotypes.filterNot { it in stereotypes }.forEach {
+            clazz.removeStereotype(it)
         }
     }
 
