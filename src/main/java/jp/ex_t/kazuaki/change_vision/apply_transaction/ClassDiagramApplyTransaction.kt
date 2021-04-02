@@ -366,7 +366,13 @@ class ClassDiagramApplyTransaction: IApplyTransaction<ClassDiagramOperation> {
     private fun searchLinkPresentation(presentations: List<ILinkPresentation>, receivedPoints: List<Point2D>, linkType: String): ILinkPresentation? {
         return when (linkType) {
             "Association" -> {
+                logger.debug("Search association link presentation.")
                 presentations.filter { entity -> entity.model is IAssociation }
+                    .firstOrNull { link -> link.points.all { receivedPoints.containsAll(link.points.toList()) } }
+            }
+            "Realization" -> {
+                logger.debug("Search realization link presentation.")
+                presentations.filter { entity -> entity.model is IRealization }
                     .firstOrNull { link -> link.points.all { receivedPoints.containsAll(link.points.toList()) } }
             }
             else -> {

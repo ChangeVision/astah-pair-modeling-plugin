@@ -63,6 +63,12 @@ class ClassDiagramEventListener(private val mqttPublisher: MqttPublisher): IEven
                         is IGeneralization -> {
                             logger.debug("${model.name}(ILinkPresentation, IGeneralization)")
                         }
+                        is IRealization -> {
+                            val serializablePoints = entity.points.map { point->Pair(point.x,point.y) }.toList()
+                            val deleteAssociationPresentation = DeleteLinkPresentation(serializablePoints, "Realization")
+                            removeTransaction.operations.add(deleteAssociationPresentation)
+                            logger.debug("${model.name}(ILinkPresentation, IRealization)")
+                        }
                         else -> {
                             logger.debug("$entity(ILinkPresentation)")
                         }
