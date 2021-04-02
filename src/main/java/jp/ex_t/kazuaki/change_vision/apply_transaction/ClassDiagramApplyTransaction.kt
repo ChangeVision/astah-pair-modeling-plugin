@@ -21,6 +21,9 @@ import java.awt.geom.Point2D
 class ClassDiagramApplyTransaction: IApplyTransaction<ClassDiagramOperation> {
     private val api = AstahAPI.getAstahAPI()
     private val projectAccessor = api.projectAccessor
+    private val diagramViewManager = api.viewManager.diagramViewManager
+    private val classDiagramEditor = projectAccessor.diagramEditorFactory.classDiagramEditor
+    private val basicModelEditor = projectAccessor.modelEditorFactory.basicModelEditor
 
     @Throws(BadTransactionException::class)
     override fun apply(operations: List<ClassDiagramOperation>) {
@@ -175,9 +178,6 @@ class ClassDiagramApplyTransaction: IApplyTransaction<ClassDiagramOperation> {
 
     private fun createClassDiagram(name: String, ownerName: String) {
         logger.debug("Create class diagram.")
-        val diagramEditorFactory = projectAccessor.diagramEditorFactory
-        val classDiagramEditor = diagramEditorFactory.classDiagramEditor
-        val diagramViewManager = api.viewManager.diagramViewManager
         val owner = projectAccessor.findElements(INamedElement::class.java, ownerName).first() as INamedElement
         val diagram = classDiagramEditor.createClassDiagram(owner, name)
         diagramViewManager.open(diagram)
@@ -185,8 +185,6 @@ class ClassDiagramApplyTransaction: IApplyTransaction<ClassDiagramOperation> {
 
     private fun createClassModel(name: String, parentPackageName: String, stereotypes: List<String?>) {
         logger.debug("Create class model.")
-        val modelEditorFactory = projectAccessor.modelEditorFactory
-        val basicModelEditor = modelEditorFactory.basicModelEditor
         val parentPackage = projectAccessor.findElements(IPackage::class.java, parentPackageName).first() as IPackage
         val clazz = basicModelEditor.createClass(parentPackage, name)
         stereotypes.forEach {
@@ -196,8 +194,6 @@ class ClassDiagramApplyTransaction: IApplyTransaction<ClassDiagramOperation> {
 
     private fun createAssociationModel(sourceClassName: String, sourceClassNavigability: String, destinationClassName: String, destinationClassNavigability: String, associationName: String) {
         logger.debug("Create association model.")
-        val modelEditorFactory = projectAccessor.modelEditorFactory
-        val basicModelEditor = modelEditorFactory.basicModelEditor
         val sourceClass = projectAccessor.findElements(IClass::class.java, sourceClassName).first() as IClass
         val destinationClass = projectAccessor.findElements(IClass::class.java, destinationClassName).first() as IClass
         val association = basicModelEditor.createAssociation(sourceClass, destinationClass, associationName, "", "")
@@ -207,8 +203,6 @@ class ClassDiagramApplyTransaction: IApplyTransaction<ClassDiagramOperation> {
 
     private fun createGeneralizationModel(superClassName: String, subClassName: String, name: String) {
         logger.debug("Create generalization model.")
-        val modelEditorFactory = projectAccessor.modelEditorFactory
-        val basicModelEditor = modelEditorFactory.basicModelEditor
         val superClass = projectAccessor.findElements(IClass::class.java, superClassName).first() as IClass
         val subClass = projectAccessor.findElements(IClass::class.java, subClassName).first() as IClass
         basicModelEditor.createGeneralization(subClass, superClass, name)
@@ -216,8 +210,6 @@ class ClassDiagramApplyTransaction: IApplyTransaction<ClassDiagramOperation> {
 
     private fun createRealizationModel(supplierClassName: String, clientClassName: String, name: String) {
         logger.debug("Create realization model.")
-        val modelEditorFactory = projectAccessor.modelEditorFactory
-        val basicModelEditor = modelEditorFactory.basicModelEditor
         val supplierClass = projectAccessor.findElements(IClass::class.java, supplierClassName).first() as IClass
         val clientClass = projectAccessor.findElements(IClass::class.java, clientClassName).first() as IClass
         basicModelEditor.createRealization(clientClass, supplierClass, name)
@@ -225,8 +217,6 @@ class ClassDiagramApplyTransaction: IApplyTransaction<ClassDiagramOperation> {
 
     private fun createClassPresentation(className: String, location: Point2D, diagramName: String) {
         logger.debug("Create class presentation.")
-        val diagramEditorFactory = projectAccessor.diagramEditorFactory
-        val classDiagramEditor = diagramEditorFactory.classDiagramEditor
         val diagram = projectAccessor.findElements(IDiagram::class.java, diagramName).first() as IDiagram
         classDiagramEditor.diagram = diagram
         val clazz = projectAccessor.findElements(IClass::class.java, className).first() as IClass
@@ -260,8 +250,6 @@ class ClassDiagramApplyTransaction: IApplyTransaction<ClassDiagramOperation> {
                 }
             }
         }
-        val diagramEditorFactory = projectAccessor.diagramEditorFactory
-        val classDiagramEditor = diagramEditorFactory.classDiagramEditor
         val diagram = projectAccessor.findElements(IDiagram::class.java, diagramName).first() as IDiagram
         classDiagramEditor.diagram = diagram
         val sourceClass = projectAccessor.findElements(IClass::class.java, sourceClassName).first() as IClass
@@ -283,16 +271,12 @@ class ClassDiagramApplyTransaction: IApplyTransaction<ClassDiagramOperation> {
 
     private fun createOperation(ownerName: String, name: String, returnTypeExpression: String) {
         logger.debug("Create operation.")
-        val modelEditorFactory = projectAccessor.modelEditorFactory
-        val basicModelEditor = modelEditorFactory.basicModelEditor
         val ownerClass = projectAccessor.findElements(IClass::class.java, ownerName).first() as IClass
         basicModelEditor.createOperation(ownerClass, name, returnTypeExpression)
     }
 
     private fun createAttribute(ownerName: String, name: String, typeExpression: String) {
         logger.debug("Create attribute.")
-        val modelEditorFactory = projectAccessor.modelEditorFactory
-        val basicModelEditor = modelEditorFactory.basicModelEditor
         val ownerClass = projectAccessor.findElements(IClass::class.java, ownerName).first() as IClass
         basicModelEditor.createAttribute(ownerClass, name, typeExpression)
     }
@@ -300,8 +284,6 @@ class ClassDiagramApplyTransaction: IApplyTransaction<ClassDiagramOperation> {
     private fun resizeClassPresentation(className: String, location: Point2D, size: Pair<Double, Double>, diagramName: String) {
         logger.debug("Resize class presentation.")
         val (width, height) = size
-        val diagramEditorFactory = projectAccessor.diagramEditorFactory
-        val classDiagramEditor = diagramEditorFactory.classDiagramEditor
         val diagram = projectAccessor.findElements(IDiagram::class.java, diagramName).first() as IDiagram
         classDiagramEditor.diagram = diagram
         val clazz = (projectAccessor.findElements(IClass::class.java, className).first() ?: return) as IClass
@@ -354,8 +336,6 @@ class ClassDiagramApplyTransaction: IApplyTransaction<ClassDiagramOperation> {
 
     private fun deleteClassModel(brotherClassModelNameList: List<String?>) {
         logger.debug("Delete class model.")
-        val modelEditorFactory = projectAccessor.modelEditorFactory
-        val basicModelEditor = modelEditorFactory.basicModelEditor
         val clazz = if (brotherClassModelNameList.isNullOrEmpty()) {
             projectAccessor.findElements(IClass::class.java).first()
         } else {
@@ -390,9 +370,7 @@ class ClassDiagramApplyTransaction: IApplyTransaction<ClassDiagramOperation> {
 
     private fun deleteLinkModel(receivedPoints: List<Point2D>, linkType: String) {
         logger.debug("Delete link model.")
-        val diagramEditorFactory = projectAccessor.diagramEditorFactory
-        val classDiagramEditor = diagramEditorFactory.classDiagramEditor
-        val diagram = api.viewManager.diagramViewManager.currentDiagram
+        val diagram = diagramViewManager.currentDiagram
         classDiagramEditor.diagram = diagram
         val foundLink = searchLinkPresentation(
             diagram.presentations.filterIsInstance<ILinkPresentation>(),
@@ -404,9 +382,7 @@ class ClassDiagramApplyTransaction: IApplyTransaction<ClassDiagramOperation> {
 
     private fun deleteClassPresentation(name: String) {
         logger.debug("Delete class model.")
-        val diagramEditorFactory = projectAccessor.diagramEditorFactory
-        val classDiagramEditor = diagramEditorFactory.classDiagramEditor
-        val diagram = api.viewManager.diagramViewManager.currentDiagram
+        val diagram = diagramViewManager.currentDiagram
         classDiagramEditor.diagram = diagram
         val clazz = projectAccessor.findElements(IClass::class.java, name).first() as IClass
         val classPresentation = clazz.presentations.find { it.diagram == diagram } ?: return
@@ -415,9 +391,7 @@ class ClassDiagramApplyTransaction: IApplyTransaction<ClassDiagramOperation> {
 
     private fun deleteLinkPresentation(receivedPoints: List<Point2D>, linkType: String) {
         logger.debug("Delete link presentation.")
-        val diagramEditorFactory = projectAccessor.diagramEditorFactory
-        val classDiagramEditor = diagramEditorFactory.classDiagramEditor
-        val diagram = api.viewManager.diagramViewManager.currentDiagram
+        val diagram = diagramViewManager.currentDiagram
         classDiagramEditor.diagram = diagram
         val foundLink = searchLinkPresentation(
             diagram.presentations.filterIsInstance<ILinkPresentation>(),
