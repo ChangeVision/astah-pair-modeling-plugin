@@ -41,7 +41,7 @@ class ClassDiagramEventListener(private val mqttPublisher: MqttPublisher): IEven
                 is IAssociation -> {
                     // TODO: 関連モデルだけで削除された場合に、どの関連モデルが削除されたか認識できるようにする
                     if (removeProjectEditUnit.any { it.entity is ILinkPresentation  && (it.entity as ILinkPresentation).model is IAssociation }) {
-                        removeTransaction.operations.add(DeleteAssociationModel(true))
+                        removeTransaction.operations.add(DeleteLinkModel(true))
                         logger.debug("${entity.name}(IAssociation")
                     } else {
                         logger.debug("$entity(IAssociation)")

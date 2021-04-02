@@ -158,7 +158,7 @@ data class DeleteClassPresentation(
 ): ClassDiagramOperation()
 
 @Serializable
-data class DeleteAssociationModel(
+data class DeleteLinkModel(
     val isDelete: Boolean = false,
 ): ClassDiagramOperation()
 
