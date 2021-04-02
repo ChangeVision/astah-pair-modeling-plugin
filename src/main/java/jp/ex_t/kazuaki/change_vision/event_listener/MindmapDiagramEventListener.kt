@@ -97,19 +97,12 @@ class MindmapDiagramEventListener(private val mqttPublisher: MqttPublisher): IEv
             logger.debug("Op: $operation -> ")
             when (val entity = it.entity) {
                 is INodePresentation -> {
-                    when (val diagram = entity.diagram) {
-                        is IMindMapDiagram -> {
-                            val location = Pair(entity.location.x, entity.location.y)
-                            val size = Pair(entity.width, entity.height)
-                            val resizeTopic = ResizeTopic(entity.label, location, size, diagram.name)
-                            modifyTransaction.operations.add(resizeTopic)
-                            logger.debug("${entity.label}(INodePresentation)::Topic(${Pair(entity.width, entity.height)} at ${entity.location}) @MindmapDiagram${diagram.name}")
-                            break
-                        }
-                        else -> {
-                            logger.debug("${entity.label}(INodePresentation) @UnknownDiagram")
-                        }
-                    }
+                    modifyTransaction.operations
+                        .add(
+                            resizeTopic(entity)
+                                ?: continue
+                        )
+                    break
                 }
                 else -> {
                     logger.debug("$entity(Unknown)")
@@ -137,6 +130,21 @@ class MindmapDiagramEventListener(private val mqttPublisher: MqttPublisher): IEv
     private fun createTopic(entity: INodePresentation): CreateTopic {
         logger.debug("${entity.parent.label}(INodePresentation) - ${entity.label}(INodePresentation)")
         return CreateTopic(entity.parent.label, entity.label, entity.diagram.name)
+    }
+
+    private fun resizeTopic(entity: INodePresentation): ResizeTopic? {
+        return when (val diagram = entity.diagram) {
+            is IMindMapDiagram -> {
+                val location = Pair(entity.location.x, entity.location.y)
+                val size = Pair(entity.width, entity.height)
+                logger.debug("${entity.label}(INodePresentation)::Topic(${Pair(entity.width, entity.height)} at ${entity.location}) @MindmapDiagram${diagram.name}")
+                ResizeTopic(entity.label, location, size, diagram.name)
+            }
+            else -> {
+                logger.debug("${entity.label}(INodePresentation) @UnknownDiagram")
+                null
+            }
+        }
     }
 
     companion object: Logging {
