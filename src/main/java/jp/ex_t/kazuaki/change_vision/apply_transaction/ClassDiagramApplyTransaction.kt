@@ -60,6 +60,16 @@ class ClassDiagramApplyTransaction: IApplyTransaction<ClassDiagramOperation> {
                         )
                     }
                 }
+                is CreateRealizationModel -> {
+                    if (it.supplierClassName.isNotEmpty()
+                        && it.clientClassName.isNotEmpty()) {
+                        createRealizationModel(
+                            it.supplierClassName,
+                            it.clientClassName,
+                            it.name,
+                        )
+                    }
+                }
                 is CreateClassPresentation -> {
                     val location = Point2D.Double(it.location.first, it.location.second)
                     if (it.diagramName.isNotEmpty() && it.className.isNotEmpty()) {
@@ -198,6 +208,15 @@ class ClassDiagramApplyTransaction: IApplyTransaction<ClassDiagramOperation> {
         val superClass = projectAccessor.findElements(IClass::class.java, superClassName).first() as IClass
         val subClass = projectAccessor.findElements(IClass::class.java, subClassName).first() as IClass
         basicModelEditor.createGeneralization(subClass, superClass, name)
+    }
+
+    private fun createRealizationModel(supplierClassName: String, clientClassName: String, name: String) {
+        logger.debug("Create realization model.")
+        val modelEditorFactory = projectAccessor.modelEditorFactory
+        val basicModelEditor = modelEditorFactory.basicModelEditor
+        val supplierClass = projectAccessor.findElements(IClass::class.java, supplierClassName).first() as IClass
+        val clientClass = projectAccessor.findElements(IClass::class.java, clientClassName).first() as IClass
+        basicModelEditor.createRealization(clientClass, supplierClass, name)
     }
 
     private fun createClassPresentation(className: String, location: Point2D, diagramName: String) {

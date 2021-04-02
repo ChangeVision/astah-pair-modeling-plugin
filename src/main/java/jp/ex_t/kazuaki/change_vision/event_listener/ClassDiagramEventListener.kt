@@ -144,6 +144,13 @@ class ClassDiagramEventListener(private val mqttPublisher: MqttPublisher): IEven
                     createTransaction.operations.add(createGeneralizationModel)
                     logger.debug("${superClass.name}(IClass) -> ${entity.name}(IGeneralization) - ${subClass.name}(IClass)")
                 }
+                is IRealization -> {
+                    val supplierClass = entity.supplier
+                    val clientClass = entity.client
+                    val createRealizationModel = CreateRealizationModel(supplierClass.name, clientClass.name, entity.name)
+                    createTransaction.operations.add(createRealizationModel)
+                    logger.debug("${supplierClass.name}(IClass) -> ${entity.name}(IRealization) -> ${clientClass.name}(IClass)")
+                }
                 is IOperation -> {
                     when (val owner = entity.owner) {
                         is IClass -> {

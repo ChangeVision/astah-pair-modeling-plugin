@@ -58,6 +58,13 @@ data class CreateGeneralizationModel(
 ): ClassDiagramOperation()
 
 @Serializable
+data class CreateRealizationModel(
+    val supplierClassName: String,
+    val clientClassName: String,
+    val name: String,
+): ClassDiagramOperation()
+
+@Serializable
 data class CreateClassPresentation(
     val className: String,
     val location: Pair<Double, Double>,
