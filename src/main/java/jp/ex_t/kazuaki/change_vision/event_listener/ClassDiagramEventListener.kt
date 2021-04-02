@@ -104,7 +104,7 @@ class ClassDiagramEventListener(private val mqttPublisher: MqttPublisher): IEven
                 }
                 is IClass -> {
                     val parentPackage = entity.owner as IPackage
-                    val createClassModel = CreateClassModel(entity.name, parentPackage.name)
+                    val createClassModel = CreateClassModel(entity.name, parentPackage.name, entity.stereotypes.toList())
                     createTransaction.operations.add(createClassModel)
                     logger.debug("${entity.name}(IClass)")
                 }

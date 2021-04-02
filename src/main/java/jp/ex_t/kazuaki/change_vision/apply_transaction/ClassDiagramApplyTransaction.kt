@@ -33,7 +33,7 @@ class ClassDiagramApplyTransaction: IApplyTransaction<ClassDiagramOperation> {
                 }
                 is CreateClassModel -> {
                     if (it.name.isNotEmpty() && it.parentPackageName.isNotEmpty()) {
-                        createClassModel(it.name, it.parentPackageName)
+                        createClassModel(it.name, it.parentPackageName, it.stereotypes)
                     }
                 }
                 is CreateAssociationModel -> {
@@ -169,12 +169,15 @@ class ClassDiagramApplyTransaction: IApplyTransaction<ClassDiagramOperation> {
         diagramViewManager.open(diagram)
     }
 
-    private fun createClassModel(name: String, parentPackageName: String) {
+    private fun createClassModel(name: String, parentPackageName: String, stereotypes: List<String?>) {
         logger.debug("Create class model.")
         val modelEditorFactory = projectAccessor.modelEditorFactory
         val basicModelEditor = modelEditorFactory.basicModelEditor
         val parentPackage = projectAccessor.findElements(IPackage::class.java, parentPackageName).first() as IPackage
-        basicModelEditor.createClass(parentPackage, name)
+        val clazz = basicModelEditor.createClass(parentPackage, name)
+        stereotypes.forEach {
+            clazz.addStereotype(it)
+        }
     }
 
     private fun createAssociationModel(sourceClassName: String, sourceClassNavigability: String, destinationClassName: String, destinationClassNavigability: String, associationName: String) {

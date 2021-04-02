@@ -38,6 +38,7 @@ data class CreateMindmapDiagram(
 data class CreateClassModel(
     val name: String,
     val parentPackageName: String,
+    val stereotypes: List<String?> = mutableListOf(),
 ): ClassDiagramOperation()
 
 @Serializable
