@@ -49,6 +49,17 @@ class ClassDiagramEventListener(private val mqttPublisher: MqttPublisher): IEven
                         return
                     }
                 }
+                is IRealization -> {
+                    // TODO: 実現モデルだけで削除された場合に、どの実現モデルが削除されたか認識できるようにする
+                    if (removeProjectEditUnit.any { it.entity is ILinkPresentation  && (it.entity as ILinkPresentation).model is IRealization }) {
+                        removeTransaction.operations.add(DeleteLinkModel(true))
+                        logger.debug("${entity.name}(IRealization")
+                    } else {
+                        logger.debug("$entity(IRealization)")
+                        logger.warn("This operation does not support because plugin can't detect what realization model delete.")
+                        return
+                    }
+                }
                 is ILinkPresentation -> {
                     if (removeProjectEditUnit.any { it.entity is IClass }) {
                         continue
