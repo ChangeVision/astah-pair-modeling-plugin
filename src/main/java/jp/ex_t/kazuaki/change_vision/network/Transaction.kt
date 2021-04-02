@@ -159,10 +159,11 @@ data class DeleteClassPresentation(
 
 @Serializable
 data class DeleteAssociationModel(
-    val isDeleteAssociationModel: Boolean = false,
+    val isDelete: Boolean = false,
 ): ClassDiagramOperation()
 
 @Serializable
-data class DeleteAssociationPresentation(
+data class DeleteLinkPresentation(
     val points: List<Pair<Double, Double>>,
+    val linkType: String,
 ): ClassDiagramOperation()
