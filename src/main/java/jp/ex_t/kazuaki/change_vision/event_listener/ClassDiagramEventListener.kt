@@ -221,6 +221,11 @@ class ClassDiagramEventListener(private val mqttPublisher: MqttPublisher): IEven
                                             createTransaction.operations.add(createLinkPresentation)
                                             logger.debug("${source.name}(IClass) - ${entity.label}(ILinkPresentation::IGeneralization) - ${target.name}(IClass)")
                                         }
+                                        is IRealization -> {
+                                            val createLinkPresentation = CreateLinkPresentation(source.name, target.name, "Realization", entity.diagram.name)
+                                            createTransaction.operations.add(createLinkPresentation)
+                                            logger.debug("${source.name}(IClass, interface) - ${entity.label}(ILinkPresentation::IRealization) - ${target.name}(IClass)")
+                                        }
                                         else -> {
                                             logger.debug("${source.name}(IClass) - ${entity.label}(ILinkPresentation::Unknown) - ${target.name}(IClass)")
                                         }

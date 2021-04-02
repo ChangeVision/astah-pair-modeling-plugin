@@ -246,6 +246,11 @@ class ClassDiagramApplyTransaction: IApplyTransaction<ClassDiagramOperation> {
                         it.superType == targetClass
                     } ?: throw ClassNotFoundException()
                 }
+                "Realization" -> {
+                    return sourceClass.supplierRealizations.find {
+                        it.client == targetClass
+                    } ?: throw ClassNotFoundException()
+                }
                 else -> {
                     throw NotImplementedError()
                 }
