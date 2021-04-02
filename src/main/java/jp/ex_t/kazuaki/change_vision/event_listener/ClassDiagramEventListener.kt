@@ -154,68 +154,31 @@ class ClassDiagramEventListener(private val mqttPublisher: MqttPublisher): IEven
             logger.debug("Op: $operation -> ")
             when (val entity = it.entity) {
                 is IClass -> {
-                    val api = AstahAPI.getAstahAPI()
-                    val brotherClassNameList = api.projectAccessor.findElements(IClass::class.java)
-                        .filterNot { it.name == entity.name }.map { it?.name }.toList()
-                    val changeClassModel = ChangeClassModel(entity.name, brotherClassNameList, entity.stereotypes.toList())
-                    modifyTransaction.operations.add(changeClassModel)
-                    logger.debug("${entity.name}(IClass) which maybe new name has ${entity.stereotypes.toList()} stereotype")
+                    modifyTransaction.operations
+                        .add(changeClassModel(entity))
                 }
                 is INodePresentation -> {
-                    when (val diagram = entity.diagram) {
-                        is IClassDiagram -> {
-                            when (val model = entity.model) {
-                                is IClass -> {
-                                    val location = Pair(entity.location.x, entity.location.y)
-                                    val size = Pair(entity.width, entity.height)
-                                    val resizeClassPresentation = ResizeClassPresentation(model.name, location, size, diagram.name)
-                                    modifyTransaction.operations.add(resizeClassPresentation)
-                                    logger.debug("${entity.label}(INodePresentation)::${model.name}(IClass, ${Pair(entity.width, entity.height)} at ${entity.location}) @ClassDiagram${diagram.name}")
-                                }
-                                else -> {
-                                    logger.debug("${entity.label}(INodePresentation) - $model(Unknown)")
-                                }
-                            }
-                        }
-                        else -> {
-                            logger.debug("${entity.label}(INodePresentation) @UnknownDiagram")
-                        }
-                    }
+                    modifyTransaction.operations
+                        .add(
+                            resizeClassPresentation(entity)
+                                ?: continue
+                        )
                 }
                 is IOperation -> {
-                    when (val owner = entity.owner) {
-                        is IClass -> {
-                            val brotherNameAndReturnTypeExpression = owner.operations.filterNot { it == entity }
-                                .map { Pair(it.name, it.returnTypeExpression) }.toList()
-                            val changeOperationNameAndReturnTypeExpression =
-                                ChangeOperationNameAndReturnTypeExpression(
-                                    owner.name,
-                                    brotherNameAndReturnTypeExpression,
-                                    entity.name,
-                                    entity.returnTypeExpression
-                                )
-                            modifyTransaction.operations.add(changeOperationNameAndReturnTypeExpression)
-                            logger.debug("${entity.name}:${entity.returnTypeExpression}/${entity.returnType}(IOperation) - ${entity.owner}(IClass)")
-                            break
-                        }
-                        else -> {
-                            logger.debug("$entity(IOperation) - ${entity.owner}(Unknown)")
-                        }
-                    }
+                    modifyTransaction.operations
+                        .add(
+                            changeOperationNameAndReturnTypeExpression(entity)
+                                ?: continue
+                        )
+                    break
                 }
                 is IAttribute -> {
-                    when (val owner = entity.owner) {
-                        is IClass -> {
-                            val brotherNameAndTypeExpression = owner.attributes.filterNot { it == entity }.map { Pair(it.name, it.typeExpression) }.toList()
-                            val changeAttributeNameAndTypeExpression = ChangeAttributeNameAndTypeExpression(owner.name, brotherNameAndTypeExpression, entity.name, entity.typeExpression)
-                            modifyTransaction.operations.add(changeAttributeNameAndTypeExpression)
-                            logger.debug("${entity.name}:${entity.typeExpression}/${entity.type}(IAttribute) - ${entity.owner}(IClass)")
-                            break
-                        }
-                        else -> {
-                            logger.debug("$entity(IAttribute) - ${entity.owner}(Unknown)")
-                        }
-                    }
+                    modifyTransaction.operations
+                        .add(
+                            changeAttributeNameAndTypeExpression(entity)
+                                ?: continue
+                        )
+                    break
                 }
                 else -> {
                     logger.debug("$entity(Unknown)")
@@ -457,6 +420,73 @@ class ClassDiagramEventListener(private val mqttPublisher: MqttPublisher): IEven
             }
         }
     }
+
+    private fun changeClassModel(entity: IClass): ChangeClassModel {
+        val api = AstahAPI.getAstahAPI()
+        val brotherClassNameList = api.projectAccessor.findElements(IClass::class.java)
+            .filterNot { it.name == entity.name }.map { it?.name }.toList()
+        logger.debug("${entity.name}(IClass) which maybe new name has ${entity.stereotypes.toList()} stereotype")
+        return ChangeClassModel(entity.name, brotherClassNameList, entity.stereotypes.toList())
+    }
+
+    private fun resizeClassPresentation(entity: INodePresentation): ResizeClassPresentation? {
+        return when (val diagram = entity.diagram) {
+            is IClassDiagram -> {
+                when (val model = entity.model) {
+                    is IClass -> {
+                        val location = Pair(entity.location.x, entity.location.y)
+                        val size = Pair(entity.width, entity.height)
+                        logger.debug("${entity.label}(INodePresentation)::${model.name}(IClass, ${Pair(entity.width, entity.height)} at ${entity.location}) @ClassDiagram${diagram.name}")
+                        ResizeClassPresentation(model.name, location, size, diagram.name)
+                    }
+                    else -> {
+                        logger.debug("${entity.label}(INodePresentation) - $model(Unknown)")
+                        null
+                    }
+                }
+            }
+            else -> {
+                logger.debug("${entity.label}(INodePresentation) @UnknownDiagram")
+                null
+            }
+        }
+    }
+
+    private fun changeOperationNameAndReturnTypeExpression(entity: IOperation): ChangeOperationNameAndReturnTypeExpression? {
+        return when (val owner = entity.owner) {
+            is IClass -> {
+                val brotherNameAndReturnTypeExpression = owner.operations.filterNot { it == entity }
+                    .map { Pair(it.name, it.returnTypeExpression) }.toList()
+                logger.debug("${entity.name}:${entity.returnTypeExpression}/${entity.returnType}(IOperation) - ${entity.owner}(IClass)")
+                ChangeOperationNameAndReturnTypeExpression(
+                    owner.name,
+                    brotherNameAndReturnTypeExpression,
+                    entity.name,
+                    entity.returnTypeExpression
+                )
+            }
+            else -> {
+                logger.debug("$entity(IOperation) - ${entity.owner}(Unknown)")
+                null
+            }
+        }
+    }
+
+    private fun changeAttributeNameAndTypeExpression(entity: IAttribute): ChangeAttributeNameAndTypeExpression? {
+        return when (val owner = entity.owner) {
+            is IClass -> {
+                val brotherNameAndTypeExpression = owner.attributes.filterNot { it == entity }.map { Pair(it.name, it.typeExpression) }.toList()
+                logger.debug("${entity.name}:${entity.typeExpression}/${entity.type}(IAttribute) - ${entity.owner}(IClass)")
+                ChangeAttributeNameAndTypeExpression(owner.name, brotherNameAndTypeExpression, entity.name, entity.typeExpression)
+            }
+            else -> {
+                logger.debug("$entity(IAttribute) - ${entity.owner}(Unknown)")
+                null
+            }
+        }
+    }
+
+
 
     companion object: Logging {
         private val logger = logger()
