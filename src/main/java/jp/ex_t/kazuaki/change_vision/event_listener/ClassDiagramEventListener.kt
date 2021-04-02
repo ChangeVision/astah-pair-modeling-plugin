@@ -49,6 +49,17 @@ class ClassDiagramEventListener(private val mqttPublisher: MqttPublisher): IEven
                         return
                     }
                 }
+                is IGeneralization -> {
+                    // TODO: 汎化モデルだけで削除された場合に、どの汎化モデルが削除されたか認識できるようにする
+                    if (removeProjectEditUnit.any { it.entity is ILinkPresentation  && (it.entity as ILinkPresentation).model is IGeneralization }) {
+                        removeTransaction.operations.add(DeleteLinkModel(true))
+                        logger.debug("${entity.name}(IGeneralization")
+                    } else {
+                        logger.debug("$entity(IGeneralization)")
+                        logger.warn("This operation does not support because plugin can't detect what generalization model delete.")
+                        return
+                    }
+                }
                 is IRealization -> {
                     // TODO: 実現モデルだけで削除された場合に、どの実現モデルが削除されたか認識できるようにする
                     if (removeProjectEditUnit.any { it.entity is ILinkPresentation  && (it.entity as ILinkPresentation).model is IRealization }) {
