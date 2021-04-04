@@ -22,9 +22,8 @@ class ClassDiagramEventListener(private val mqttPublisher: MqttPublisher) : IEve
     @ExperimentalSerializationApi
     override fun process(projectEditUnit: List<ProjectEditUnit>) {
         logger.debug("Start process")
-        val removeTransaction = Transaction()
         val removeProjectEditUnit = projectEditUnit.filter { it.operation == Operation.REMOVE.ordinal }
-        removeTransaction.operations.addAll(removeProjectEditUnit.mapNotNull { editUnit ->
+        val removeOperations = removeProjectEditUnit.mapNotNull { editUnit ->
             when (val entity = editUnit.entity) {
                 is IClass -> deleteClassModel(entity)
                 is IAssociation -> deleteAssociationModel(entity, removeProjectEditUnit) ?: return
@@ -38,22 +37,21 @@ class ClassDiagramEventListener(private val mqttPublisher: MqttPublisher) : IEve
                     null
                 }
             }
-        })
-        if (removeTransaction.operations.isNotEmpty()) {
+        }
+        if (removeOperations.isNotEmpty()) {
+            val removeTransaction = Transaction(removeOperations)
             ProjectChangedListener.encodeAndPublish(removeTransaction, mqttPublisher)
         }
 
-        val createTransaction = Transaction()
         val addProjectEditUnit = projectEditUnit.filter { it.operation == Operation.ADD.ordinal }
         val addDiagramUnit = addProjectEditUnit.filter { it.entity is IClassDiagram }
-        addDiagramUnit.forEach { unit ->
-            val createDiagramTransaction =
-                Transaction().also { it.operations.add(createClassDiagram(unit.entity as IClassDiagram)) }
+        addDiagramUnit.forEach {
+            val createDiagramTransaction = Transaction(listOf(createClassDiagram(it.entity as IClassDiagram)))
             ProjectChangedListener.encodeAndPublish(createDiagramTransaction, mqttPublisher)
         }
 
         val otherAddUnit = addProjectEditUnit - addDiagramUnit
-        createTransaction.operations.addAll(otherAddUnit.mapNotNull {
+        val createOperations = otherAddUnit.mapNotNull {
             Operation.values()[it.operation].let { op -> logger.debug("Op: $op -> ") }
             when (val entity = it.entity) {
                 is IClass -> createClassModel(entity)
@@ -62,12 +60,6 @@ class ClassDiagramEventListener(private val mqttPublisher: MqttPublisher) : IEve
                 is IRealization -> createRealizationModel(entity)
                 is IOperation -> createOperation(entity)
                 is IAttribute -> createAttribute(entity)
-//                is IModel -> {
-//                    println("${entity.name}(IModel)")
-//                }
-//                is IPresentation -> {
-//                    println("${entity.label}(IPresentation)")
-//                }
                 is INodePresentation -> createClassPresentation(entity)
                 is ILinkPresentation -> createLinkPresentation(entity)
                 else -> {
@@ -75,15 +67,15 @@ class ClassDiagramEventListener(private val mqttPublisher: MqttPublisher) : IEve
                     null
                 }
             }
-        })
-        if (createTransaction.operations.isNotEmpty()) {
+        }
+        if (createOperations.isNotEmpty()) {
+            val createTransaction = Transaction(createOperations)
             ProjectChangedListener.encodeAndPublish(createTransaction, mqttPublisher)
             return
         }
 
-        val modifyTransaction = Transaction()
         val modifyProjectEditUnit = projectEditUnit.filter { it.operation == Operation.MODIFY.ordinal }
-        modifyTransaction.operations.addAll(modifyProjectEditUnit.mapNotNull {
+        val modifyOperations = modifyProjectEditUnit.mapNotNull {
             val operation = Operation.values()[it.operation]
             logger.debug("Op: $operation -> ")
             when (val entity = it.entity) {
@@ -96,8 +88,9 @@ class ClassDiagramEventListener(private val mqttPublisher: MqttPublisher) : IEve
                     null
                 }
             }
-        })
-        if (modifyTransaction.operations.isNotEmpty()) {
+        }
+        if (modifyOperations.isNotEmpty()) {
+            val modifyTransaction = Transaction(modifyOperations)
             ProjectChangedListener.encodeAndPublish(modifyTransaction, mqttPublisher)
         }
     }

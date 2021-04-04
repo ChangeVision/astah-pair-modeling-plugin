@@ -11,35 +11,35 @@ package jp.ex_t.kazuaki.change_vision.network
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class Transaction(val operations: MutableList<TransactionalOperation> = mutableListOf())
+data class Transaction(val operations: List<TransactionalOperation>)
 
 @Serializable
 sealed class TransactionalOperation
 
 @Serializable
-sealed class ClassDiagramOperation: TransactionalOperation()
+sealed class ClassDiagramOperation : TransactionalOperation()
 
 @Serializable
-sealed class MindmapDiagramOperation: TransactionalOperation()
+sealed class MindmapDiagramOperation : TransactionalOperation()
 
 @Serializable
 data class CreateClassDiagram(
     val name: String,
     val ownerName: String,
-): ClassDiagramOperation()
+) : ClassDiagramOperation()
 
 @Serializable
 data class CreateMindmapDiagram(
     val name: String,
     val ownerName: String,
-): MindmapDiagramOperation()
+) : MindmapDiagramOperation()
 
 @Serializable
 data class CreateClassModel(
     val name: String,
     val parentPackageName: String,
     val stereotypes: List<String?> = mutableListOf(),
-): ClassDiagramOperation()
+) : ClassDiagramOperation()
 
 @Serializable
 data class CreateAssociationModel(
@@ -48,28 +48,28 @@ data class CreateAssociationModel(
     val destinationClassName: String,
     val destinationClassNavigability: String,
     val name: String = "",
-): ClassDiagramOperation()
+) : ClassDiagramOperation()
 
 @Serializable
 data class CreateGeneralizationModel(
     val superClassName: String,
     val subClassName: String,
     val name: String = "",
-): ClassDiagramOperation()
+) : ClassDiagramOperation()
 
 @Serializable
 data class CreateRealizationModel(
     val supplierClassName: String,
     val clientClassName: String,
     val name: String = "",
-): ClassDiagramOperation()
+) : ClassDiagramOperation()
 
 @Serializable
 data class CreateClassPresentation(
     val className: String,
     val location: Pair<Double, Double>,
     val diagramName: String,
-): ClassDiagramOperation()
+) : ClassDiagramOperation()
 
 @Serializable
 data class CreateLinkPresentation(
@@ -77,28 +77,28 @@ data class CreateLinkPresentation(
     val targetClassName: String,
     val linkType: String,
     val diagramName: String,
-): ClassDiagramOperation()
+) : ClassDiagramOperation()
 
 @Serializable
 data class CreateOperation(
     val ownerName: String,
     val name: String,
     val returnTypeExpression: String,
-): ClassDiagramOperation()
+) : ClassDiagramOperation()
 
 @Serializable
 data class CreateAttribute(
     val ownerName: String,
     val name: String,
     val typeExpression: String,
-): ClassDiagramOperation()
+) : ClassDiagramOperation()
 
 @Serializable
 data class CreateTopic(
     val ownerName: String,
     val name: String,
     val diagramName: String,
-): MindmapDiagramOperation()
+) : MindmapDiagramOperation()
 
 @Serializable
 data class CreateFloatingTopic(
@@ -106,7 +106,7 @@ data class CreateFloatingTopic(
     val location: Pair<Double, Double>,
     val size: Pair<Double, Double>,
     val diagramName: String,
-): MindmapDiagramOperation()
+) : MindmapDiagramOperation()
 
 @Serializable
 data class ResizeClassPresentation(
@@ -114,14 +114,14 @@ data class ResizeClassPresentation(
     val location: Pair<Double, Double>,
     val size: Pair<Double, Double>,
     val diagramName: String,
-): ClassDiagramOperation()
+) : ClassDiagramOperation()
 
 @Serializable
 data class ChangeClassModel(
     val name: String,
     val brotherClassNameList: List<String?> = mutableListOf(),
     val stereotypes: List<String?> = mutableListOf(),
-): ClassDiagramOperation()
+) : ClassDiagramOperation()
 
 @Serializable
 data class ChangeOperationNameAndReturnTypeExpression(
@@ -129,7 +129,7 @@ data class ChangeOperationNameAndReturnTypeExpression(
     val brotherNameAndReturnTypeExpression: List<Pair<String, String>>,
     val name: String,
     val returnTypeExpression: String,
-): ClassDiagramOperation()
+) : ClassDiagramOperation()
 
 @Serializable
 data class ChangeAttributeNameAndTypeExpression(
@@ -137,7 +137,7 @@ data class ChangeAttributeNameAndTypeExpression(
     val brotherNameAndTypeExpression: List<Pair<String, String>>,
     val name: String,
     val typeExpression: String,
-): ClassDiagramOperation()
+) : ClassDiagramOperation()
 
 @Serializable
 data class ResizeTopic(
@@ -145,25 +145,25 @@ data class ResizeTopic(
     val location: Pair<Double, Double>,
     val size: Pair<Double, Double>,
     val diagramName: String,
-): MindmapDiagramOperation()
+) : MindmapDiagramOperation()
 
 @Serializable
 data class DeleteClassModel(
     val brotherClassNameList: List<String?> = mutableListOf(),
-): ClassDiagramOperation()
+) : ClassDiagramOperation()
 
 @Serializable
 data class DeleteClassPresentation(
     val className: String,
-): ClassDiagramOperation()
+) : ClassDiagramOperation()
 
 @Serializable
 data class DeleteLinkModel(
     val isDelete: Boolean = false,
-): ClassDiagramOperation()
+) : ClassDiagramOperation()
 
 @Serializable
 data class DeleteLinkPresentation(
     val points: List<Pair<Double, Double>>,
     val linkType: String,
-): ClassDiagramOperation()
+) : ClassDiagramOperation()

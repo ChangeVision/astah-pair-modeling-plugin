@@ -18,13 +18,11 @@ import jp.ex_t.kazuaki.change_vision.logger
 import jp.ex_t.kazuaki.change_vision.network.*
 import kotlinx.serialization.ExperimentalSerializationApi
 
-class MindmapDiagramEventListener(private val mqttPublisher: MqttPublisher): IEventListener {
+class MindmapDiagramEventListener(private val mqttPublisher: MqttPublisher) : IEventListener {
     @ExperimentalSerializationApi
     override fun process(projectEditUnit: List<ProjectEditUnit>) {
         logger.debug("Start process")
 //        val removeTransaction = Transaction()
-        val createTransaction = Transaction()
-        val modifyTransaction = Transaction()
 //        val removeProjectEditUnit = projectEditUnit.filter { it.operation == Operation.REMOVE.ordinal }
 //        for (it in removeProjectEditUnit) {
 //            val operation = Operation.values()[it.operation]
@@ -48,13 +46,13 @@ class MindmapDiagramEventListener(private val mqttPublisher: MqttPublisher): IEv
 //        }
 
         val addProjectEditUnit = projectEditUnit.filter { it.operation == Operation.ADD.ordinal }
+        val createOperations = mutableListOf<MindmapDiagramOperation>()
         for (it in addProjectEditUnit) {
             val operation = Operation.values()[it.operation]
             logger.debug("Op: $operation -> ")
             when (val entity = it.entity) {
                 is IMindMapDiagram -> {
-                    modifyTransaction.operations
-                        .add(createMindMapDiagram(entity))
+                    createOperations.add(createMindMapDiagram(entity))
                     break
                 }
                 is INodePresentation -> {
@@ -62,12 +60,10 @@ class MindmapDiagramEventListener(private val mqttPublisher: MqttPublisher): IEv
                         is IMindMapDiagram -> {
                             when (entity.parent) {
                                 null -> {
-                                    modifyTransaction.operations
-                                        .add(createFloatingTopic(entity))
+                                    createOperations.add(createFloatingTopic(entity))
                                 }
                                 else -> {
-                                    modifyTransaction.operations
-                                        .add(createTopic(entity))
+                                    createOperations.add(createTopic(entity))
                                 }
                             }
                         }
@@ -86,22 +82,20 @@ class MindmapDiagramEventListener(private val mqttPublisher: MqttPublisher): IEv
                 }
             }
         }
-        if (createTransaction.operations.isNotEmpty()) {
+        if (createOperations.isNotEmpty()) {
+            val createTransaction = Transaction(createOperations)
             ProjectChangedListener.encodeAndPublish(createTransaction, mqttPublisher)
             return
         }
 
         val modifyProjectEditUnit = projectEditUnit.filter { it.operation == Operation.MODIFY.ordinal }
+        val modifyOperations = mutableListOf<MindmapDiagramOperation>()
         for (it in modifyProjectEditUnit) {
             val operation = Operation.values()[it.operation]
             logger.debug("Op: $operation -> ")
             when (val entity = it.entity) {
                 is INodePresentation -> {
-                    modifyTransaction.operations
-                        .add(
-                            resizeTopic(entity)
-                                ?: continue
-                        )
+                    modifyOperations.add(resizeTopic(entity) ?: continue)
                     break
                 }
                 else -> {
@@ -109,7 +103,8 @@ class MindmapDiagramEventListener(private val mqttPublisher: MqttPublisher): IEv
                 }
             }
         }
-        if (modifyTransaction.operations.isNotEmpty()) {
+        if (modifyOperations.isNotEmpty()) {
+            val modifyTransaction = Transaction(modifyOperations)
             ProjectChangedListener.encodeAndPublish(modifyTransaction, mqttPublisher)
         }
     }
@@ -137,7 +132,14 @@ class MindmapDiagramEventListener(private val mqttPublisher: MqttPublisher): IEv
             is IMindMapDiagram -> {
                 val location = Pair(entity.location.x, entity.location.y)
                 val size = Pair(entity.width, entity.height)
-                logger.debug("${entity.label}(INodePresentation)::Topic(${Pair(entity.width, entity.height)} at ${entity.location}) @MindmapDiagram${diagram.name}")
+                logger.debug(
+                    "${entity.label}(INodePresentation)::Topic(${
+                        Pair(
+                            entity.width,
+                            entity.height
+                        )
+                    } at ${entity.location}) @MindmapDiagram${diagram.name}"
+                )
                 ResizeTopic(entity.label, location, size, diagram.name)
             }
             else -> {
@@ -147,7 +149,7 @@ class MindmapDiagramEventListener(private val mqttPublisher: MqttPublisher): IEv
         }
     }
 
-    companion object: Logging {
+    companion object : Logging {
         private val logger = logger()
     }
 }
