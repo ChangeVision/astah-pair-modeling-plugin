@@ -41,6 +41,7 @@ class ClassDiagramEventListener(private val mqttPublisher: MqttPublisher) : IEve
         if (removeOperations.isNotEmpty()) {
             val removeTransaction = Transaction(removeOperations)
             ProjectChangedListener.encodeAndPublish(removeTransaction, mqttPublisher)
+            return
         }
 
         val addProjectEditUnit = projectEditUnit.filter { it.operation == Operation.ADD.ordinal }
@@ -48,6 +49,7 @@ class ClassDiagramEventListener(private val mqttPublisher: MqttPublisher) : IEve
         addDiagramUnit.forEach {
             val createDiagramTransaction = Transaction(listOf(createClassDiagram(it.entity as IClassDiagram)))
             ProjectChangedListener.encodeAndPublish(createDiagramTransaction, mqttPublisher)
+            return
         }
 
         val otherAddUnit = addProjectEditUnit - addDiagramUnit
