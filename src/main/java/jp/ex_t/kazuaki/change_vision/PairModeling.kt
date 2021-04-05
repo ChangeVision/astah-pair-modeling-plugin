@@ -13,6 +13,7 @@ import jp.ex_t.kazuaki.change_vision.apply_transaction.TransactionReceiver
 import jp.ex_t.kazuaki.change_vision.event_listener.ProjectChangedListener
 import jp.ex_t.kazuaki.change_vision.network.MqttPublisher
 import jp.ex_t.kazuaki.change_vision.network.MqttSubscriber
+import jp.ex_t.kazuaki.change_vision.network.MqttSubscriberConfig
 
 class PairModeling(topic: String, private val clientId: String, private val brokerAddress: String) {
     private val topicTransaction = "$topic/transaction"
@@ -39,7 +40,8 @@ class PairModeling(topic: String, private val clientId: String, private val brok
         logger.debug("Launching subscriber...")
         val topicTransactionSubscriber = "$topicTransaction/#"
         transactionReceiver = TransactionReceiver(projectChangedListener)
-        mqttSubscriber = MqttSubscriber(brokerAddress, topicTransactionSubscriber, clientId, transactionReceiver)
+        val mqttSubscriberConfig = MqttSubscriberConfig(topicTransactionSubscriber, 2, transactionReceiver)
+        mqttSubscriber = MqttSubscriber(brokerAddress, listOf(mqttSubscriberConfig), clientId)
         mqttSubscriber.subscribe()
         logger.debug("Subscribed: $brokerAddress:$topicTransaction ($clientId")
         logger.info("Launched subscriber.")

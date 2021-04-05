@@ -15,17 +15,14 @@ import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence
 
 class MqttSubscriber(
     brokerAddress: String,
-    private val topic: String,
+    private val config: List<MqttSubscriberConfig>,
     private val clientId: String,
-    private val receiver: IReceiver
 ) : MqttCallback {
     private var broker: String = "tcp://$brokerAddress:1883"
     private lateinit var mqttClient: MqttClient
     private val clientIdSubscriber = "$clientId/sub"
 
     fun subscribe() {
-        val qos = 2
-
         mqttClient = MqttClient(broker, clientIdSubscriber, MemoryPersistence())
         mqttClient.setCallback(this)
         val mqttConnectOptions = MqttConnectOptions()
@@ -34,7 +31,10 @@ class MqttSubscriber(
         mqttClient.connect(mqttConnectOptions)
         logger.info("Connected to broker $broker")
 
-        mqttClient.subscribe(topic, qos)
+        config.forEach {
+            mqttClient.subscribe(it.topic, it.qos)
+            logger.debug("Subscribed $it")
+        }
     }
 
     fun close() {
@@ -56,6 +56,7 @@ class MqttSubscriber(
             return
         }
         logger.debug("Received message: $topic")
+        val receiver = (config.find { it.topic.regionMatches(0, topic, 0, it.topic.length - 1) } ?: return).receiver
         receiver.receive(senderClientId, message)
     }
 
