@@ -35,9 +35,11 @@ class ReflectTransaction(private val projectChangedListener: ProjectChangedListe
                 logger.debug("Start transaction.")
                 transactionManager.beginTransaction()
                 classDiagramApplyTransaction.apply(
-                    transaction.operations.filterIsInstance<ClassDiagramOperation>())
+                    transaction.operations.filterIsInstance<ClassDiagramOperation>()
+                )
                 mindmapDiagramApplyTransaction.apply(
-                    transaction.operations.filterIsInstance<MindmapDiagramOperation>())
+                    transaction.operations.filterIsInstance<MindmapDiagramOperation>()
+                )
                 transactionManager.endTransaction()
                 logger.debug("Finished transaction.")
                 api.viewManager.diagramViewManager.select(emptyArray())
@@ -51,7 +53,7 @@ class ReflectTransaction(private val projectChangedListener: ProjectChangedListe
         }
     }
 
-    companion object: Logging {
+    companion object : Logging {
         private val logger = logger()
     }
 }
