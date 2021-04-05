@@ -35,8 +35,8 @@ class ProjectChangedListener(mqttPublisher: MqttPublisher) : ProjectEventListene
         }
     }
 
-    override fun projectOpened(p0: ProjectEvent) {}
-    override fun projectClosed(p0: ProjectEvent) {}
+    override fun projectOpened(p0: ProjectEvent?) {}
+    override fun projectClosed(p0: ProjectEvent?) {}
 
     companion object : Logging {
         private val logger = logger()

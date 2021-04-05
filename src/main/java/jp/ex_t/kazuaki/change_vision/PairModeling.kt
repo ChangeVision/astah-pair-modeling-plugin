@@ -11,9 +11,7 @@ package jp.ex_t.kazuaki.change_vision
 import com.change_vision.jude.api.inf.AstahAPI
 import jp.ex_t.kazuaki.change_vision.apply_transaction.TransactionReceiver
 import jp.ex_t.kazuaki.change_vision.event_listener.ProjectChangedListener
-import jp.ex_t.kazuaki.change_vision.network.MqttPublisher
-import jp.ex_t.kazuaki.change_vision.network.MqttSubscriber
-import jp.ex_t.kazuaki.change_vision.network.MqttSubscriberConfig
+import jp.ex_t.kazuaki.change_vision.network.*
 
 class PairModeling(topic: String, private val clientId: String, private val brokerAddress: String) {
     private val topicTransaction = "$topic/transaction"
@@ -45,6 +43,8 @@ class PairModeling(topic: String, private val clientId: String, private val brok
         mqttSubscriber.subscribe()
         logger.debug("Subscribed: $brokerAddress:$topicTransaction ($clientId")
         logger.info("Launched subscriber.")
+
+        syncProject()
     }
 
     fun end() {
