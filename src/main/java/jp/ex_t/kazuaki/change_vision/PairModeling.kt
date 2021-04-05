@@ -16,6 +16,7 @@ import jp.ex_t.kazuaki.change_vision.network.MqttSubscriber
 
 class PairModeling(topic: String, private val clientId: String, private val brokerAddress: String) {
     private val topicTransaction = "$topic/transaction"
+
     // TODO: もしプロジェクト全体が欲しいとなった場合はトピックを別で生やす
     // TODO: もしチャットが欲しいとなった場合はトピックを別で生やす
     private lateinit var mqttPublisher: MqttPublisher
@@ -57,7 +58,7 @@ class PairModeling(topic: String, private val clientId: String, private val brok
         logger.info("Stopped publisher.")
     }
 
-    companion object: Logging {
+    companion object : Logging {
         private val logger = logger()
     }
 }

@@ -8,6 +8,6 @@
 
 package jp.ex_t.kazuaki.change_vision.apply_transaction
 
-interface IApplyTransaction <T> {
+interface IApplyTransaction<T> {
     fun apply(operations: List<T>)
 }

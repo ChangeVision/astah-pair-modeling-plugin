@@ -14,7 +14,7 @@ import com.change_vision.jude.api.inf.ui.IWindow
 import java.util.*
 import javax.swing.JOptionPane
 
-class PairModelingAction: IPluginActionDelegate {
+class PairModelingAction : IPluginActionDelegate {
     private var isLaunched = false
     private lateinit var pairModeling: PairModeling
 
@@ -42,7 +42,8 @@ class PairModelingAction: IPluginActionDelegate {
 
     private fun getHostAddress(window: IWindow): String? {
         val ipAddress = JOptionPane.showInputDialog(window.parent, "Input IP address or \"localhost\"") ?: return null
-        val ipAddressPattern = Regex("""^((25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])\.){3}(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])${'$'}""")
+        val ipAddressPattern =
+            Regex("""^((25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])\.){3}(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])${'$'}""")
         if (!ipAddressPattern.matches(ipAddress) && ipAddress != "localhost") {
             val message = "IP address must be IPv4 address."
             JOptionPane.showMessageDialog(window.parent, message, "IP address error", JOptionPane.WARNING_MESSAGE)
@@ -51,7 +52,7 @@ class PairModelingAction: IPluginActionDelegate {
         return ipAddress
     }
 
-    companion object: Logging {
+    companion object : Logging {
         private val logger = logger()
     }
 }

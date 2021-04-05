@@ -42,7 +42,7 @@ class MqttPublisher(brokerAddress: String, private val topic: String, clientId: 
         }
     }
 
-    companion object: Logging {
+    companion object : Logging {
         private val logger = logger()
     }
 }

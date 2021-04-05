@@ -19,7 +19,7 @@ import jp.ex_t.kazuaki.change_vision.logger
 import jp.ex_t.kazuaki.change_vision.network.*
 import java.awt.geom.Point2D
 
-class MindmapDiagramApplyTransaction: IApplyTransaction<MindmapDiagramOperation> {
+class MindmapDiagramApplyTransaction : IApplyTransaction<MindmapDiagramOperation> {
     private val api = AstahAPI.getAstahAPI()
     private val projectAccessor = api.projectAccessor
     private val mindmapEditor = projectAccessor.diagramEditorFactory.mindmapEditor
@@ -53,8 +53,9 @@ class MindmapDiagramApplyTransaction: IApplyTransaction<MindmapDiagramOperation>
     private fun validateAndCreateTopic(operation: CreateTopic) {
         if (operation.ownerName.isNotEmpty()
             && operation.name.isNotEmpty()
-            && operation.diagramName.isNotEmpty()) {
-                createTopic(operation.ownerName, operation.name, operation.diagramName)
+            && operation.diagramName.isNotEmpty()
+        ) {
+            createTopic(operation.ownerName, operation.name, operation.diagramName)
         }
     }
 
@@ -84,8 +85,7 @@ class MindmapDiagramApplyTransaction: IApplyTransaction<MindmapDiagramOperation>
         topics.forEach {
             if (it.label == name) {
                 return it
-            }
-            else if (it.children.isNotEmpty()) {
+            } else if (it.children.isNotEmpty()) {
                 return searchTopic(name, it.children)
             }
         }
@@ -128,8 +128,8 @@ class MindmapDiagramApplyTransaction: IApplyTransaction<MindmapDiagramOperation>
         topic.width = width
         topic.height = height
     }
-    
-    companion object: Logging {
+
+    companion object : Logging {
         private val logger = logger()
     }
 }
