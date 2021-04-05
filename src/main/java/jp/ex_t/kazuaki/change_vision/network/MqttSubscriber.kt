@@ -51,12 +51,12 @@ class MqttSubscriber(
 
     override fun messageArrived(topic: String, message: MqttMessage) {
         // If the message was send by myself,  ignore this one.
-        val receivedClientId = topic.split("/").last()
-        if (receivedClientId == clientId) {
+        val senderClientId = topic.split("/").last()
+        if (senderClientId == clientId) {
             return
         }
         logger.debug("Received message: $topic")
-        receiver.receive(message)
+        receiver.receive(senderClientId, message)
     }
 
     override fun deliveryComplete(token: IMqttDeliveryToken) {

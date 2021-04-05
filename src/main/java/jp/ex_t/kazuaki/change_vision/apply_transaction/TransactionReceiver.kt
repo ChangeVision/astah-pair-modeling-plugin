@@ -32,7 +32,7 @@ class TransactionReceiver(private val projectChangedListener: ProjectChangedList
     private val mindmapDiagramApplyTransaction = MindmapDiagramApplyTransaction()
 
     @ExperimentalSerializationApi
-    override fun receive(message: MqttMessage) {
+    override fun receive(senderClientId: String, message: MqttMessage) {
         val receivedMessage = Cbor.decodeFromByteArray<Transaction>(message.payload)
         logger.debug("Message: $receivedMessage")
         transact(receivedMessage)

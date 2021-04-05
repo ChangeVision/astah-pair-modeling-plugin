@@ -11,5 +11,5 @@ package jp.ex_t.kazuaki.change_vision.network
 import org.eclipse.paho.client.mqttv3.MqttMessage
 
 interface IReceiver {
-    fun receive(message: MqttMessage)
+    fun receive(sender: String, message: MqttMessage)
 }
