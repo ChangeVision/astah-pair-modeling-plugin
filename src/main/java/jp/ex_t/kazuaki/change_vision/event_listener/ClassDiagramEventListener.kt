@@ -105,7 +105,7 @@ class ClassDiagramEventListener(private val mqttPublisher: MqttPublisher) : IEve
         return DeleteClassModel(brotherClassNameList)
     }
 
-    private fun deleteAssociationModel( //
+    private fun deleteAssociationModel(
         entity: IAssociation,
         removeProjectEditUnit: List<ProjectEditUnit>
     ): DeleteLinkModel? {
