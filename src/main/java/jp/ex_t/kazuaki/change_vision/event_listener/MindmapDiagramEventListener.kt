@@ -63,7 +63,7 @@ class MindmapDiagramEventListener(private val entityLUT: EntityLUT, private val 
                                     createOperations.add(createFloatingTopic(entity))
                                 }
                                 else -> {
-                                    createOperations.add(createTopic(entity))
+                                    createOperations.add(createTopic(entity) ?: return)
                                 }
                             }
                         }
@@ -111,8 +111,10 @@ class MindmapDiagramEventListener(private val entityLUT: EntityLUT, private val 
 
     private fun createMindMapDiagram(entity: IMindMapDiagram): CreateMindmapDiagram {
         val owner = entity.owner as INamedElement
+        val rootTopic = entity.root
         logger.debug("${entity.name}(IMindMapDiagram)")
-        return CreateMindmapDiagram(entity.name, owner.name)
+        entityLUT.entries.add(Entry(rootTopic.id, rootTopic.id))
+        return CreateMindmapDiagram(entity.name, owner.name, rootTopic.id)
     }
 
     private fun createFloatingTopic(entity: INodePresentation): CreateFloatingTopic {
@@ -123,10 +125,15 @@ class MindmapDiagramEventListener(private val entityLUT: EntityLUT, private val 
         return CreateFloatingTopic(entity.label, location, size, entity.diagram.name, entity.id)
     }
 
-    private fun createTopic(entity: INodePresentation): CreateTopic {
+    private fun createTopic(entity: INodePresentation): CreateTopic? {
         entityLUT.entries.add(Entry(entity.id, entity.id))
+        val parentEntry = entityLUT.entries.find { it.mine == entity.parent.id }
+        if (parentEntry == null) {
+            logger.debug("${entity.parent.id} not found on LUT.")
+            return null
+        }
         logger.debug("${entity.parent.label}(INodePresentation) - ${entity.label}(INodePresentation)")
-        return CreateTopic(entity.parent.label, entity.label, entity.diagram.name, entity.id)
+        return CreateTopic(parentEntry.common, entity.label, entity.diagram.name, entity.id)
     }
 
     private fun resizeTopic(entity: INodePresentation): ResizeTopic? {
@@ -147,7 +154,7 @@ class MindmapDiagramEventListener(private val entityLUT: EntityLUT, private val 
                     logger.debug("${entity.id} not found on LUT.")
                     null
                 } else {
-                    ResizeTopic(entity.label, location, size, diagram.name, lut.someones)
+                    ResizeTopic(entity.label, location, size, diagram.name, lut.common)
                 }
             }
             else -> {

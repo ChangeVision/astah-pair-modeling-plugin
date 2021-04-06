@@ -14,5 +14,5 @@ data class EntityLUT(
 
 data class Entry (
         val mine: String,
-        val someones: String,
+        val common: String,
 )

@@ -32,6 +32,7 @@ data class CreateClassDiagram(
 data class CreateMindmapDiagram(
     val name: String,
     val ownerName: String,
+    val rootTopicId: String,
 ) : MindmapDiagramOperation()
 
 @Serializable
@@ -95,7 +96,7 @@ data class CreateAttribute(
 
 @Serializable
 data class CreateTopic(
-    val ownerName: String,
+    val ownerId: String,
     val name: String,
     val diagramName: String,
     val id: String,
