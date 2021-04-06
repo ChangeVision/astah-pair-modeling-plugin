@@ -27,10 +27,10 @@ class ProjectSender(private val topic: String, private val clientId: String, pri
     override fun receive(senderClientId: String, message: MqttMessage) {
         val receiveMessage = message.toString()
         if (receiveMessage == "hello") {
-            logger.debug("Exporting project xmi...")
-            val projectFile = createTempFile(suffix = ".xmi")
+            logger.debug("Exporting project xml...")
+            val projectFile = createTempFile(suffix = ".xml")
             projectAccessor.exportXMI(projectFile.toString())
-            logger.debug("Exported project xmi: $projectFile")
+            logger.debug("Exported project xml: $projectFile")
             val topicSender = "$topic/$senderClientId/$clientId"
             val mqttPublisher = MqttPublisher(brokerAddress, topicSender, clientId)
             logger.debug("Reading file...")
@@ -62,7 +62,7 @@ class ProjectReceiver : IReceiver {
         logger.debug("Received file.")
         logger.debug("Writing file...")
         val posixFilePermissions = PosixFilePermissions.asFileAttribute(PosixFilePermissions.fromString("rw-r--rw-"))
-        val projectFile = createTempFile(suffix = ".xmi", attributes = arrayOf(posixFilePermissions))
+        val projectFile = createTempFile(suffix = ".xml", attributes = arrayOf(posixFilePermissions))
         projectFile.writeBytes(message.payload)
         logger.debug("Wrote file: $projectFile")
         logger.debug("Importing file...")
