@@ -98,6 +98,7 @@ data class CreateTopic(
     val ownerName: String,
     val name: String,
     val diagramName: String,
+    val id: String,
 ) : MindmapDiagramOperation()
 
 @Serializable
@@ -106,6 +107,7 @@ data class CreateFloatingTopic(
     val location: Pair<Double, Double>,
     val size: Pair<Double, Double>,
     val diagramName: String,
+    val id: String,
 ) : MindmapDiagramOperation()
 
 @Serializable
@@ -145,6 +147,7 @@ data class ResizeTopic(
     val location: Pair<Double, Double>,
     val size: Pair<Double, Double>,
     val diagramName: String,
+    val id: String,
 ) : MindmapDiagramOperation()
 
 @Serializable

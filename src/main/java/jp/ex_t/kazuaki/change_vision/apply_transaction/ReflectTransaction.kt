@@ -16,15 +16,16 @@ import jp.ex_t.kazuaki.change_vision.Logging
 import jp.ex_t.kazuaki.change_vision.event_listener.ProjectChangedListener
 import jp.ex_t.kazuaki.change_vision.logger
 import jp.ex_t.kazuaki.change_vision.network.ClassDiagramOperation
+import jp.ex_t.kazuaki.change_vision.network.EntityLUT
 import jp.ex_t.kazuaki.change_vision.network.MindmapDiagramOperation
 import jp.ex_t.kazuaki.change_vision.network.Transaction
 import javax.swing.SwingUtilities
 
-class ReflectTransaction(private val projectChangedListener: ProjectChangedListener) {
+class ReflectTransaction(entityLUT: EntityLUT, private val projectChangedListener: ProjectChangedListener) {
     private val api: AstahAPI = AstahAPI.getAstahAPI()
     private val projectAccessor: ProjectAccessor = api.projectAccessor
     private val classDiagramApplyTransaction = ClassDiagramApplyTransaction()
-    private val mindmapDiagramApplyTransaction = MindmapDiagramApplyTransaction()
+    private val mindmapDiagramApplyTransaction = MindmapDiagramApplyTransaction(entityLUT)
 
     @Throws(UnExpectedException::class)
     fun transact(transaction: Transaction) {

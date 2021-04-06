@@ -11,6 +11,7 @@ package jp.ex_t.kazuaki.change_vision
 import com.change_vision.jude.api.inf.AstahAPI
 import jp.ex_t.kazuaki.change_vision.apply_transaction.ReflectTransaction
 import jp.ex_t.kazuaki.change_vision.event_listener.ProjectChangedListener
+import jp.ex_t.kazuaki.change_vision.network.EntityLUT
 import jp.ex_t.kazuaki.change_vision.network.MqttPublisher
 import jp.ex_t.kazuaki.change_vision.network.MqttSubscriber
 
@@ -23,22 +24,24 @@ class PairModeling(topic: String, private val clientId: String, private val brok
     private lateinit var projectChangedListener: ProjectChangedListener
     private lateinit var mqttSubscriber: MqttSubscriber
     private lateinit var reflectTransaction: ReflectTransaction
+    private lateinit var entityLUT: EntityLUT
 
     fun start() {
         val api = AstahAPI.getAstahAPI()
         val projectAccessor = api.projectAccessor
 
         logger.debug("Launching publisher...")
+        entityLUT = EntityLUT()
         val topicTransactionPublisher = "$topicTransaction/$clientId"
         mqttPublisher = MqttPublisher(brokerAddress, topicTransactionPublisher, clientId)
-        projectChangedListener = ProjectChangedListener(mqttPublisher)
+        projectChangedListener = ProjectChangedListener(entityLUT, mqttPublisher)
         projectAccessor.addProjectEventListener(projectChangedListener)
         logger.debug("Published: $brokerAddress:$topicTransaction ($clientId")
         logger.info("Launched publisher.")
 
         logger.debug("Launching subscriber...")
         val topicTransactionSubscriber = "$topicTransaction/#"
-        reflectTransaction = ReflectTransaction(projectChangedListener)
+        reflectTransaction = ReflectTransaction(entityLUT, projectChangedListener)
         mqttSubscriber = MqttSubscriber(brokerAddress, topicTransactionSubscriber, clientId, reflectTransaction)
         mqttSubscriber.subscribe()
         logger.debug("Subscribed: $brokerAddress:$topicTransaction ($clientId")

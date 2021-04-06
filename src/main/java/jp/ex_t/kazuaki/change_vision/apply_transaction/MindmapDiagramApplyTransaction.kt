@@ -19,7 +19,7 @@ import jp.ex_t.kazuaki.change_vision.logger
 import jp.ex_t.kazuaki.change_vision.network.*
 import java.awt.geom.Point2D
 
-class MindmapDiagramApplyTransaction : IApplyTransaction<MindmapDiagramOperation> {
+class MindmapDiagramApplyTransaction(private val entityLUT: EntityLUT): IApplyTransaction<MindmapDiagramOperation> {
     private val api = AstahAPI.getAstahAPI()
     private val projectAccessor = api.projectAccessor
     private val mindmapEditor = projectAccessor.diagramEditorFactory.mindmapEditor
@@ -54,22 +54,23 @@ class MindmapDiagramApplyTransaction : IApplyTransaction<MindmapDiagramOperation
         if (operation.ownerName.isNotEmpty()
             && operation.name.isNotEmpty()
             && operation.diagramName.isNotEmpty()
+            && operation.id.isNotEmpty()
         ) {
-            createTopic(operation.ownerName, operation.name, operation.diagramName)
+            createTopic(operation.ownerName, operation.name, operation.diagramName, operation.id)
         }
     }
 
     private fun validateAndCreateFloatingTopic(operation: CreateFloatingTopic) {
         val location = Point2D.Double(operation.location.first, operation.location.second)
-        if (operation.name.isNotEmpty() && operation.diagramName.isNotEmpty()) {
-            createFloatingTopic(operation.name, location, operation.size, operation.diagramName)
+        if (operation.name.isNotEmpty() && operation.diagramName.isNotEmpty() && operation.id.isNotEmpty()) {
+            createFloatingTopic(operation.name, location, operation.size, operation.diagramName, operation.id)
         }
     }
 
     private fun validateAndResizeTopic(operation: ResizeTopic) {
         val location = Point2D.Double(operation.location.first, operation.location.second)
-        if (operation.name.isNotEmpty() && operation.diagramName.isNotEmpty()) {
-            resizeTopic(operation.name, location, operation.size, operation.diagramName)
+        if (operation.name.isNotEmpty() && operation.diagramName.isNotEmpty() && operation.id.isNotEmpty()) {
+            resizeTopic(operation.name, location, operation.size, operation.diagramName, operation.id)
         }
     }
 
@@ -92,7 +93,7 @@ class MindmapDiagramApplyTransaction : IApplyTransaction<MindmapDiagramOperation
         return null
     }
 
-    private fun createTopic(ownerName: String, name: String, diagramName: String) {
+    private fun createTopic(ownerName: String, name: String, diagramName: String, id: String) {
         logger.debug("Create topic.")
         val diagram = projectAccessor.findElements(IDiagram::class.java, diagramName).first() as IMindMapDiagram
         mindmapEditor.diagram = diagram
@@ -102,10 +103,11 @@ class MindmapDiagramApplyTransaction : IApplyTransaction<MindmapDiagramOperation
             logger.error("Parent topic not found.")
             return
         }
-        mindmapEditor.createTopic(parent, name)
+        val topic = mindmapEditor.createTopic(parent, name)
+        entityLUT.entries.add(Entry(topic.id, id))
     }
 
-    private fun createFloatingTopic(name: String, location: Point2D, size: Pair<Double, Double>, diagramName: String) {
+    private fun createFloatingTopic(name: String, location: Point2D, size: Pair<Double, Double>, diagramName: String, id: String) {
         logger.debug("Create floating topic.")
         val (width, height) = size
         val diagram = projectAccessor.findElements(IDiagram::class.java, diagramName).first() as IMindMapDiagram
@@ -116,17 +118,28 @@ class MindmapDiagramApplyTransaction : IApplyTransaction<MindmapDiagramOperation
         topic.location = location
         topic.width = width
         topic.height = height
+        entityLUT.entries.add(Entry(topic.id, id))
     }
 
-    private fun resizeTopic(name: String, location: Point2D, size: Pair<Double, Double>, diagramName: String) {
+    private fun resizeTopic(name: String, location: Point2D, size: Pair<Double, Double>, diagramName: String, id: String) {
         logger.debug("Resize topic.")
         val (width, height) = size
         val diagram = projectAccessor.findElements(IDiagram::class.java, diagramName).first() as IMindMapDiagram
         mindmapEditor.diagram = diagram
-        val topic = diagram.floatingTopics.first { it.label == name }
-        topic.location = location
-        topic.width = width
-        topic.height = height
+        val topicId = entityLUT.entries.find { it.someones == id }
+        if (topicId == null) {
+            logger.debug("$id not found on LUT.")
+            return
+        }
+        val topic = diagram.floatingTopics.find { it.id == topicId.mine }
+        if (topic == null) {
+            logger.debug("Topic ${topicId.mine} not found")
+        } else {
+            topic.label = name
+            topic.location = location
+            topic.width = width
+            topic.height = height
+        }
     }
 
     companion object : Logging {
