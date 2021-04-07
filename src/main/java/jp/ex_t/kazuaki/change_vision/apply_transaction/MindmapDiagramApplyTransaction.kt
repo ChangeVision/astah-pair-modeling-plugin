@@ -174,7 +174,8 @@ class MindmapDiagramApplyTransaction(private val entityLUT: EntityLUT): IApplyTr
                 }
                 val topic = searchTopic(topicEntry.mine, topics)
                 if (topic == null) {
-                    logger.debug("Topic ${topicEntry.mine} not found.")
+                    logger.debug("Topic ${topicEntry.mine} not found but $id found on LUT.")
+                    entityLUT.entries.remove(topicEntry)
                 } else {
                     mindmapEditor.deletePresentation(topic)
                     entityLUT.entries.remove(topicEntry)
