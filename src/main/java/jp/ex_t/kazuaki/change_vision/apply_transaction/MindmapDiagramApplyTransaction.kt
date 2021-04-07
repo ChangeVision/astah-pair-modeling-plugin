@@ -72,8 +72,8 @@ class MindmapDiagramApplyTransaction(private val entityLUT: EntityLUT): IApplyTr
 
     private fun validateAndResizeTopic(operation: ResizeTopic) {
         val location = Point2D.Double(operation.location.first, operation.location.second)
-        if (operation.name.isNotEmpty() && operation.diagramName.isNotEmpty() && operation.id.isNotEmpty()) {
-            resizeTopic(operation.name, location, operation.size, operation.diagramName, operation.id)
+        if (operation.name.isNotEmpty() && operation.id.isNotEmpty()) {
+            resizeTopic(operation.name, location, operation.size, operation.id)
         }
     }
 
@@ -140,24 +140,42 @@ class MindmapDiagramApplyTransaction(private val entityLUT: EntityLUT): IApplyTr
         entityLUT.entries.add(Entry(topic.id, id))
     }
 
-    private fun resizeTopic(name: String, location: Point2D, size: Pair<Double, Double>, diagramName: String, id: String) {
+    private fun resizeTopic(name: String, location: Point2D, size: Pair<Double, Double>, id: String) {
         logger.debug("Resize topic.")
         val (width, height) = size
-        val diagram = projectAccessor.findElements(IDiagram::class.java, diagramName).first() as IMindMapDiagram
-        mindmapEditor.diagram = diagram
-        val topicId = entityLUT.entries.find { it.common == id }
-        if (topicId == null) {
-            logger.debug("$id not found on LUT.")
-            return
-        }
-        val topic = diagram.floatingTopics.find { it.id == topicId.mine }
-        if (topic == null) {
-            logger.debug("Topic ${topicId.mine} not found")
-        } else {
-            topic.label = name
-            topic.location = location
-            topic.width = width
-            topic.height = height
+        when (val diagram = api.viewManager.diagramViewManager.currentDiagram) {
+            is IMindMapDiagram -> {
+                mindmapEditor.diagram = diagram
+                val topicId = entityLUT.entries.find { it.common == id }
+                if (topicId == null) {
+                    logger.debug("$id not found on LUT.")
+                    return
+                }
+                val topics = diagram.floatingTopics + diagram.root
+                if (diagram.root.id == topicId.mine) {
+                    diagram.root.label = name
+                    return
+                }
+                val topic = searchTopic(topicId.mine, topics) // diagram.floatingTopics.find { it.id == topicId.mine }
+                if (topic == null) {
+                    logger.debug("Topic ${topicId.mine} not found")
+                } else {
+                    if (topic == diagram.root) {
+                        topic.label = name
+                    }
+                    if (diagram.floatingTopics.contains(topic)) {
+                        topic.label = name
+                        topic.location = location
+                        topic.width = width
+                        topic.height = height
+                    }
+                    else {
+                        topic.label = name
+                    }
+                }
+            } else -> {
+                logger.error("$diagram is not Mindmap diagram.")
+            }
         }
     }
 

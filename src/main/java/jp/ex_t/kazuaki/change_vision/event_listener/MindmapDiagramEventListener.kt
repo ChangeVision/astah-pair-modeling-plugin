@@ -149,7 +149,7 @@ class MindmapDiagramEventListener(private val entityLUT: EntityLUT, private val 
                     logger.debug("${entity.id} not found on LUT.")
                     null
                 } else {
-                    ResizeTopic(entity.label, location, size, diagram.name, lut.common)
+                    ResizeTopic(entity.label, location, size, lut.common)
                 }
             }
             else -> {
