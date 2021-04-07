@@ -18,7 +18,8 @@ import jp.ex_t.kazuaki.change_vision.logger
 import jp.ex_t.kazuaki.change_vision.network.*
 import kotlinx.serialization.ExperimentalSerializationApi
 
-class MindmapDiagramEventListener(private val entityLUT: EntityLUT, private val mqttPublisher: MqttPublisher): IEventListener {
+class MindmapDiagramEventListener(private val entityLUT: EntityLUT, private val mqttPublisher: MqttPublisher) :
+    IEventListener {
     @ExperimentalSerializationApi
     override fun process(projectEditUnit: List<ProjectEditUnit>) {
         logger.debug("Start process")

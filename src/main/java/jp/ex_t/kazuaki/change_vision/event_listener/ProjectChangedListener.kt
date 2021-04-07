@@ -23,7 +23,8 @@ import kotlinx.serialization.encodeToByteArray
 
 class ProjectChangedListener(entityLUT: EntityLUT, mqttPublisher: MqttPublisher) : ProjectEventListener {
     private val classDiagramEventListener: ClassDiagramEventListener = ClassDiagramEventListener(mqttPublisher)
-    private val mindmapDiagramEventListener: MindmapDiagramEventListener = MindmapDiagramEventListener(entityLUT, mqttPublisher)
+    private val mindmapDiagramEventListener: MindmapDiagramEventListener =
+        MindmapDiagramEventListener(entityLUT, mqttPublisher)
 
     @ExperimentalSerializationApi
     override fun projectChanged(e: ProjectEvent) {

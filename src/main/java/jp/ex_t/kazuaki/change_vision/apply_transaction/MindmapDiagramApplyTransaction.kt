@@ -19,7 +19,7 @@ import jp.ex_t.kazuaki.change_vision.logger
 import jp.ex_t.kazuaki.change_vision.network.*
 import java.awt.geom.Point2D
 
-class MindmapDiagramApplyTransaction(private val entityLUT: EntityLUT): IApplyTransaction<MindmapDiagramOperation> {
+class MindmapDiagramApplyTransaction(private val entityLUT: EntityLUT) : IApplyTransaction<MindmapDiagramOperation> {
     private val api = AstahAPI.getAstahAPI()
     private val projectAccessor = api.projectAccessor
     private val mindmapEditor = projectAccessor.diagramEditorFactory.mindmapEditor
@@ -126,7 +126,13 @@ class MindmapDiagramApplyTransaction(private val entityLUT: EntityLUT): IApplyTr
         entityLUT.entries.add(Entry(topic.id, id))
     }
 
-    private fun createFloatingTopic(name: String, location: Point2D, size: Pair<Double, Double>, diagramName: String, id: String) {
+    private fun createFloatingTopic(
+        name: String,
+        location: Point2D,
+        size: Pair<Double, Double>,
+        diagramName: String,
+        id: String
+    ) {
         logger.debug("Create floating topic.")
         val (width, height) = size
         val diagram = projectAccessor.findElements(IDiagram::class.java, diagramName).first() as IMindMapDiagram
@@ -168,12 +174,12 @@ class MindmapDiagramApplyTransaction(private val entityLUT: EntityLUT): IApplyTr
                         topic.location = location
                         topic.width = width
                         topic.height = height
-                    }
-                    else {
+                    } else {
                         topic.label = name
                     }
                 }
-            } else -> {
+            }
+            else -> {
                 logger.error("$diagram is not Mindmap diagram.")
             }
         }
@@ -198,7 +204,8 @@ class MindmapDiagramApplyTransaction(private val entityLUT: EntityLUT): IApplyTr
                     mindmapEditor.deletePresentation(topic)
                     entityLUT.entries.remove(topicEntry)
                 }
-            } else -> {
+            }
+            else -> {
                 logger.error("$diagram is not Mindmap diagram.")
             }
         }
