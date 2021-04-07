@@ -40,6 +40,9 @@ class MindmapDiagramApplyTransaction(private val entityLUT: EntityLUT): IApplyTr
                 is ResizeTopic -> {
                     validateAndResizeTopic(it)
                 }
+                is DeleteTopic -> {
+                    validateAndDeleteTopic(it)
+                }
             }
         }
     }
@@ -74,6 +77,12 @@ class MindmapDiagramApplyTransaction(private val entityLUT: EntityLUT): IApplyTr
         }
     }
 
+    private fun validateAndDeleteTopic(operation: DeleteTopic) {
+        if (operation.id.isNotEmpty()) {
+            deleteTopic(operation.id)
+        }
+    }
+
     private fun createMindmapDiagram(name: String, ownerName: String, rootTopicId: String) {
         logger.debug("Create mindmap diagram.")
         val diagramViewManager = api.viewManager.diagramViewManager
@@ -84,12 +93,12 @@ class MindmapDiagramApplyTransaction(private val entityLUT: EntityLUT): IApplyTr
         diagramViewManager.open(diagram)
     }
 
-    private fun searchTopic(ownerId: String, topics: Array<INodePresentation>): INodePresentation? {
+    private fun searchTopic(targetId: String, topics: Array<INodePresentation>): INodePresentation? {
         topics.forEach {
-            if (it.id == ownerId) {
+            if (it.id == targetId) {
                 return it
             } else if (it.children.isNotEmpty()) {
-                val topic = searchTopic(ownerId, it.children)
+                val topic = searchTopic(targetId, it.children)
                 if (topic != null) {
                     return topic
                 }
@@ -149,6 +158,30 @@ class MindmapDiagramApplyTransaction(private val entityLUT: EntityLUT): IApplyTr
             topic.location = location
             topic.width = width
             topic.height = height
+        }
+    }
+
+    private fun deleteTopic(id: String) {
+        logger.debug("Delete topic.")
+        when (val diagram = api.viewManager.diagramViewManager.currentDiagram) {
+            is IMindMapDiagram -> {
+                mindmapEditor.diagram = diagram
+                val topics = diagram.floatingTopics + diagram.root
+                val topicEntry = entityLUT.entries.find { it.common == id }
+                if (topicEntry == null) {
+                    logger.debug("$id not found on LUT.")
+                    return
+                }
+                val topic = searchTopic(topicEntry.mine, topics)
+                if (topic == null) {
+                    logger.debug("Topic ${topicEntry.mine} not found.")
+                } else {
+                    mindmapEditor.deletePresentation(topic)
+                    entityLUT.entries.remove(topicEntry)
+                }
+            } else -> {
+                logger.error("$diagram is not Mindmap diagram.")
+            }
         }
     }
 

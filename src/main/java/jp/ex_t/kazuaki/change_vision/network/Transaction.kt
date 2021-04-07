@@ -162,6 +162,11 @@ data class DeleteClassPresentation(
 ) : ClassDiagramOperation()
 
 @Serializable
+data class DeleteTopic(
+    val id: String,
+) : MindmapDiagramOperation()
+
+@Serializable
 data class DeleteLinkModel(
     val isDelete: Boolean = false,
 ) : ClassDiagramOperation()

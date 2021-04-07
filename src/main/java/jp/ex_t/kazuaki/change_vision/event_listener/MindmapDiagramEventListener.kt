@@ -22,28 +22,23 @@ class MindmapDiagramEventListener(private val entityLUT: EntityLUT, private val 
     @ExperimentalSerializationApi
     override fun process(projectEditUnit: List<ProjectEditUnit>) {
         logger.debug("Start process")
-//        val removeTransaction = Transaction()
-//        val removeProjectEditUnit = projectEditUnit.filter { it.operation == Operation.REMOVE.ordinal }
-//        for (it in removeProjectEditUnit) {
-//            val operation = Operation.values()[it.operation]
-//            logger.debug("Op: $operation -> ")
-//            when (val entity = it.entity) {
-//                is ILinkPresentation -> {
-//                    when (entity.model) {
-//                        else -> {
-//                            logger.debug("$entity(INodePresentation)")
-//                        }
-//                    }
-//                }
-//                else -> {
-//                    logger.debug("$entity(Unknown)")
-//                }
-//            }
-//        }
-//        if (removeTransaction.operations.isNotEmpty()) {
-//            ProjectChangedListener.encodeAndPublish(removeTransaction, mqttPublisher)
-//            return
-//        }
+        val removeProjectEditUnit = projectEditUnit.filter { it.operation == Operation.REMOVE.ordinal }
+        val removeOperations = removeProjectEditUnit.mapNotNull { editUnit ->
+            Operation.values()[editUnit.operation].let { op -> logger.debug("Op: $op -> ") }
+            when (val entity = editUnit.entity) {
+                is INodePresentation -> deleteTopic(entity)
+
+                else -> {
+                    logger.debug("$entity(Unknown)")
+                    null
+                }
+            }
+        }
+        if (removeOperations.isNotEmpty()) {
+            val removeTransaction = Transaction(removeOperations)
+            ProjectChangedListener.encodeAndPublish(removeTransaction, mqttPublisher)
+            return
+        }
 
         val addProjectEditUnit = projectEditUnit.filter { it.operation == Operation.ADD.ordinal }
         val createOperations = mutableListOf<MindmapDiagramOperation>()
@@ -160,6 +155,20 @@ class MindmapDiagramEventListener(private val entityLUT: EntityLUT, private val 
             else -> {
                 logger.debug("${entity.label}(INodePresentation) @UnknownDiagram")
                 null
+            }
+        }
+    }
+
+    private fun deleteTopic(entity: INodePresentation): DeleteTopic? {
+        return run {
+            val lut = entityLUT.entries.find { it.mine == entity.id }
+            if (lut == null) {
+                logger.debug("${entity.id} not found on LUT.")
+                null
+            } else {
+                entityLUT.entries.remove(lut)
+                logger.debug("${entity}(INodePresentation) @MindmapDiagram")
+                DeleteTopic(lut.common)
             }
         }
     }
