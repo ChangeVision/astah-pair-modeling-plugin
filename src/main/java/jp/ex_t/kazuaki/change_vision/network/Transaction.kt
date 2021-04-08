@@ -32,6 +32,7 @@ data class CreateClassDiagram(
 data class CreateMindmapDiagram(
     val name: String,
     val ownerName: String,
+    val rootTopicId: String,
 ) : MindmapDiagramOperation()
 
 @Serializable
@@ -95,9 +96,10 @@ data class CreateAttribute(
 
 @Serializable
 data class CreateTopic(
-    val ownerName: String,
+    val ownerId: String,
     val name: String,
     val diagramName: String,
+    val id: String,
 ) : MindmapDiagramOperation()
 
 @Serializable
@@ -106,6 +108,7 @@ data class CreateFloatingTopic(
     val location: Pair<Double, Double>,
     val size: Pair<Double, Double>,
     val diagramName: String,
+    val id: String,
 ) : MindmapDiagramOperation()
 
 @Serializable
@@ -144,7 +147,7 @@ data class ResizeTopic(
     val name: String,
     val location: Pair<Double, Double>,
     val size: Pair<Double, Double>,
-    val diagramName: String,
+    val id: String,
 ) : MindmapDiagramOperation()
 
 @Serializable
@@ -156,6 +159,11 @@ data class DeleteClassModel(
 data class DeleteClassPresentation(
     val className: String,
 ) : ClassDiagramOperation()
+
+@Serializable
+data class DeleteTopic(
+    val id: String,
+) : MindmapDiagramOperation()
 
 @Serializable
 data class DeleteLinkModel(

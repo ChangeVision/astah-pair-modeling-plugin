@@ -18,32 +18,28 @@ import jp.ex_t.kazuaki.change_vision.logger
 import jp.ex_t.kazuaki.change_vision.network.*
 import kotlinx.serialization.ExperimentalSerializationApi
 
-class MindmapDiagramEventListener(private val mqttPublisher: MqttPublisher) : IEventListener {
+class MindmapDiagramEventListener(private val entityLUT: EntityLUT, private val mqttPublisher: MqttPublisher) :
+    IEventListener {
     @ExperimentalSerializationApi
     override fun process(projectEditUnit: List<ProjectEditUnit>) {
         logger.debug("Start process")
-//        val removeTransaction = Transaction()
-//        val removeProjectEditUnit = projectEditUnit.filter { it.operation == Operation.REMOVE.ordinal }
-//        for (it in removeProjectEditUnit) {
-//            val operation = Operation.values()[it.operation]
-//            logger.debug("Op: $operation -> ")
-//            when (val entity = it.entity) {
-//                is ILinkPresentation -> {
-//                    when (entity.model) {
-//                        else -> {
-//                            logger.debug("$entity(INodePresentation)")
-//                        }
-//                    }
-//                }
-//                else -> {
-//                    logger.debug("$entity(Unknown)")
-//                }
-//            }
-//        }
-//        if (removeTransaction.operations.isNotEmpty()) {
-//            ProjectChangedListener.encodeAndPublish(removeTransaction, mqttPublisher)
-//            return
-//        }
+        val removeProjectEditUnit = projectEditUnit.filter { it.operation == Operation.REMOVE.ordinal }
+        val removeOperations = removeProjectEditUnit.mapNotNull { editUnit ->
+            Operation.values()[editUnit.operation].let { op -> logger.debug("Op: $op -> ") }
+            when (val entity = editUnit.entity) {
+                is INodePresentation -> deleteTopic(entity)
+
+                else -> {
+                    logger.debug("$entity(Unknown)")
+                    null
+                }
+            }
+        }
+        if (removeOperations.isNotEmpty()) {
+            val removeTransaction = Transaction(removeOperations)
+            ProjectChangedListener.encodeAndPublish(removeTransaction, mqttPublisher)
+            return
+        }
 
         val addProjectEditUnit = projectEditUnit.filter { it.operation == Operation.ADD.ordinal }
         val createOperations = mutableListOf<MindmapDiagramOperation>()
@@ -63,7 +59,7 @@ class MindmapDiagramEventListener(private val mqttPublisher: MqttPublisher) : IE
                                     createOperations.add(createFloatingTopic(entity))
                                 }
                                 else -> {
-                                    createOperations.add(createTopic(entity))
+                                    createOperations.add(createTopic(entity) ?: return)
                                 }
                             }
                         }
@@ -111,20 +107,29 @@ class MindmapDiagramEventListener(private val mqttPublisher: MqttPublisher) : IE
 
     private fun createMindMapDiagram(entity: IMindMapDiagram): CreateMindmapDiagram {
         val owner = entity.owner as INamedElement
+        val rootTopic = entity.root
         logger.debug("${entity.name}(IMindMapDiagram)")
-        return CreateMindmapDiagram(entity.name, owner.name)
+        entityLUT.entries.add(Entry(rootTopic.id, rootTopic.id))
+        return CreateMindmapDiagram(entity.name, owner.name, rootTopic.id)
     }
 
     private fun createFloatingTopic(entity: INodePresentation): CreateFloatingTopic {
         val location = Pair(entity.location.x, entity.location.y)
         val size = Pair(entity.width, entity.height)
+        entityLUT.entries.add(Entry(entity.id, entity.id))
         logger.debug("${entity.label}(INodePresentation, FloatingTopic)")
-        return CreateFloatingTopic(entity.label, location, size, entity.diagram.name)
+        return CreateFloatingTopic(entity.label, location, size, entity.diagram.name, entity.id)
     }
 
-    private fun createTopic(entity: INodePresentation): CreateTopic {
+    private fun createTopic(entity: INodePresentation): CreateTopic? {
+        entityLUT.entries.add(Entry(entity.id, entity.id))
+        val parentEntry = entityLUT.entries.find { it.mine == entity.parent.id }
+        if (parentEntry == null) {
+            logger.debug("${entity.parent.id} not found on LUT.")
+            return null
+        }
         logger.debug("${entity.parent.label}(INodePresentation) - ${entity.label}(INodePresentation)")
-        return CreateTopic(entity.parent.label, entity.label, entity.diagram.name)
+        return CreateTopic(parentEntry.common, entity.label, entity.diagram.name, entity.id)
     }
 
     private fun resizeTopic(entity: INodePresentation): ResizeTopic? {
@@ -140,11 +145,31 @@ class MindmapDiagramEventListener(private val mqttPublisher: MqttPublisher) : IE
                         )
                     } at ${entity.location}) @MindmapDiagram${diagram.name}"
                 )
-                ResizeTopic(entity.label, location, size, diagram.name)
+                val lut = entityLUT.entries.find { it.mine == entity.id }
+                if (lut == null) {
+                    logger.debug("${entity.id} not found on LUT.")
+                    null
+                } else {
+                    ResizeTopic(entity.label, location, size, lut.common)
+                }
             }
             else -> {
                 logger.debug("${entity.label}(INodePresentation) @UnknownDiagram")
                 null
+            }
+        }
+    }
+
+    private fun deleteTopic(entity: INodePresentation): DeleteTopic? {
+        return run {
+            val lut = entityLUT.entries.find { it.mine == entity.id }
+            if (lut == null) {
+                logger.debug("${entity.id} not found on LUT.")
+                null
+            } else {
+                entityLUT.entries.remove(lut)
+                logger.debug("${entity}(INodePresentation) @MindmapDiagram")
+                DeleteTopic(lut.common)
             }
         }
     }
