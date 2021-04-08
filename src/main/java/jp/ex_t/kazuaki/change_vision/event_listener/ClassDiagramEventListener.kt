@@ -18,7 +18,8 @@ import jp.ex_t.kazuaki.change_vision.logger
 import jp.ex_t.kazuaki.change_vision.network.*
 import kotlinx.serialization.ExperimentalSerializationApi
 
-class ClassDiagramEventListener(private val mqttPublisher: MqttPublisher) : IEventListener {
+class ClassDiagramEventListener(private val entityLUT: EntityLUT, private val mqttPublisher: MqttPublisher) :
+    IEventListener {
     @ExperimentalSerializationApi
     override fun process(projectEditUnit: List<ProjectEditUnit>) {
         logger.debug("Start process")
@@ -195,14 +196,22 @@ class ClassDiagramEventListener(private val mqttPublisher: MqttPublisher) : IEve
 
     private fun createClassDiagram(entity: IClassDiagram): ClassDiagramOperation {
         val owner = entity.owner as INamedElement
-        val createClassDiagram = CreateClassDiagram(entity.name, owner.name)
+        // TODO: ownerのIDをどうにかして共有させる
+        val createClassDiagram = CreateClassDiagram(entity.name, owner.name, entity.id)
+        entityLUT.entries.add(Entry(entity.id, entity.id))
         logger.debug("${entity.name}(IClassDiagram)")
         return createClassDiagram
     }
 
-    private fun createClassModel(entity: IClass): CreateClassModel {
-        val parentPackage = entity.owner as IPackage
-        val createClassModel = CreateClassModel(entity.name, parentPackage.name, entity.stereotypes.toList())
+    private fun createClassModel(entity: IClass): CreateClassModel? {
+        entityLUT.entries.add(Entry(entity.id, entity.id))
+//        val parentEntry = entityLUT.entries.find { it.mine == entity.owner.id } ?: run {
+//            logger.debug("${entity.owner.id} not found on LUT.")
+//            return null
+//        }
+        // TODO: ownerのIDをLUTに登録できるようにする(最初はパッケージのIDを登録していないので取れない)
+        val owner = entity.owner as INamedElement
+        val createClassModel = CreateClassModel(entity.name, owner.name, entity.stereotypes.toList(), entity.id)
         logger.debug("${entity.name}(IClass)")
         return createClassModel
     }
@@ -214,15 +223,24 @@ class ClassDiagramEventListener(private val mqttPublisher: MqttPublisher) : IEve
             is IClass -> {
                 when (destinationClass) {
                     is IClass -> {
+                        val sourceClassEntry = entityLUT.entries.find { it.mine == sourceClass.id } ?: run {
+                            logger.debug("${sourceClass.id} not found on LUT.")
+                            return null
+                        }
+                        val destinationClassEntry = entityLUT.entries.find { it.mine == destinationClass.id } ?: run {
+                            logger.debug("${destinationClass.id} not found on LUT.")
+                            return null
+                        }
                         val sourceClassNavigability = entity.memberEnds.first().navigability
                         val destinationClassNavigability = entity.memberEnds.last().navigability
                         logger.debug("${sourceClass.name}(IClass, $sourceClassNavigability) - ${entity.name}(IAssociation) - ${destinationClass.name}(IClass, $destinationClassNavigability)")
                         CreateAssociationModel(
-                            sourceClass.name,
+                            sourceClassEntry.common,
                             sourceClassNavigability,
-                            destinationClass.name,
+                            destinationClassEntry.common,
                             destinationClassNavigability,
                             entity.name,
+                            entity.id,
                         )
                     }
                     else -> {
@@ -238,25 +256,48 @@ class ClassDiagramEventListener(private val mqttPublisher: MqttPublisher) : IEve
         }
     }
 
-    private fun createGeneralizationModel(entity: IGeneralization): ClassDiagramOperation {
+    private fun createGeneralizationModel(entity: IGeneralization): ClassDiagramOperation? {
         val superClass = entity.superType
         val subClass = entity.subType
+        val superClassEntry = entityLUT.entries.find { it.mine == superClass.id } ?: run {
+            logger.debug("${superClass.id} not found on LUT.")
+            return null
+        }
+        val subClassEntry = entityLUT.entries.find { it.mine == subClass.id } ?: run {
+            logger.debug("${subClass.id} not found on LUT.")
+            return null
+        }
         logger.debug("${superClass.name}(IClass) -> ${entity.name}(IGeneralization) - ${subClass.name}(IClass)")
-        return CreateGeneralizationModel(superClass.name, subClass.name, entity.name)
+        entityLUT.entries.add(Entry(entity.id, entity.id))
+        return CreateGeneralizationModel(superClassEntry.common, subClassEntry.common, entity.name, entity.id)
     }
 
-    private fun createRealizationModel(entity: IRealization): ClassDiagramOperation {
+    private fun createRealizationModel(entity: IRealization): ClassDiagramOperation? {
         val supplierClass = entity.supplier
         val clientClass = entity.client
+        val supplierClassEntry = entityLUT.entries.find { it.mine == supplierClass.id } ?: run {
+            logger.debug("${supplierClass.id} not found on LUT.")
+            return null
+        }
+        val clientClassEntry = entityLUT.entries.find { it.mine == clientClass.id } ?: run {
+            logger.debug("${clientClass.id} not found on LUT.")
+            return null
+        }
         logger.debug("${supplierClass.name}(IClass) -> ${entity.name}(IRealization) -> ${clientClass.name}(IClass)")
-        return CreateRealizationModel(supplierClass.name, clientClass.name, entity.name)
+        entityLUT.entries.add(Entry(entity.id, entity.id))
+        return CreateRealizationModel(supplierClassEntry.common, clientClassEntry.common, entity.name, entity.id)
     }
 
     private fun createOperation(entity: IOperation): CreateOperation? {
         return when (val owner = entity.owner) {
             is IClass -> {
+                val ownerEntry = entityLUT.entries.find { it.mine == owner.id } ?: run {
+                    logger.debug("${owner.id} not found on LUT.")
+                    return null
+                }
                 logger.debug("${entity.name}(IOperation) - $owner(IClass)")
-                CreateOperation(owner.name, entity.name, entity.returnTypeExpression)
+                entityLUT.entries.add(Entry(entity.id, entity.id))
+                CreateOperation(ownerEntry.common, entity.name, entity.returnTypeExpression, entity.id)
             }
             else -> {
                 logger.debug("${entity.name}(IOperation) - $owner(Unknown)")
@@ -268,8 +309,13 @@ class ClassDiagramEventListener(private val mqttPublisher: MqttPublisher) : IEve
     private fun createAttribute(entity: IAttribute): CreateAttribute? {
         return when (val owner = entity.owner) {
             is IClass -> {
+                val ownerEntry = entityLUT.entries.find { it.mine == owner.id } ?: run {
+                    logger.debug("${owner.id} not found on LUT.")
+                    return null
+                }
                 logger.debug("${entity.name}(IAttribute) - ${owner}(IClass)")
-                CreateAttribute(owner.name, entity.name, entity.typeExpression)
+                entityLUT.entries.add(Entry(entity.id, entity.id))
+                CreateAttribute(ownerEntry.common, entity.name, entity.typeExpression, entity.id)
             }
             else -> {
                 logger.debug("${entity.name}(IAttribute) - ${owner}(Unknown)")
@@ -283,7 +329,10 @@ class ClassDiagramEventListener(private val mqttPublisher: MqttPublisher) : IEve
             is IClassDiagram -> {
                 when (val model = entity.model) {
                     is IClass -> {
-                        // TODO: クラスとインタフェースをINodePresentationのプロパティで見分ける
+                        val classModelEntry = entityLUT.entries.find { it.mine == model.id } ?: run {
+                            logger.debug("${model.id} not found on LUT.")
+                            return null
+                        }
                         val location = Pair(entity.location.x, entity.location.y)
                         logger.debug(
                             "${entity.label}(INodePresentation)::${model.name}(IClass, ${
@@ -293,7 +342,8 @@ class ClassDiagramEventListener(private val mqttPublisher: MqttPublisher) : IEve
                                 )
                             } at ${entity.location})"
                         )
-                        CreateClassPresentation(model.name, location, diagram.name)
+                        entityLUT.entries.add(Entry(entity.id, entity.id))
+                        CreateClassPresentation(classModelEntry.common, location, diagram.name, entity.id)
                     }
                     else -> {
                         logger.debug("${entity.label}(INodePresentation) - $model(Unknown)")
@@ -316,18 +366,47 @@ class ClassDiagramEventListener(private val mqttPublisher: MqttPublisher) : IEve
             is IClass -> {
                 when (target) {
                     is IClass -> {
+                        val sourceEntry = entityLUT.entries.find { it.mine == source.id } ?: run {
+                            logger.debug("${source.id} not found on LUT.")
+                            return null
+                        }
+                        val targetEntry = entityLUT.entries.find { it.mine == target.id } ?: run {
+                            logger.debug("${target.id} not found on LUT.")
+                            return null
+                        }
                         when (entity.model) {
                             is IAssociation -> {
                                 logger.debug("${source.name}(IClass) - ${entity.label}(ILinkPresentation::IAssociation) - ${target.name}(IClass)")
-                                CreateLinkPresentation(source.name, target.name, "Association", entity.diagram.name)
+                                entityLUT.entries.add(Entry(entity.id, entity.id))
+                                CreateLinkPresentation(
+                                    sourceEntry.common,
+                                    targetEntry.common,
+                                    "Association",
+                                    entity.diagram.name,
+                                    entity.id
+                                )
                             }
                             is IGeneralization -> {
                                 logger.debug("${source.name}(IClass) - ${entity.label}(ILinkPresentation::IGeneralization) - ${target.name}(IClass)")
-                                CreateLinkPresentation(source.name, target.name, "Generalization", entity.diagram.name)
+                                entityLUT.entries.add(Entry(entity.id, entity.id))
+                                CreateLinkPresentation(
+                                    sourceEntry.common,
+                                    targetEntry.common,
+                                    "Generalization",
+                                    entity.diagram.name,
+                                    entity.id
+                                )
                             }
                             is IRealization -> {
                                 logger.debug("${source.name}(IClass, interface) - ${entity.label}(ILinkPresentation::IRealization) - ${target.name}(IClass)")
-                                CreateLinkPresentation(source.name, target.name, "Realization", entity.diagram.name)
+                                entityLUT.entries.add(Entry(entity.id, entity.id))
+                                CreateLinkPresentation(
+                                    sourceEntry.common,
+                                    targetEntry.common,
+                                    "Realization",
+                                    entity.diagram.name,
+                                    entity.id
+                                )
                             }
                             else -> {
                                 logger.debug("${source.name}(IClass) - ${entity.label}(ILinkPresentation::Unknown) - ${target.name}(IClass)")

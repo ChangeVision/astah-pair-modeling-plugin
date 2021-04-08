@@ -22,7 +22,8 @@ import kotlinx.serialization.cbor.Cbor
 import kotlinx.serialization.encodeToByteArray
 
 class ProjectChangedListener(entityLUT: EntityLUT, mqttPublisher: MqttPublisher) : ProjectEventListener {
-    private val classDiagramEventListener: ClassDiagramEventListener = ClassDiagramEventListener(mqttPublisher)
+    private val classDiagramEventListener: ClassDiagramEventListener =
+        ClassDiagramEventListener(entityLUT, mqttPublisher)
     private val mindmapDiagramEventListener: MindmapDiagramEventListener =
         MindmapDiagramEventListener(entityLUT, mqttPublisher)
 
