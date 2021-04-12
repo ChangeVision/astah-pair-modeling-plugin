@@ -25,6 +25,7 @@ class ClassDiagramEventListener(private val entityLUT: EntityLUT, private val mq
         logger.debug("Start process")
         val removeProjectEditUnit = projectEditUnit.filter { it.operation == Operation.REMOVE.ordinal }
         val removeOperations = removeProjectEditUnit.mapNotNull { editUnit ->
+            Operation.values()[editUnit.operation].let { op -> logger.debug("Op: $op -> ") }
             when (val entity = editUnit.entity) {
                 is IClass -> deleteClassModel(entity)
                 is IAssociation -> deleteAssociationModel(entity, removeProjectEditUnit) ?: return
