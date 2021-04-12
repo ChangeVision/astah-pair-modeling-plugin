@@ -24,7 +24,7 @@ import javax.swing.SwingUtilities
 class ReflectTransaction(entityLUT: EntityLUT, private val projectChangedListener: ProjectChangedListener) {
     private val api: AstahAPI = AstahAPI.getAstahAPI()
     private val projectAccessor: ProjectAccessor = api.projectAccessor
-    private val classDiagramApplyTransaction = ClassDiagramApplyTransaction()
+    private val classDiagramApplyTransaction = ClassDiagramApplyTransaction(entityLUT)
     private val mindmapDiagramApplyTransaction = MindmapDiagramApplyTransaction(entityLUT)
 
     @Throws(UnExpectedException::class)

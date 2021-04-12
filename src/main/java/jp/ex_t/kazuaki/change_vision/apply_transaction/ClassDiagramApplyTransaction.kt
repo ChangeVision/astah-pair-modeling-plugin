@@ -11,14 +11,13 @@ package jp.ex_t.kazuaki.change_vision.apply_transaction
 import com.change_vision.jude.api.inf.AstahAPI
 import com.change_vision.jude.api.inf.exception.BadTransactionException
 import com.change_vision.jude.api.inf.model.*
-import com.change_vision.jude.api.inf.presentation.ILinkPresentation
 import com.change_vision.jude.api.inf.presentation.INodePresentation
 import jp.ex_t.kazuaki.change_vision.Logging
 import jp.ex_t.kazuaki.change_vision.logger
 import jp.ex_t.kazuaki.change_vision.network.*
 import java.awt.geom.Point2D
 
-class ClassDiagramApplyTransaction : IApplyTransaction<ClassDiagramOperation> {
+class ClassDiagramApplyTransaction(private val entityLUT: EntityLUT) : IApplyTransaction<ClassDiagramOperation> {
     private val api = AstahAPI.getAstahAPI()
     private val projectAccessor = api.projectAccessor
     private val diagramViewManager = api.viewManager.diagramViewManager
@@ -72,7 +71,7 @@ class ClassDiagramApplyTransaction : IApplyTransaction<ClassDiagramOperation> {
                     validateAndDeleteClassModel(it)
                 }
                 is DeleteLinkModel -> {
-                    deleteLinkModel(operations)
+                    validateAndDeleteLinkModel(it)
                 }
                 is DeleteClassPresentation -> {
                     validateAndDeleteClassPresentation(it)
@@ -85,98 +84,115 @@ class ClassDiagramApplyTransaction : IApplyTransaction<ClassDiagramOperation> {
     }
 
     private fun validateAndCreateClassDiagram(operation: CreateClassDiagram) {
-        if (operation.name.isNotEmpty() && operation.ownerName.isNotEmpty()) {
-            createClassDiagram(operation.name, operation.ownerName)
+        if (operation.name.isNotEmpty() && operation.ownerName.isNotEmpty() && operation.id.isNotEmpty()) {
+            createClassDiagram(operation.name, operation.ownerName, operation.id)
         }
     }
 
     private fun validateAndCreateClassModel(operation: CreateClassModel) {
-        if (operation.name.isNotEmpty() && operation.parentPackageName.isNotEmpty()) {
-            createClassModel(operation.name, operation.parentPackageName, operation.stereotypes)
+        if (operation.name.isNotEmpty() && operation.parentName.isNotEmpty() && operation.id.isNotEmpty()) {
+            createClassModel(operation.name, operation.parentName, operation.stereotypes, operation.id)
         }
     }
 
     private fun validateAndCreateAssociationModel(operation: CreateAssociationModel) {
-        if (operation.sourceClassName.isNotEmpty()
+        if (operation.sourceClassId.isNotEmpty()
             && operation.sourceClassNavigability.isNotEmpty()
-            && operation.destinationClassName.isNotEmpty()
+            && operation.destinationClassId.isNotEmpty()
             && operation.destinationClassNavigability.isNotEmpty()
+            && operation.id.isNotEmpty()
         ) {
             createAssociationModel(
-                operation.sourceClassName,
+                operation.sourceClassId,
                 operation.sourceClassNavigability,
-                operation.destinationClassName,
+                operation.destinationClassId,
                 operation.destinationClassNavigability,
                 operation.name,
+                operation.id,
             )
         }
     }
 
     private fun validateAndCreateGeneralizationModel(operation: CreateGeneralizationModel) {
-        if (operation.superClassName.isNotEmpty()
-            && operation.subClassName.isNotEmpty()
+        if (operation.superClassId.isNotEmpty()
+            && operation.subClassId.isNotEmpty()
+            && operation.id.isNotEmpty()
         ) {
             createGeneralizationModel(
-                operation.superClassName,
-                operation.subClassName,
+                operation.superClassId,
+                operation.subClassId,
                 operation.name,
+                operation.id,
             )
         }
     }
 
     private fun validateAndCreateRealizationModel(operation: CreateRealizationModel) {
-        if (operation.supplierClassName.isNotEmpty()
-            && operation.clientClassName.isNotEmpty()
+        if (operation.supplierClassId.isNotEmpty()
+            && operation.clientClassId.isNotEmpty()
+            && operation.id.isNotEmpty()
         ) {
             createRealizationModel(
-                operation.supplierClassName,
-                operation.clientClassName,
+                operation.supplierClassId,
+                operation.clientClassId,
                 operation.name,
+                operation.id
             )
+        }
+    }
+
+    private fun validateAndDeleteLinkModel(operation: DeleteLinkModel) {
+        if (operation.id.isNotEmpty()) {
+            deleteLinkModel(operation.id)
         }
     }
 
     private fun validateAndCreateClassPresentation(operation: CreateClassPresentation) {
         val location = Point2D.Double(operation.location.first, operation.location.second)
-        if (operation.diagramName.isNotEmpty() && operation.className.isNotEmpty()) {
-            createClassPresentation(operation.className, location, operation.diagramName)
+        if (operation.diagramName.isNotEmpty() && operation.classId.isNotEmpty() && operation.id.isNotEmpty()) {
+            createClassPresentation(operation.classId, location, operation.diagramName, operation.id)
         }
     }
 
     private fun validateAndCreateLinkPresentation(operation: CreateLinkPresentation) {
-        if (operation.sourceClassName.isNotEmpty()
-            && operation.targetClassName.isNotEmpty()
+        if (operation.sourceClassId.isNotEmpty()
+            && operation.targetClassId.isNotEmpty()
             && operation.linkType.isNotEmpty()
             && operation.diagramName.isNotEmpty()
+            && operation.id.isNotEmpty()
         ) {
             createLinkPresentation(
-                operation.sourceClassName,
-                operation.targetClassName,
+                operation.sourceClassId,
+                operation.targetClassId,
                 operation.linkType,
-                operation.diagramName
+                operation.diagramName,
+                operation.id,
             )
         }
     }
 
     private fun validateAndCreateOperation(operation: CreateOperation) {
-        if (operation.ownerName.isNotEmpty()
+        if (operation.ownerId.isNotEmpty()
             && operation.name.isNotEmpty()
             && operation.returnTypeExpression.isNotEmpty()
+            && operation.id.isNotEmpty()
         ) {
             createOperation(
-                operation.ownerName,
+                operation.ownerId,
                 operation.name,
-                operation.returnTypeExpression
+                operation.returnTypeExpression,
+                operation.id,
             )
         }
     }
 
     private fun validateAndCreateAttribute(operation: CreateAttribute) {
-        if (operation.ownerName.isNotEmpty()
+        if (operation.ownerId.isNotEmpty()
             && operation.name.isNotEmpty()
             && operation.typeExpression.isNotEmpty()
+            && operation.id.isNotEmpty()
         ) {
-            createAttribute(operation.ownerName, operation.name, operation.typeExpression)
+            createAttribute(operation.ownerId, operation.name, operation.typeExpression, operation.id)
         }
     }
 
@@ -186,10 +202,10 @@ class ClassDiagramApplyTransaction : IApplyTransaction<ClassDiagramOperation> {
     ) {
         val location = Point2D.Double(operation.location.first, operation.location.second)
         if (!operations.any { it is ChangeClassModel }
-            && operation.className.isNotEmpty()
+            && operation.id.isNotEmpty()
             && operation.diagramName.isNotEmpty()) {
             resizeClassPresentation(
-                operation.className,
+                operation.id,
                 location,
                 operation.size,
                 operation.diagramName
@@ -198,19 +214,20 @@ class ClassDiagramApplyTransaction : IApplyTransaction<ClassDiagramOperation> {
     }
 
     private fun validateAndChangeClassModel(operation: ChangeClassModel) {
-        if (operation.name.isNotEmpty()) {
-            changeClassModel(operation.name, operation.brotherClassNameList, operation.stereotypes)
+        if (operation.id.isNotEmpty() && operation.name.isNotEmpty()) {
+            changeClassModel(operation.id, operation.name, operation.stereotypes)
         }
     }
 
     private fun validateAndChangeOperationNameAndReturnTypeExpression(operation: ChangeOperationNameAndReturnTypeExpression) {
-        if (operation.ownerName.isNotEmpty()
+        if (operation.ownerId.isNotEmpty()
+            && operation.id.isNotEmpty()
             && operation.name.isNotEmpty()
             && operation.returnTypeExpression.isNotEmpty()
         ) {
             changeOperationNameAndReturnTypeExpression(
-                operation.ownerName,
-                operation.brotherNameAndReturnTypeExpression,
+                operation.ownerId,
+                operation.id,
                 operation.name,
                 operation.returnTypeExpression
             )
@@ -218,13 +235,14 @@ class ClassDiagramApplyTransaction : IApplyTransaction<ClassDiagramOperation> {
     }
 
     private fun validateAndChangeAttributeNameAndTypeExpression(operation: ChangeAttributeNameAndTypeExpression) {
-        if (operation.ownerName.isNotEmpty()
+        if (operation.ownerId.isNotEmpty()
+            && operation.id.isNotEmpty()
             && operation.name.isNotEmpty()
             && operation.typeExpression.isNotEmpty()
         ) {
             changeAttributeNameAndTypeExpression(
-                operation.ownerName,
-                operation.brotherNameAndTypeExpression,
+                operation.ownerId,
+                operation.id,
                 operation.name,
                 operation.typeExpression
             )
@@ -232,25 +250,14 @@ class ClassDiagramApplyTransaction : IApplyTransaction<ClassDiagramOperation> {
     }
 
     private fun validateAndDeleteClassModel(operation: DeleteClassModel) {
-        deleteClassModel(operation.brotherClassNameList)
-    }
-
-    private fun deleteLinkModel(operations: List<ClassDiagramOperation>) {
-        val deleteLinkPresentation = (operations.find {
-            it is DeleteLinkPresentation
-        } ?: return) as DeleteLinkPresentation
-        val receivedPoints = deleteLinkPresentation.points.map { point
-            ->
-            Point2D.Double(point.first, point.second)
-        }.toList()
-        if (deleteLinkPresentation.linkType.isNotEmpty()) {
-            deleteLinkModel(receivedPoints, deleteLinkPresentation.linkType)
+        if (operation.id.isNotEmpty()) {
+            deleteClassModel(operation.id)
         }
     }
 
     private fun validateAndDeleteClassPresentation(operation: DeleteClassPresentation) {
-        if (operation.className.isNotEmpty()) {
-            deleteClassPresentation(operation.className)
+        if (operation.id.isNotEmpty()) {
+            deleteClassPresentation(operation.id)
         }
     }
 
@@ -259,76 +266,164 @@ class ClassDiagramApplyTransaction : IApplyTransaction<ClassDiagramOperation> {
         operations: List<ClassDiagramOperation>
     ) {
         if (!operations.any { it is DeleteLinkModel }) {
-            val receivedPoints = operation.points.map { point
-                ->
-                Point2D.Double(point.first, point.second)
-            }.toList()
-            if (operation.linkType.isNotEmpty()) {
-                deleteLinkPresentation(receivedPoints, operation.linkType)
+            if (operation.id.isNotEmpty()) {
+                deleteLinkPresentation(operation.id)
             }
         }
     }
 
-    private fun createClassDiagram(name: String, ownerName: String) {
+    private fun createClassDiagram(name: String, ownerName: String, id: String) {
         logger.debug("Create class diagram.")
         val owner = projectAccessor.findElements(INamedElement::class.java, ownerName).first() as INamedElement
         val diagram = classDiagramEditor.createClassDiagram(owner, name)
+        entityLUT.entries.add(Entry(diagram.id, id))
         diagramViewManager.open(diagram)
     }
 
-    private fun createClassModel(name: String, parentPackageName: String, stereotypes: List<String?>) {
+    private fun createClassModel(name: String, parentName: String, stereotypes: List<String?>, id: String) {
         logger.debug("Create class model.")
-        val parentPackage = projectAccessor.findElements(IPackage::class.java, parentPackageName).first() as IPackage
-        val clazz = basicModelEditor.createClass(parentPackage, name)
-        stereotypes.forEach {
-            clazz.addStereotype(it)
+        val parent = projectAccessor.findElements(IPackage::class.java, parentName).first() as IPackage? ?: run {
+            logger.debug("Parent $parentName not found.")
+            return
         }
+        val classModel = basicModelEditor.createClass(parent, name)
+        stereotypes.forEach {
+            classModel.addStereotype(it)
+        }
+        entityLUT.entries.add(Entry(classModel.id, id))
+//        val parentEntry = entityLUT.entries.find { it.common == parentId } ?: run {
+//            logger.debug("$parentId not found on LUT.")
+//            return
+//        }
+//        val parentPackage = projectAccessor.findElements(IPackage::class.java).find { it.id == parentEntry.mine }
+//        val parentClass = projectAccessor.findElements(IClass::class.java).find { it.id == parentEntry.mine }
+//        if (parentPackage != null) {
+//            val classModel = basicModelEditor.createClass(parentPackage as IPackage, name)
+//            stereotypes.forEach {
+//                classModel.addStereotype(it)
+//            }
+//            entityLUT.entries.add(Entry(classModel.id, id))
+//        } else if (parentClass != null) {
+//            val classModel = basicModelEditor.createClass(parentClass as IClass, name)
+//            stereotypes.forEach {
+//                classModel.addStereotype(it)
+//            }
+//            entityLUT.entries.add(Entry(classModel.id, id))
+//        } else {
+//            logger.debug("$parentId not found on LUT.")
+//            return
+//        }
     }
 
     private fun createAssociationModel(
-        sourceClassName: String,
+        sourceClassId: String,
         sourceClassNavigability: String,
-        destinationClassName: String,
+        destinationClassId: String,
         destinationClassNavigability: String,
-        associationName: String
+        associationName: String,
+        id: String
     ) {
         logger.debug("Create association model.")
-        val sourceClass = projectAccessor.findElements(IClass::class.java, sourceClassName).first() as IClass
-        val destinationClass = projectAccessor.findElements(IClass::class.java, destinationClassName).first() as IClass
+        val sourceClassEntry = entityLUT.entries.find { it.common == sourceClassId } ?: run {
+            logger.debug("$sourceClassId not found on LUT.")
+            return
+        }
+        val destinationClassEntry = entityLUT.entries.find { it.common == destinationClassId } ?: run {
+            logger.debug("$destinationClassId not found on LUT.")
+            return
+        }
+        val sourceClass =
+            projectAccessor.findElements(IClass::class.java).find { it.id == sourceClassEntry.mine } as IClass? ?: run {
+                logger.debug("IClass ${sourceClassEntry.mine} not found but $sourceClassId found on LUT.")
+                return
+            }
+        val destinationClass =
+            projectAccessor.findElements(IClass::class.java).find { it.id == destinationClassEntry.mine } as IClass?
+                ?: run {
+                    logger.debug("IClass ${destinationClassEntry.mine} not found but $destinationClassId found on LUT.")
+                    return
+                }
+
         val association = basicModelEditor.createAssociation(sourceClass, destinationClass, associationName, "", "")
+        entityLUT.entries.add(Entry(association.id, id))
         sourceClass.attributes.filterNot { it.association == null }
             .find { it.association == association }?.navigability = sourceClassNavigability
         destinationClass.attributes.filterNot { it.association == null }
             .find { it.association == association }?.navigability = destinationClassNavigability
     }
 
-    private fun createGeneralizationModel(superClassName: String, subClassName: String, name: String) {
+    private fun createGeneralizationModel(superClassId: String, subClassId: String, name: String, id: String) {
         logger.debug("Create generalization model.")
-        val superClass = projectAccessor.findElements(IClass::class.java, superClassName).first() as IClass
-        val subClass = projectAccessor.findElements(IClass::class.java, subClassName).first() as IClass
-        basicModelEditor.createGeneralization(subClass, superClass, name)
+        val superClassEntry = entityLUT.entries.find { it.common == superClassId } ?: run {
+            logger.debug("$superClassId not found on LUT.")
+            return
+        }
+        val subClassEntry = entityLUT.entries.find { it.common == subClassId } ?: run {
+            logger.debug("$subClassId not found on LUT.")
+            return
+        }
+        val superClass =
+            projectAccessor.findElements(IClass::class.java).find { it.id == superClassEntry.mine } as IClass? ?: run {
+                logger.debug("IClass ${superClassEntry.mine} not found but $superClassId found on LUT.")
+                return
+            }
+        val subClass =
+            projectAccessor.findElements(IClass::class.java).find { it.id == subClassEntry.mine } as IClass? ?: run {
+                logger.debug("IClass ${subClassEntry.mine} not found but $subClassId found on LUT.")
+                return
+            }
+        val generalization = basicModelEditor.createGeneralization(subClass, superClass, name)
+        entityLUT.entries.add(Entry(generalization.id, id))
     }
 
-    private fun createRealizationModel(supplierClassName: String, clientClassName: String, name: String) {
+    private fun createRealizationModel(supplierClassId: String, clientClassId: String, name: String, id: String) {
         logger.debug("Create realization model.")
-        val supplierClass = projectAccessor.findElements(IClass::class.java, supplierClassName).first() as IClass
-        val clientClass = projectAccessor.findElements(IClass::class.java, clientClassName).first() as IClass
-        basicModelEditor.createRealization(clientClass, supplierClass, name)
+        val supplierClassEntry = entityLUT.entries.find { it.common == supplierClassId } ?: run {
+            logger.debug("$supplierClassId not found on LUT.")
+            return
+        }
+        val clientClassEntry = entityLUT.entries.find { it.common == clientClassId } ?: run {
+            logger.debug("$clientClassId not found on LUT.")
+            return
+        }
+        val supplierClass =
+            projectAccessor.findElements(IClass::class.java).find { it.id == supplierClassEntry.mine } as IClass?
+                ?: run {
+                    logger.debug("IClass ${supplierClassEntry.mine} not found but $supplierClassId found on LUT.")
+                    return
+                }
+        val clientClass =
+            projectAccessor.findElements(IClass::class.java).find { it.id == clientClassEntry.mine } as IClass? ?: run {
+                logger.debug("IClass ${clientClassEntry.mine} not found but $clientClassId found on LUT.")
+                return
+            }
+        val realization = basicModelEditor.createRealization(clientClass, supplierClass, name)
+        entityLUT.entries.add(Entry(realization.id, id))
     }
 
-    private fun createClassPresentation(className: String, location: Point2D, diagramName: String) {
+    private fun createClassPresentation(classId: String, location: Point2D, diagramName: String, id: String) {
         logger.debug("Create class presentation.")
+        val classEntry = entityLUT.entries.find { it.common == classId } ?: run {
+            logger.debug("$classId not found on LUT.")
+            return
+        }
+        val classModel =
+            projectAccessor.findElements(IClass::class.java).find { it.id == classEntry.mine } as IClass? ?: run {
+                logger.debug("IClass ${classEntry.mine} not found but $classId found on LUT.")
+                return
+            }
         val diagram = projectAccessor.findElements(IDiagram::class.java, diagramName).first() as IDiagram
         classDiagramEditor.diagram = diagram
-        val clazz = projectAccessor.findElements(IClass::class.java, className).first() as IClass
-        classDiagramEditor.createNodePresentation(clazz, location)
+        val classPresentation = classDiagramEditor.createNodePresentation(classModel, location)
+        entityLUT.entries.add(Entry(classPresentation.id, id))
     }
 
     private fun createLinkPresentation(
-        sourceClassName: String,
-        targetClassName: String,
+        sourceClassId: String,
+        targetClassId: String,
         linkType: String,
-        diagramName: String
+        diagramName: String,
+        id: String
     ) {
         logger.debug("Create link presentation.")
         @Throws(ClassNotFoundException::class)
@@ -359,15 +454,33 @@ class ClassDiagramApplyTransaction : IApplyTransaction<ClassDiagramOperation> {
 
         val diagram = projectAccessor.findElements(IDiagram::class.java, diagramName).first() as IDiagram
         classDiagramEditor.diagram = diagram
-        val sourceClass = projectAccessor.findElements(IClass::class.java, sourceClassName).first() as IClass
+        val sourceClassEntry = entityLUT.entries.find { it.common == sourceClassId } ?: run {
+            logger.debug("$sourceClassId not found on LUT.")
+            return
+        }
+        val sourceClass =
+            projectAccessor.findElements(IClass::class.java).find { it.id == sourceClassEntry.mine } as IClass? ?: run {
+                logger.debug("IClass ${sourceClassEntry.mine} not found but $sourceClassId found on LUT.")
+                return
+            }
         val sourceClassPresentation = sourceClass.presentations.first { it.diagram == diagram } as INodePresentation
-        val targetClass = projectAccessor.findElements(IClass::class.java, targetClassName).first() as IClass
+        val targetClassEntry = entityLUT.entries.find { it.common == targetClassId } ?: run {
+            logger.debug("$targetClassId not found on LUT.")
+            return
+        }
+        val targetClass =
+            projectAccessor.findElements(IClass::class.java).find { it.id == targetClassEntry.mine } as IClass? ?: run {
+                logger.debug("IClass ${targetClassEntry.mine} not found but $targetClassId found on LUT.")
+                return
+            }
         val targetClassPresentation = targetClass.presentations.first { it.diagram == diagram } as INodePresentation
         logger.debug("Source: ${sourceClass.attributes}, target: ${targetClass.attributes}")
         try {
             val element = searchModel(linkType, sourceClass, targetClass)
             logger.debug("Link: $element")
-            classDiagramEditor.createLinkPresentation(element, sourceClassPresentation, targetClassPresentation)
+            val linkPresentation =
+                classDiagramEditor.createLinkPresentation(element, sourceClassPresentation, targetClassPresentation)
+            entityLUT.entries.add(Entry(linkPresentation.id, id))
         } catch (e: ClassNotFoundException) {
             logger.error("Link model not found.", e)
             return
@@ -376,20 +489,38 @@ class ClassDiagramApplyTransaction : IApplyTransaction<ClassDiagramOperation> {
         }
     }
 
-    private fun createOperation(ownerName: String, name: String, returnTypeExpression: String) {
+    private fun createOperation(ownerId: String, name: String, returnTypeExpression: String, id: String) {
         logger.debug("Create operation.")
-        val ownerClass = projectAccessor.findElements(IClass::class.java, ownerName).first() as IClass
-        basicModelEditor.createOperation(ownerClass, name, returnTypeExpression)
+        val ownerEntry = entityLUT.entries.find { it.common == ownerId } ?: run {
+            logger.debug("$ownerId not found on LUT.")
+            return
+        }
+        val owner =
+            projectAccessor.findElements(IClass::class.java).find { it.id == ownerEntry.mine } as IClass? ?: run {
+                logger.debug("IClass ${ownerEntry.mine} not found but $ownerId found on LUT.")
+                return
+            }
+        val operation = basicModelEditor.createOperation(owner, name, returnTypeExpression)
+        entityLUT.entries.add(Entry(operation.id, id))
     }
 
-    private fun createAttribute(ownerName: String, name: String, typeExpression: String) {
+    private fun createAttribute(ownerId: String, name: String, typeExpression: String, id: String) {
         logger.debug("Create attribute.")
-        val ownerClass = projectAccessor.findElements(IClass::class.java, ownerName).first() as IClass
-        basicModelEditor.createAttribute(ownerClass, name, typeExpression)
+        val ownerEntry = entityLUT.entries.find { it.common == ownerId } ?: run {
+            logger.debug("$ownerId not found on LUT.")
+            return
+        }
+        val owner =
+            projectAccessor.findElements(IClass::class.java).find { it.id == ownerEntry.mine } as IClass? ?: run {
+                logger.debug("IClass ${ownerEntry.mine} not found but $ownerId found on LUT.")
+                return
+            }
+        val attribute = basicModelEditor.createAttribute(owner, name, typeExpression)
+        entityLUT.entries.add(Entry(attribute.id, id))
     }
 
     private fun resizeClassPresentation(
-        className: String,
+        id: String,
         location: Point2D,
         size: Pair<Double, Double>,
         diagramName: String
@@ -398,21 +529,29 @@ class ClassDiagramApplyTransaction : IApplyTransaction<ClassDiagramOperation> {
         val (width, height) = size
         val diagram = projectAccessor.findElements(IDiagram::class.java, diagramName).first() as IDiagram
         classDiagramEditor.diagram = diagram
-        val clazz = (projectAccessor.findElements(IClass::class.java, className).first() ?: return) as IClass
-        val classPresentation = clazz.presentations.first { it.diagram == diagram } as INodePresentation
+        val entry = entityLUT.entries.find { it.common == id } ?: run {
+            logger.debug("$id not found on LUT.")
+            return
+        }
+        val classPresentation = diagram.presentations.find { it.id == entry.mine } as INodePresentation? ?: run {
+            logger.debug("INodePresentation ${entry.mine} not found but $id found on LUT.")
+            return
+        }
         classPresentation.location = location
         classPresentation.width = width
         classPresentation.height = height
     }
 
-    private fun changeClassModel(name: String, brotherClassModelNameList: List<String?>, stereotypes: List<String?>) {
+    private fun changeClassModel(id: String, name: String, stereotypes: List<String?>) {
         logger.debug("Change class model name and stereotypes.")
-        val clazz = (
-                if (brotherClassModelNameList.isNullOrEmpty())
-                    projectAccessor.findElements(IClass::class.java).first()
-                else projectAccessor.findElements(IClass::class.java)
-                    .filterNot { it.name in brotherClassModelNameList }.first()
-                ) as IClass
+        val entry = entityLUT.entries.find { it.common == id } ?: run {
+            logger.debug("$id not found on LUT.")
+            return
+        }
+        val clazz = projectAccessor.findElements(IClass::class.java).find { it.id == entry.mine } as IClass? ?: run {
+            logger.debug("IClass ${entry.mine} not found but $id found on LUT.")
+            return
+        }
         clazz.name = name
         val clazzStereotypes = clazz.stereotypes.toList()
         logger.debug("Add stereotypes.")
@@ -426,106 +565,123 @@ class ClassDiagramApplyTransaction : IApplyTransaction<ClassDiagramOperation> {
     }
 
     private fun changeOperationNameAndReturnTypeExpression(
-        ownerName: String,
-        brotherNameAndReturnTypeExpression: List<Pair<String, String>>,
+        ownerId: String,
+        id: String,
         name: String,
         returnTypeExpression: String
     ) {
         logger.debug("Change operation name and return type expression.")
-        val ownerClass = projectAccessor.findElements(IClass::class.java, ownerName).first() as IClass
-        val operation = ownerClass.operations.filterNot {
-            Pair(
-                it.name,
-                it.returnTypeExpression
-            ) in brotherNameAndReturnTypeExpression
-        }.first()
+        val ownerEntry = entityLUT.entries.find { it.common == ownerId } ?: run {
+            logger.debug("$id not found on LUT.")
+            return
+        }
+        val ownerClass =
+            projectAccessor.findElements(IClass::class.java).find { it.id == ownerEntry.mine } as IClass? ?: run {
+                logger.debug("IClass ${ownerEntry.mine} not found but $ownerId found on LUT.")
+                return
+            }
+        val entry = entityLUT.entries.find { it.common == id } ?: run {
+            logger.debug("$id not found on LUT.")
+            return
+        }
+        val operation = ownerClass.operations.find { it.id == entry.mine } ?: run {
+            logger.debug("IOperation ${entry.mine} not found but $id found on LUT.")
+            return
+        }
         operation.name = name
         operation.returnTypeExpression = returnTypeExpression
     }
 
     private fun changeAttributeNameAndTypeExpression(
-        ownerName: String,
-        brotherNameAndTypeExpression: List<Pair<String, String>>,
+        ownerId: String,
+        id: String,
         name: String,
         typeExpression: String
     ) {
         logger.debug("Change attribute name and type expression.")
-        val ownerClass = projectAccessor.findElements(IClass::class.java, ownerName).first() as IClass
+        val ownerEntry = entityLUT.entries.find { it.common == ownerId } ?: run {
+            logger.debug("$id not found on LUT.")
+            return
+        }
+        val ownerClass =
+            projectAccessor.findElements(IClass::class.java).find { it.id == ownerEntry.mine } as IClass? ?: run {
+                logger.debug("IClass ${ownerEntry.mine} not found but $ownerId found on LUT.")
+                return
+            }
+        val entry = entityLUT.entries.find { it.common == id } ?: run {
+            logger.debug("$id not found on LUT.")
+            return
+        }
         val attribute =
-            ownerClass.attributes.filterNot { Pair(it.name, it.typeExpression) in brotherNameAndTypeExpression }.first()
+            ownerClass.attributes.find { it.id == entry.mine } ?: run {
+                logger.debug("IAttribute ${entry.mine} not found but $id found on LUT.")
+                return
+            }
         attribute.name = name
         attribute.typeExpression = typeExpression
     }
 
-    private fun deleteClassModel(brotherClassModelNameList: List<String?>) {
+    private fun deleteClassModel(id: String) {
         logger.debug("Delete class model.")
-        val clazz = if (brotherClassModelNameList.isNullOrEmpty()) {
-            projectAccessor.findElements(IClass::class.java).first()
-        } else {
-            projectAccessor.findElements(IClass::class.java)
-                .filterNot { it.name in brotherClassModelNameList }.first()
+        val lutEntry = entityLUT.entries.find { it.common == id } ?: run {
+            logger.debug("$id not found on LUT.")
+            return
         }
+        val clazz = projectAccessor.findElements(IClass::class.java).find { it.id == lutEntry.mine } ?: run {
+            logger.debug("Class ${lutEntry.mine} not found but $id found on LUT.")
+            entityLUT.entries.remove(lutEntry)
+            return
+        }
+        entityLUT.entries.remove(lutEntry)
         basicModelEditor.delete(clazz)
     }
 
-    private fun searchLinkPresentation(
-        presentations: List<ILinkPresentation>,
-        receivedPoints: List<Point2D>,
-        linkType: String
-    ): ILinkPresentation? {
-        return when (linkType) {
-            "Association" -> {
-                logger.debug("Search association link presentation.")
-                presentations.filter { entity -> entity.model is IAssociation }
-                    .firstOrNull { link -> link.points.all { receivedPoints.containsAll(link.points.toList()) } }
-            }
-            "Generalization" -> {
-                logger.debug("Search generalization link presentation.")
-                presentations.filter { entity -> entity.model is IGeneralization }
-                    .firstOrNull { link -> link.points.all { receivedPoints.containsAll(link.points.toList()) } }
-            }
-            "Realization" -> {
-                logger.debug("Search realization link presentation.")
-                presentations.filter { entity -> entity.model is IRealization }
-                    .firstOrNull { link -> link.points.all { receivedPoints.containsAll(link.points.toList()) } }
-            }
-            else -> {
-                null
-            }
-        }
-    }
-
-    private fun deleteLinkModel(receivedPoints: List<Point2D>, linkType: String) {
+    private fun deleteLinkModel(id: String) {
         logger.debug("Delete link model.")
         val diagram = diagramViewManager.currentDiagram
         classDiagramEditor.diagram = diagram
-        val foundLink = searchLinkPresentation(
-            diagram.presentations.filterIsInstance<ILinkPresentation>(),
-            receivedPoints,
-            linkType
-        )
-        foundLink?.let { projectAccessor.modelEditorFactory.basicModelEditor.delete(it.model) }
+        val lutEntry = entityLUT.entries.find { it.common == id } ?: run {
+            logger.debug("$id not found on LUT.")
+            return
+        }
+        val linkModel = projectAccessor.findElements(IEntity::class.java).find { it.id == lutEntry.mine } ?: run {
+            logger.debug("Link model ${lutEntry.mine} not found but $id found on LUT.")
+            entityLUT.entries.remove(lutEntry)
+            return
+        }
+        projectAccessor.modelEditorFactory.basicModelEditor.delete(linkModel)
     }
 
-    private fun deleteClassPresentation(name: String) {
+    private fun deleteClassPresentation(id: String) {
         logger.debug("Delete class model.")
         val diagram = diagramViewManager.currentDiagram
         classDiagramEditor.diagram = diagram
-        val clazz = projectAccessor.findElements(IClass::class.java, name).first() as IClass
-        val classPresentation = clazz.presentations.find { it.diagram == diagram } ?: return
+        val lutEntry = entityLUT.entries.find { it.common == id } ?: run {
+            logger.debug("$id not found on LUT.")
+            return
+        }
+        val classPresentation = diagram.presentations.find { it.id == lutEntry.mine } ?: run {
+            logger.debug("Class presentation ${lutEntry.mine} not found but $id found on LUT.")
+            entityLUT.entries.remove(lutEntry)
+            return
+        }
         classDiagramEditor.deletePresentation(classPresentation)
     }
 
-    private fun deleteLinkPresentation(receivedPoints: List<Point2D>, linkType: String) {
+    private fun deleteLinkPresentation(id: String) {
         logger.debug("Delete link presentation.")
         val diagram = diagramViewManager.currentDiagram
         classDiagramEditor.diagram = diagram
-        val foundLink = searchLinkPresentation(
-            diagram.presentations.filterIsInstance<ILinkPresentation>(),
-            receivedPoints,
-            linkType
-        )
-        foundLink?.let { classDiagramEditor.deletePresentation(it) }
+        val lutEntry = entityLUT.entries.find { it.common == id } ?: run {
+            logger.debug("$id not found on LUT.")
+            return
+        }
+        val linkPresentation = diagram.presentations.find { it.id == lutEntry.mine } ?: run {
+            logger.debug("Link presentation ${lutEntry.mine} not found but $id found on LUT.")
+            entityLUT.entries.remove(lutEntry)
+            return
+        }
+        classDiagramEditor.deletePresentation(linkPresentation)
     }
 
     companion object : Logging {

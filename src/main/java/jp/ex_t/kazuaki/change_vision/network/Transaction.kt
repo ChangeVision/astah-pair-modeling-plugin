@@ -26,6 +26,7 @@ sealed class MindmapDiagramOperation : TransactionalOperation()
 data class CreateClassDiagram(
     val name: String,
     val ownerName: String,
+    val id: String,
 ) : ClassDiagramOperation()
 
 @Serializable
@@ -38,60 +39,68 @@ data class CreateMindmapDiagram(
 @Serializable
 data class CreateClassModel(
     val name: String,
-    val parentPackageName: String,
+    val parentName: String,
     val stereotypes: List<String?> = mutableListOf(),
+    val id: String,
 ) : ClassDiagramOperation()
 
 @Serializable
 data class CreateAssociationModel(
-    val sourceClassName: String,
+    val sourceClassId: String,
     val sourceClassNavigability: String,
-    val destinationClassName: String,
+    val destinationClassId: String,
     val destinationClassNavigability: String,
     val name: String = "",
+    val id: String,
 ) : ClassDiagramOperation()
 
 @Serializable
 data class CreateGeneralizationModel(
-    val superClassName: String,
-    val subClassName: String,
+    val superClassId: String,
+    val subClassId: String,
     val name: String = "",
+    val id: String,
 ) : ClassDiagramOperation()
 
 @Serializable
 data class CreateRealizationModel(
-    val supplierClassName: String,
-    val clientClassName: String,
+    val supplierClassId: String,
+    val clientClassId: String,
     val name: String = "",
+    val id: String,
 ) : ClassDiagramOperation()
 
 @Serializable
 data class CreateClassPresentation(
-    val className: String,
+    val classId: String,
     val location: Pair<Double, Double>,
     val diagramName: String,
+    val id: String,
 ) : ClassDiagramOperation()
 
 @Serializable
 data class CreateLinkPresentation(
-    val sourceClassName: String,
-    val targetClassName: String,
+    val sourceClassId: String,
+    val targetClassId: String,
     val linkType: String,
     val diagramName: String,
+    val id: String,
 ) : ClassDiagramOperation()
 
 @Serializable
 data class CreateOperation(
-    val ownerName: String,
+    val ownerId: String,
     val name: String,
     val returnTypeExpression: String,
+    val id: String,
 ) : ClassDiagramOperation()
 
 @Serializable
 data class CreateAttribute(
-    val ownerName: String,
+    val ownerId: String,
     val name: String,
     val typeExpression: String,
+    val id: String,
 ) : ClassDiagramOperation()
 
 @Serializable
@@ -113,7 +122,7 @@ data class CreateFloatingTopic(
 
 @Serializable
 data class ResizeClassPresentation(
-    val className: String,
+    val id: String,
     val location: Pair<Double, Double>,
     val size: Pair<Double, Double>,
     val diagramName: String,
@@ -121,23 +130,23 @@ data class ResizeClassPresentation(
 
 @Serializable
 data class ChangeClassModel(
+    val id: String,
     val name: String,
-    val brotherClassNameList: List<String?> = mutableListOf(),
     val stereotypes: List<String?> = mutableListOf(),
 ) : ClassDiagramOperation()
 
 @Serializable
 data class ChangeOperationNameAndReturnTypeExpression(
-    val ownerName: String,
-    val brotherNameAndReturnTypeExpression: List<Pair<String, String>>,
+    val ownerId: String,
+    val id: String,
     val name: String,
     val returnTypeExpression: String,
 ) : ClassDiagramOperation()
 
 @Serializable
 data class ChangeAttributeNameAndTypeExpression(
-    val ownerName: String,
-    val brotherNameAndTypeExpression: List<Pair<String, String>>,
+    val ownerId: String,
+    val id: String,
     val name: String,
     val typeExpression: String,
 ) : ClassDiagramOperation()
@@ -152,12 +161,12 @@ data class ResizeTopic(
 
 @Serializable
 data class DeleteClassModel(
-    val brotherClassNameList: List<String?> = mutableListOf(),
+    val id: String,
 ) : ClassDiagramOperation()
 
 @Serializable
 data class DeleteClassPresentation(
-    val className: String,
+    val id: String,
 ) : ClassDiagramOperation()
 
 @Serializable
@@ -167,11 +176,10 @@ data class DeleteTopic(
 
 @Serializable
 data class DeleteLinkModel(
-    val isDelete: Boolean = false,
+    val id: String,
 ) : ClassDiagramOperation()
 
 @Serializable
 data class DeleteLinkPresentation(
-    val points: List<Pair<Double, Double>>,
-    val linkType: String,
+    val id: String,
 ) : ClassDiagramOperation()
