@@ -11,7 +11,6 @@ package jp.ex_t.kazuaki.change_vision.apply_transaction
 import com.change_vision.jude.api.inf.AstahAPI
 import com.change_vision.jude.api.inf.exception.BadTransactionException
 import com.change_vision.jude.api.inf.model.*
-import com.change_vision.jude.api.inf.presentation.ILinkPresentation
 import com.change_vision.jude.api.inf.presentation.INodePresentation
 import jp.ex_t.kazuaki.change_vision.Logging
 import jp.ex_t.kazuaki.change_vision.logger
@@ -72,7 +71,7 @@ class ClassDiagramApplyTransaction(private val entityLUT: EntityLUT) : IApplyTra
                     validateAndDeleteClassModel(it)
                 }
                 is DeleteLinkModel -> {
-                    deleteLinkModel(operations)
+                    validateAndDeleteLinkModel(it)
                 }
                 is DeleteClassPresentation -> {
                     validateAndDeleteClassPresentation(it)
@@ -139,6 +138,12 @@ class ClassDiagramApplyTransaction(private val entityLUT: EntityLUT) : IApplyTra
                 operation.name,
                 operation.id
             )
+        }
+    }
+
+    private fun validateAndDeleteLinkModel(operation: DeleteLinkModel) {
+        if (operation.id.isNotEmpty()) {
+            deleteLinkModel(operation.id)
         }
     }
 
@@ -243,25 +248,14 @@ class ClassDiagramApplyTransaction(private val entityLUT: EntityLUT) : IApplyTra
     }
 
     private fun validateAndDeleteClassModel(operation: DeleteClassModel) {
-        deleteClassModel(operation.brotherClassNameList)
-    }
-
-    private fun deleteLinkModel(operations: List<ClassDiagramOperation>) {
-        val deleteLinkPresentation = (operations.find {
-            it is DeleteLinkPresentation
-        } ?: return) as DeleteLinkPresentation
-        val receivedPoints = deleteLinkPresentation.points.map { point
-            ->
-            Point2D.Double(point.first, point.second)
-        }.toList()
-        if (deleteLinkPresentation.linkType.isNotEmpty()) {
-            deleteLinkModel(receivedPoints, deleteLinkPresentation.linkType)
+        if (operation.id.isNotEmpty()) {
+            deleteClassModel(operation.id)
         }
     }
 
     private fun validateAndDeleteClassPresentation(operation: DeleteClassPresentation) {
-        if (operation.className.isNotEmpty()) {
-            deleteClassPresentation(operation.className)
+        if (operation.id.isNotEmpty()) {
+            deleteClassPresentation(operation.id)
         }
     }
 
@@ -270,12 +264,8 @@ class ClassDiagramApplyTransaction(private val entityLUT: EntityLUT) : IApplyTra
         operations: List<ClassDiagramOperation>
     ) {
         if (!operations.any { it is DeleteLinkModel }) {
-            val receivedPoints = operation.points.map { point
-                ->
-                Point2D.Double(point.first, point.second)
-            }.toList()
-            if (operation.linkType.isNotEmpty()) {
-                deleteLinkPresentation(receivedPoints, operation.linkType)
+            if (operation.id.isNotEmpty()) {
+                deleteLinkPresentation(operation.id)
             }
         }
     }
@@ -596,75 +586,67 @@ class ClassDiagramApplyTransaction(private val entityLUT: EntityLUT) : IApplyTra
         attribute.typeExpression = typeExpression
     }
 
-    private fun deleteClassModel(brotherClassModelNameList: List<String?>) {
+    private fun deleteClassModel(id: String) {
         logger.debug("Delete class model.")
-        val clazz = if (brotherClassModelNameList.isNullOrEmpty()) {
-            projectAccessor.findElements(IClass::class.java).first()
-        } else {
-            projectAccessor.findElements(IClass::class.java)
-                .filterNot { it.name in brotherClassModelNameList }.first()
+        val lutEntry = entityLUT.entries.find { it.common == id } ?: run {
+            logger.debug("$id not found on LUT.")
+            return
         }
+        val clazz = projectAccessor.findElements(IClass::class.java).find { it.id == lutEntry.mine } ?: run {
+            logger.debug("Class ${lutEntry.mine} not found but $id found on LUT.")
+            entityLUT.entries.remove(lutEntry)
+            return
+        }
+        entityLUT.entries.remove(lutEntry)
         basicModelEditor.delete(clazz)
     }
 
-    private fun searchLinkPresentation(
-        presentations: List<ILinkPresentation>,
-        receivedPoints: List<Point2D>,
-        linkType: String
-    ): ILinkPresentation? {
-        return when (linkType) {
-            "Association" -> {
-                logger.debug("Search association link presentation.")
-                presentations.filter { entity -> entity.model is IAssociation }
-                    .firstOrNull { link -> link.points.all { receivedPoints.containsAll(link.points.toList()) } }
-            }
-            "Generalization" -> {
-                logger.debug("Search generalization link presentation.")
-                presentations.filter { entity -> entity.model is IGeneralization }
-                    .firstOrNull { link -> link.points.all { receivedPoints.containsAll(link.points.toList()) } }
-            }
-            "Realization" -> {
-                logger.debug("Search realization link presentation.")
-                presentations.filter { entity -> entity.model is IRealization }
-                    .firstOrNull { link -> link.points.all { receivedPoints.containsAll(link.points.toList()) } }
-            }
-            else -> {
-                null
-            }
-        }
-    }
-
-    private fun deleteLinkModel(receivedPoints: List<Point2D>, linkType: String) {
+    private fun deleteLinkModel(id: String) {
         logger.debug("Delete link model.")
         val diagram = diagramViewManager.currentDiagram
         classDiagramEditor.diagram = diagram
-        val foundLink = searchLinkPresentation(
-            diagram.presentations.filterIsInstance<ILinkPresentation>(),
-            receivedPoints,
-            linkType
-        )
-        foundLink?.let { projectAccessor.modelEditorFactory.basicModelEditor.delete(it.model) }
+        val lutEntry = entityLUT.entries.find { it.common == id } ?: run {
+            logger.debug("$id not found on LUT.")
+            return
+        }
+        val linkModel = projectAccessor.findElements(IEntity::class.java).find { it.id == lutEntry.mine } ?: run {
+            logger.debug("Link model ${lutEntry.mine} not found but $id found on LUT.")
+            entityLUT.entries.remove(lutEntry)
+            return
+        }
+        projectAccessor.modelEditorFactory.basicModelEditor.delete(linkModel)
     }
 
-    private fun deleteClassPresentation(name: String) {
+    private fun deleteClassPresentation(id: String) {
         logger.debug("Delete class model.")
         val diagram = diagramViewManager.currentDiagram
         classDiagramEditor.diagram = diagram
-        val clazz = projectAccessor.findElements(IClass::class.java, name).first() as IClass
-        val classPresentation = clazz.presentations.find { it.diagram == diagram } ?: return
+        val lutEntry = entityLUT.entries.find { it.common == id } ?: run {
+            logger.debug("$id not found on LUT.")
+            return
+        }
+        val classPresentation = diagram.presentations.find { it.id == lutEntry.mine } ?: run {
+            logger.debug("Class presentation ${lutEntry.mine} not found but $id found on LUT.")
+            entityLUT.entries.remove(lutEntry)
+            return
+        }
         classDiagramEditor.deletePresentation(classPresentation)
     }
 
-    private fun deleteLinkPresentation(receivedPoints: List<Point2D>, linkType: String) {
+    private fun deleteLinkPresentation(id: String) {
         logger.debug("Delete link presentation.")
         val diagram = diagramViewManager.currentDiagram
         classDiagramEditor.diagram = diagram
-        val foundLink = searchLinkPresentation(
-            diagram.presentations.filterIsInstance<ILinkPresentation>(),
-            receivedPoints,
-            linkType
-        )
-        foundLink?.let { classDiagramEditor.deletePresentation(it) }
+        val lutEntry = entityLUT.entries.find { it.common == id } ?: run {
+            logger.debug("$id not found on LUT.")
+            return
+        }
+        val linkPresentation = diagram.presentations.find { it.id == lutEntry.mine } ?: run {
+            logger.debug("Link presentation ${lutEntry.mine} not found but $id found on LUT.")
+            entityLUT.entries.remove(lutEntry)
+            return
+        }
+        classDiagramEditor.deletePresentation(linkPresentation)
     }
 
     companion object : Logging {

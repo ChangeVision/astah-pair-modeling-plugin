@@ -28,9 +28,9 @@ class ClassDiagramEventListener(private val entityLUT: EntityLUT, private val mq
             Operation.values()[editUnit.operation].let { op -> logger.debug("Op: $op -> ") }
             when (val entity = editUnit.entity) {
                 is IClass -> deleteClassModel(entity)
-                is IAssociation -> deleteAssociationModel(entity, removeProjectEditUnit) ?: return
-                is IGeneralization -> deleteGeneralizationModel(entity, removeProjectEditUnit) ?: return
-                is IRealization -> deleteRealizationModel(entity, removeProjectEditUnit) ?: return
+                is IAssociation -> deleteAssociationModel(entity) ?: return
+                is IGeneralization -> deleteGeneralizationModel(entity) ?: return
+                is IRealization -> deleteRealizationModel(entity) ?: return
                 is ILinkPresentation -> deleteLinkPresentation(entity, removeProjectEditUnit)
                 is INodePresentation -> deleteNodePresentation(entity)
 
@@ -99,57 +99,50 @@ class ClassDiagramEventListener(private val entityLUT: EntityLUT, private val mq
         }
     }
 
-    private fun deleteClassModel(entity: IClass): DeleteClassModel {
-        val api = AstahAPI.getAstahAPI()
-        val brotherClassNameList = api.projectAccessor.findElements(IClass::class.java)
-            .filterNot { it == entity }.map { it?.name }.toList()
+    private fun deleteClassModel(entity: IClass): DeleteClassModel? {
+        val lutEntity = entityLUT.entries.find { it.mine == entity.id } ?: run {
+            logger.debug("${entity.id}(IClass) not found on LUT.")
+            return null
+        }
+        entityLUT.entries.remove(lutEntity)
         logger.debug("${entity.name}(IClass)")
-        return DeleteClassModel(brotherClassNameList)
+        return DeleteClassModel(lutEntity.common)
     }
 
     private fun deleteAssociationModel(
         entity: IAssociation,
-        removeProjectEditUnit: List<ProjectEditUnit>
     ): DeleteLinkModel? {
-        // TODO: 関連モデルだけで削除された場合に、どの関連モデルが削除されたか認識できるようにする
-        return if (removeProjectEditUnit.any { it.entity is ILinkPresentation && (it.entity as ILinkPresentation).model is IAssociation }) {
-            logger.debug("${entity.name}(IAssociation")
-            DeleteLinkModel(true)
-        } else {
-            logger.debug("$entity(IAssociation)")
-            logger.warn("This operation does not support because plugin can't detect what association model delete.")
-            null
+        val lutEntity = entityLUT.entries.find { it.mine == entity.id } ?: run {
+            logger.debug("${entity.id}(IAssociation) not found on LUT.")
+            return null
         }
+        entityLUT.entries.remove(lutEntity)
+        logger.debug("${entity.name}(IAssociation)")
+        return DeleteLinkModel(lutEntity.common)
     }
 
     private fun deleteGeneralizationModel(
         entity: IGeneralization,
-        removeProjectEditUnit: List<ProjectEditUnit>
     ): DeleteLinkModel? {
-        // TODO: 汎化モデルだけで削除された場合に、どの汎化モデルが削除されたか認識できるようにする
-        return if (removeProjectEditUnit.any { it.entity is ILinkPresentation && (it.entity as ILinkPresentation).model is IGeneralization }) {
-            logger.debug("${entity.name}(IGeneralization")
-            DeleteLinkModel(true)
-        } else {
-            logger.debug("$entity(IGeneralization)")
-            logger.warn("This operation does not support because plugin can't detect what generalization model delete.")
-            null
+        val lutEntity = entityLUT.entries.find { it.mine == entity.id } ?: run {
+            logger.debug("${entity.id}(IGeneralization) not found on LUT.")
+            return null
         }
+        entityLUT.entries.remove(lutEntity)
+        logger.debug("${entity.name}(IGeneralization)")
+        return DeleteLinkModel(lutEntity.common)
     }
 
-    private fun deleteRealizationModel( //
+    private fun deleteRealizationModel(
         entity: IRealization,
-        removeProjectEditUnit: List<ProjectEditUnit>
     ): DeleteLinkModel? {
-        // TODO: 実現モデルだけで削除された場合に、どの実現モデルが削除されたか認識できるようにする
-        return if (removeProjectEditUnit.any { it.entity is ILinkPresentation && (it.entity as ILinkPresentation).model is IRealization }) {
-            logger.debug("${entity.name}(IRealization")
-            DeleteLinkModel(true)
-        } else {
-            logger.debug("$entity(IRealization)")
-            logger.warn("This operation does not support because plugin can't detect what realization model delete.")
-            null
+        val lutEntity = entityLUT.entries.find { it.mine == entity.id } ?: run {
+            logger.debug("${entity.id}(IRealization) not found on LUT.")
+            return null
         }
+        entityLUT.entries.remove(lutEntity)
+        logger.debug("${entity.name}(IRealization)")
+        return DeleteLinkModel(lutEntity.common)
     }
 
     private fun deleteLinkPresentation(
@@ -161,19 +154,31 @@ class ClassDiagramEventListener(private val entityLUT: EntityLUT, private val mq
         }
         return when (val model = entity.model) {
             is IAssociation -> {
-                val serializablePoints = entity.points.map { point -> Pair(point.x, point.y) }.toList()
+                val lutEntity = entityLUT.entries.find { it.mine == entity.id } ?: run {
+                    logger.debug("${entity.id}(ILinkPresentation, IAssociation) not found on LUT.")
+                    return null
+                }
+                entityLUT.entries.remove(lutEntity)
                 logger.debug("${entity.label}(ILinkPresentation, IAssociation)")
-                DeleteLinkPresentation(serializablePoints, "Association")
+                DeleteLinkPresentation(lutEntity.common)
             }
             is IGeneralization -> {
-                val serializablePoints = entity.points.map { point -> Pair(point.x, point.y) }.toList()
+                val lutEntity = entityLUT.entries.find { it.mine == entity.id } ?: run {
+                    logger.debug("${entity.id}(ILinkPresentation, IGeneralization) not found on LUT.")
+                    return null
+                }
+                entityLUT.entries.remove(lutEntity)
                 logger.debug("${model.name}(ILinkPresentation, IGeneralization)")
-                DeleteLinkPresentation(serializablePoints, "Generalization")
+                DeleteLinkPresentation(lutEntity.common)
             }
             is IRealization -> {
-                val serializablePoints = entity.points.map { point -> Pair(point.x, point.y) }.toList()
+                val lutEntity = entityLUT.entries.find { it.mine == entity.id } ?: run {
+                    logger.debug("${entity.id}(ILinkPresentation, IRealization) not found on LUT.")
+                    return null
+                }
+                entityLUT.entries.remove(lutEntity)
                 logger.debug("${model.name}(ILinkPresentation, IRealization)")
-                DeleteLinkPresentation(serializablePoints, "Realization")
+                DeleteLinkPresentation(lutEntity.common)
             }
             else -> {
                 logger.debug("$entity(ILinkPresentation)")
@@ -185,8 +190,13 @@ class ClassDiagramEventListener(private val entityLUT: EntityLUT, private val mq
     private fun deleteNodePresentation(entity: INodePresentation): DeleteClassPresentation? {
         return when (val model = entity.model) {
             is IClass -> {
+                val lutEntity = entityLUT.entries.find { it.mine == entity.id } ?: run {
+                    logger.debug("${entity.id}(INodePresentation, IClass) not found on LUT.")
+                    return null
+                }
+                entityLUT.entries.remove(lutEntity)
                 logger.debug("${model.name}(INodePresentation, IClass)")
-                DeleteClassPresentation(model.name)
+                DeleteClassPresentation(lutEntity.common)
             }
             else -> {
                 logger.debug("${model}(INodePresentation, Unknown)")
@@ -204,7 +214,7 @@ class ClassDiagramEventListener(private val entityLUT: EntityLUT, private val mq
         return createClassDiagram
     }
 
-    private fun createClassModel(entity: IClass): CreateClassModel? {
+    private fun createClassModel(entity: IClass): CreateClassModel {
         entityLUT.entries.add(Entry(entity.id, entity.id))
 //        val parentEntry = entityLUT.entries.find { it.mine == entity.owner.id } ?: run {
 //            logger.debug("${entity.owner.id} not found on LUT.")
@@ -235,6 +245,7 @@ class ClassDiagramEventListener(private val entityLUT: EntityLUT, private val mq
                         val sourceClassNavigability = entity.memberEnds.first().navigability
                         val destinationClassNavigability = entity.memberEnds.last().navigability
                         logger.debug("${sourceClass.name}(IClass, $sourceClassNavigability) - ${entity.name}(IAssociation) - ${destinationClass.name}(IClass, $destinationClassNavigability)")
+                        entityLUT.entries.add(Entry(entity.id, entity.id))
                         CreateAssociationModel(
                             sourceClassEntry.common,
                             sourceClassNavigability,

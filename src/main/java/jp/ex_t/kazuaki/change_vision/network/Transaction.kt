@@ -161,12 +161,12 @@ data class ResizeTopic(
 
 @Serializable
 data class DeleteClassModel(
-    val brotherClassNameList: List<String?> = mutableListOf(),
+    val id: String,
 ) : ClassDiagramOperation()
 
 @Serializable
 data class DeleteClassPresentation(
-    val className: String,
+    val id: String,
 ) : ClassDiagramOperation()
 
 @Serializable
@@ -176,11 +176,10 @@ data class DeleteTopic(
 
 @Serializable
 data class DeleteLinkModel(
-    val isDelete: Boolean = false,
+    val id: String,
 ) : ClassDiagramOperation()
 
 @Serializable
 data class DeleteLinkPresentation(
-    val points: List<Pair<Double, Double>>,
-    val linkType: String,
+    val id: String,
 ) : ClassDiagramOperation()
