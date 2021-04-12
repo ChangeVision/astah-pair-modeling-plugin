@@ -575,10 +575,11 @@ class ClassDiagramApplyTransaction(private val entityLUT: EntityLUT) : IApplyTra
             logger.debug("$id not found on LUT.")
             return
         }
-        val ownerClass = projectAccessor.findElements(IClass::class.java).find { it.id == ownerEntry.mine } as IClass? ?: run {
-            logger.debug("IClass ${ownerEntry.mine} not found but $ownerId found on LUT.")
-            return
-        }
+        val ownerClass =
+            projectAccessor.findElements(IClass::class.java).find { it.id == ownerEntry.mine } as IClass? ?: run {
+                logger.debug("IClass ${ownerEntry.mine} not found but $ownerId found on LUT.")
+                return
+            }
         val entry = entityLUT.entries.find { it.common == id } ?: run {
             logger.debug("$id not found on LUT.")
             return
@@ -602,10 +603,11 @@ class ClassDiagramApplyTransaction(private val entityLUT: EntityLUT) : IApplyTra
             logger.debug("$id not found on LUT.")
             return
         }
-        val ownerClass = projectAccessor.findElements(IClass::class.java).find { it.id == ownerEntry.mine } as IClass? ?: run {
-            logger.debug("IClass ${ownerEntry.mine} not found but $ownerId found on LUT.")
-            return
-        }
+        val ownerClass =
+            projectAccessor.findElements(IClass::class.java).find { it.id == ownerEntry.mine } as IClass? ?: run {
+                logger.debug("IClass ${ownerEntry.mine} not found but $ownerId found on LUT.")
+                return
+            }
         val entry = entityLUT.entries.find { it.common == id } ?: run {
             logger.debug("$id not found on LUT.")
             return
