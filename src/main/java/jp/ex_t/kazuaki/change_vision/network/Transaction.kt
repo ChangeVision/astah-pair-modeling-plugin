@@ -122,7 +122,7 @@ data class CreateFloatingTopic(
 
 @Serializable
 data class ResizeClassPresentation(
-    val className: String,
+    val id: String,
     val location: Pair<Double, Double>,
     val size: Pair<Double, Double>,
     val diagramName: String,
@@ -130,23 +130,23 @@ data class ResizeClassPresentation(
 
 @Serializable
 data class ChangeClassModel(
+    val id: String,
     val name: String,
-    val brotherClassNameList: List<String?> = mutableListOf(),
     val stereotypes: List<String?> = mutableListOf(),
 ) : ClassDiagramOperation()
 
 @Serializable
 data class ChangeOperationNameAndReturnTypeExpression(
-    val ownerName: String,
-    val brotherNameAndReturnTypeExpression: List<Pair<String, String>>,
+    val ownerId: String,
+    val id: String,
     val name: String,
     val returnTypeExpression: String,
 ) : ClassDiagramOperation()
 
 @Serializable
 data class ChangeAttributeNameAndTypeExpression(
-    val ownerName: String,
-    val brotherNameAndTypeExpression: List<Pair<String, String>>,
+    val ownerId: String,
+    val id: String,
     val name: String,
     val typeExpression: String,
 ) : ClassDiagramOperation()

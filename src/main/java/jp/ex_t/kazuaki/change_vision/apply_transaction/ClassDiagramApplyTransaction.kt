@@ -202,10 +202,10 @@ class ClassDiagramApplyTransaction(private val entityLUT: EntityLUT) : IApplyTra
     ) {
         val location = Point2D.Double(operation.location.first, operation.location.second)
         if (!operations.any { it is ChangeClassModel }
-            && operation.className.isNotEmpty()
+            && operation.id.isNotEmpty()
             && operation.diagramName.isNotEmpty()) {
             resizeClassPresentation(
-                operation.className,
+                operation.id,
                 location,
                 operation.size,
                 operation.diagramName
@@ -214,19 +214,20 @@ class ClassDiagramApplyTransaction(private val entityLUT: EntityLUT) : IApplyTra
     }
 
     private fun validateAndChangeClassModel(operation: ChangeClassModel) {
-        if (operation.name.isNotEmpty()) {
-            changeClassModel(operation.name, operation.brotherClassNameList, operation.stereotypes)
+        if (operation.id.isNotEmpty() && operation.name.isNotEmpty()) {
+            changeClassModel(operation.id, operation.name, operation.stereotypes)
         }
     }
 
     private fun validateAndChangeOperationNameAndReturnTypeExpression(operation: ChangeOperationNameAndReturnTypeExpression) {
-        if (operation.ownerName.isNotEmpty()
+        if (operation.ownerId.isNotEmpty()
+            && operation.id.isNotEmpty()
             && operation.name.isNotEmpty()
             && operation.returnTypeExpression.isNotEmpty()
         ) {
             changeOperationNameAndReturnTypeExpression(
-                operation.ownerName,
-                operation.brotherNameAndReturnTypeExpression,
+                operation.ownerId,
+                operation.id,
                 operation.name,
                 operation.returnTypeExpression
             )
@@ -234,13 +235,14 @@ class ClassDiagramApplyTransaction(private val entityLUT: EntityLUT) : IApplyTra
     }
 
     private fun validateAndChangeAttributeNameAndTypeExpression(operation: ChangeAttributeNameAndTypeExpression) {
-        if (operation.ownerName.isNotEmpty()
+        if (operation.ownerId.isNotEmpty()
+            && operation.id.isNotEmpty()
             && operation.name.isNotEmpty()
             && operation.typeExpression.isNotEmpty()
         ) {
             changeAttributeNameAndTypeExpression(
-                operation.ownerName,
-                operation.brotherNameAndTypeExpression,
+                operation.ownerId,
+                operation.id,
                 operation.name,
                 operation.typeExpression
             )
@@ -518,7 +520,7 @@ class ClassDiagramApplyTransaction(private val entityLUT: EntityLUT) : IApplyTra
     }
 
     private fun resizeClassPresentation(
-        className: String,
+        id: String,
         location: Point2D,
         size: Pair<Double, Double>,
         diagramName: String
@@ -527,21 +529,29 @@ class ClassDiagramApplyTransaction(private val entityLUT: EntityLUT) : IApplyTra
         val (width, height) = size
         val diagram = projectAccessor.findElements(IDiagram::class.java, diagramName).first() as IDiagram
         classDiagramEditor.diagram = diagram
-        val clazz = (projectAccessor.findElements(IClass::class.java, className).first() ?: return) as IClass
-        val classPresentation = clazz.presentations.first { it.diagram == diagram } as INodePresentation
+        val entry = entityLUT.entries.find { it.common == id } ?: run {
+            logger.debug("$id not found on LUT.")
+            return
+        }
+        val classPresentation = diagram.presentations.find { it.id == entry.mine } as INodePresentation? ?: run {
+            logger.debug("INodePresentation ${entry.mine} not found but $id found on LUT.")
+            return
+        }
         classPresentation.location = location
         classPresentation.width = width
         classPresentation.height = height
     }
 
-    private fun changeClassModel(name: String, brotherClassModelNameList: List<String?>, stereotypes: List<String?>) {
+    private fun changeClassModel(id: String, name: String, stereotypes: List<String?>) {
         logger.debug("Change class model name and stereotypes.")
-        val clazz = (
-                if (brotherClassModelNameList.isNullOrEmpty())
-                    projectAccessor.findElements(IClass::class.java).first()
-                else projectAccessor.findElements(IClass::class.java)
-                    .filterNot { it.name in brotherClassModelNameList }.first()
-                ) as IClass
+        val entry = entityLUT.entries.find { it.common == id } ?: run {
+            logger.debug("$id not found on LUT.")
+            return
+        }
+        val clazz = projectAccessor.findElements(IClass::class.java).find { it.id == entry.mine } as IClass? ?: run {
+            logger.debug("IClass ${entry.mine} not found but $id found on LUT.")
+            return
+        }
         clazz.name = name
         val clazzStereotypes = clazz.stereotypes.toList()
         logger.debug("Add stereotypes.")
@@ -555,33 +565,56 @@ class ClassDiagramApplyTransaction(private val entityLUT: EntityLUT) : IApplyTra
     }
 
     private fun changeOperationNameAndReturnTypeExpression(
-        ownerName: String,
-        brotherNameAndReturnTypeExpression: List<Pair<String, String>>,
+        ownerId: String,
+        id: String,
         name: String,
         returnTypeExpression: String
     ) {
         logger.debug("Change operation name and return type expression.")
-        val ownerClass = projectAccessor.findElements(IClass::class.java, ownerName).first() as IClass
-        val operation = ownerClass.operations.filterNot {
-            Pair(
-                it.name,
-                it.returnTypeExpression
-            ) in brotherNameAndReturnTypeExpression
-        }.first()
+        val ownerEntry = entityLUT.entries.find { it.common == ownerId } ?: run {
+            logger.debug("$id not found on LUT.")
+            return
+        }
+        val ownerClass = projectAccessor.findElements(IClass::class.java).find { it.id == ownerEntry.mine } as IClass? ?: run {
+            logger.debug("IClass ${ownerEntry.mine} not found but $ownerId found on LUT.")
+            return
+        }
+        val entry = entityLUT.entries.find { it.common == id } ?: run {
+            logger.debug("$id not found on LUT.")
+            return
+        }
+        val operation = ownerClass.operations.find { it.id == entry.mine } ?: run {
+            logger.debug("IOperation ${entry.mine} not found but $id found on LUT.")
+            return
+        }
         operation.name = name
         operation.returnTypeExpression = returnTypeExpression
     }
 
     private fun changeAttributeNameAndTypeExpression(
-        ownerName: String,
-        brotherNameAndTypeExpression: List<Pair<String, String>>,
+        ownerId: String,
+        id: String,
         name: String,
         typeExpression: String
     ) {
         logger.debug("Change attribute name and type expression.")
-        val ownerClass = projectAccessor.findElements(IClass::class.java, ownerName).first() as IClass
+        val ownerEntry = entityLUT.entries.find { it.common == ownerId } ?: run {
+            logger.debug("$id not found on LUT.")
+            return
+        }
+        val ownerClass = projectAccessor.findElements(IClass::class.java).find { it.id == ownerEntry.mine } as IClass? ?: run {
+            logger.debug("IClass ${ownerEntry.mine} not found but $ownerId found on LUT.")
+            return
+        }
+        val entry = entityLUT.entries.find { it.common == id } ?: run {
+            logger.debug("$id not found on LUT.")
+            return
+        }
         val attribute =
-            ownerClass.attributes.filterNot { Pair(it.name, it.typeExpression) in brotherNameAndTypeExpression }.first()
+            ownerClass.attributes.find { it.id == entry.mine } ?: run {
+                logger.debug("IAttribute ${entry.mine} not found but $id found on LUT.")
+                return
+            }
         attribute.name = name
         attribute.typeExpression = typeExpression
     }

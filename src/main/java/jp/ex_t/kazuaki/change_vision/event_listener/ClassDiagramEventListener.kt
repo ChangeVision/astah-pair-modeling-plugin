@@ -8,7 +8,6 @@
 
 package jp.ex_t.kazuaki.change_vision.event_listener
 
-import com.change_vision.jude.api.inf.AstahAPI
 import com.change_vision.jude.api.inf.model.*
 import com.change_vision.jude.api.inf.presentation.ILinkPresentation
 import com.change_vision.jude.api.inf.presentation.INodePresentation
@@ -439,12 +438,13 @@ class ClassDiagramEventListener(private val entityLUT: EntityLUT, private val mq
         }
     }
 
-    private fun changeClassModel(entity: IClass): ChangeClassModel {
-        val api = AstahAPI.getAstahAPI()
-        val brotherClassNameList = api.projectAccessor.findElements(IClass::class.java)
-            .filterNot { it.name == entity.name }.map { it?.name }.toList()
+    private fun changeClassModel(entity: IClass): ChangeClassModel? {
+        val entry = entityLUT.entries.find { it.mine == entity.id } ?: run {
+            logger.debug("${entity.id} not found on LUT.")
+            return null
+        }
         logger.debug("${entity.name}(IClass) which maybe new name has ${entity.stereotypes.toList()} stereotype")
-        return ChangeClassModel(entity.name, brotherClassNameList, entity.stereotypes.toList())
+        return ChangeClassModel(entry.common, entity.name, entity.stereotypes.toList())
     }
 
     private fun resizeClassPresentation(entity: INodePresentation): ResizeClassPresentation? {
@@ -452,6 +452,10 @@ class ClassDiagramEventListener(private val entityLUT: EntityLUT, private val mq
             is IClassDiagram -> {
                 when (val model = entity.model) {
                     is IClass -> {
+                        val entry = entityLUT.entries.find { it.mine == entity.id } ?: run {
+                            logger.debug("${entity.id} not found on LUT.")
+                            return null
+                        }
                         val location = Pair(entity.location.x, entity.location.y)
                         val size = Pair(entity.width, entity.height)
                         logger.debug(
@@ -462,7 +466,7 @@ class ClassDiagramEventListener(private val entityLUT: EntityLUT, private val mq
                                 )
                             } at ${entity.location}) @ClassDiagram${diagram.name}"
                         )
-                        ResizeClassPresentation(model.name, location, size, diagram.name)
+                        ResizeClassPresentation(entry.common, location, size, diagram.name)
                     }
                     else -> {
                         logger.debug("${entity.label}(INodePresentation) - $model(Unknown)")
@@ -480,12 +484,18 @@ class ClassDiagramEventListener(private val entityLUT: EntityLUT, private val mq
     private fun changeOperationNameAndReturnTypeExpression(entity: IOperation): ChangeOperationNameAndReturnTypeExpression? {
         return when (val owner = entity.owner) {
             is IClass -> {
-                val brotherNameAndReturnTypeExpression = owner.operations.filterNot { it == entity }
-                    .map { Pair(it.name, it.returnTypeExpression) }.toList()
+                val ownerEntry = entityLUT.entries.find { it.mine == owner.id } ?: run {
+                    logger.debug("${owner.id} not found on LUT.")
+                    return null
+                }
+                val entry = entityLUT.entries.find { it.mine == entity.id } ?: run {
+                    logger.debug("${entity.id} not found on LUT.")
+                    return null
+                }
                 logger.debug("${entity.name}:${entity.returnTypeExpression}/${entity.returnType}(IOperation) - ${entity.owner}(IClass)")
                 ChangeOperationNameAndReturnTypeExpression(
-                    owner.name,
-                    brotherNameAndReturnTypeExpression,
+                    ownerEntry.common,
+                    entry.common,
                     entity.name,
                     entity.returnTypeExpression
                 )
@@ -500,12 +510,18 @@ class ClassDiagramEventListener(private val entityLUT: EntityLUT, private val mq
     private fun changeAttributeNameAndTypeExpression(entity: IAttribute): ChangeAttributeNameAndTypeExpression? {
         return when (val owner = entity.owner) {
             is IClass -> {
-                val brotherNameAndTypeExpression =
-                    owner.attributes.filterNot { it == entity }.map { Pair(it.name, it.typeExpression) }.toList()
+                val ownerEntry = entityLUT.entries.find { it.mine == owner.id } ?: run {
+                    logger.debug("${owner.id} not found on LUT.")
+                    return null
+                }
+                val entry = entityLUT.entries.find { it.mine == entity.id } ?: run {
+                    logger.debug("${entity.id} not found on LUT.")
+                    return null
+                }
                 logger.debug("${entity.name}:${entity.typeExpression}/${entity.type}(IAttribute) - ${entity.owner}(IClass)")
                 ChangeAttributeNameAndTypeExpression(
-                    owner.name,
-                    brotherNameAndTypeExpression,
+                    ownerEntry.common,
+                    entry.common,
                     entity.name,
                     entity.typeExpression
                 )
