@@ -156,6 +156,7 @@ data class ResizeTopic(
     val name: String,
     val location: Pair<Double, Double>,
     val size: Pair<Double, Double>,
+    val parentId: String,
     val id: String,
 ) : MindmapDiagramOperation()
 

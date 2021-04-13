@@ -92,7 +92,6 @@ class MindmapDiagramEventListener(private val entityLUT: EntityLUT, private val 
             when (val entity = it.entity) {
                 is INodePresentation -> {
                     modifyOperations.add(resizeTopic(entity) ?: continue)
-                    break
                 }
                 else -> {
                     logger.debug("$entity(Unknown)")
@@ -145,13 +144,16 @@ class MindmapDiagramEventListener(private val entityLUT: EntityLUT, private val 
                         )
                     } at ${entity.location}) @MindmapDiagram${diagram.name}"
                 )
-                val lut = entityLUT.entries.find { it.mine == entity.id }
-                if (lut == null) {
+                val entry = entityLUT.entries.find { it.mine == entity.id } ?: run {
                     logger.debug("${entity.id} not found on LUT.")
-                    null
-                } else {
-                    ResizeTopic(entity.label, location, size, lut.common)
+                    return null
                 }
+                // Root topic and floating topic have no parent, so parent entry is empty. (It means parent id is also empty.)
+                val parentEntry = if (entity.parent == null) Entry("", "") else entityLUT.entries.find { it.mine == entity.parent.id } ?: run {
+                    logger.debug("${entity.parent.id} not found on LUT.")
+                    return null
+                }
+                ResizeTopic(entity.label, location, size, parentEntry.common, entry.common)
             }
             else -> {
                 logger.debug("${entity.label}(INodePresentation) @UnknownDiagram")
