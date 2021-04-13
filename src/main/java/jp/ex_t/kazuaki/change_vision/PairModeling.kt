@@ -15,7 +15,7 @@ import jp.ex_t.kazuaki.change_vision.network.EntityLUT
 import jp.ex_t.kazuaki.change_vision.network.MqttPublisher
 import jp.ex_t.kazuaki.change_vision.network.MqttSubscriber
 
-class PairModeling(topic: String, private val clientId: String, private val brokerAddress: String) {
+class PairModeling(topic: String, private val clientId: String, private val brokerAddress: String, private val brokerPortNumber: Int) {
     private val topicTransaction = "$topic/transaction"
 
     // TODO: もしプロジェクト全体が欲しいとなった場合はトピックを別で生やす
@@ -33,7 +33,7 @@ class PairModeling(topic: String, private val clientId: String, private val brok
         logger.debug("Launching publisher...")
         entityLUT = EntityLUT()
         val topicTransactionPublisher = "$topicTransaction/$clientId"
-        mqttPublisher = MqttPublisher(brokerAddress, topicTransactionPublisher, clientId)
+        mqttPublisher = MqttPublisher(brokerAddress, brokerPortNumber, topicTransactionPublisher, clientId)
         projectChangedListener = ProjectChangedListener(entityLUT, mqttPublisher)
         projectAccessor.addProjectEventListener(projectChangedListener)
         logger.debug("Published: $brokerAddress:$topicTransaction ($clientId")
@@ -42,7 +42,7 @@ class PairModeling(topic: String, private val clientId: String, private val brok
         logger.debug("Launching subscriber...")
         val topicTransactionSubscriber = "$topicTransaction/#"
         reflectTransaction = ReflectTransaction(entityLUT, projectChangedListener)
-        mqttSubscriber = MqttSubscriber(brokerAddress, topicTransactionSubscriber, clientId, reflectTransaction)
+        mqttSubscriber = MqttSubscriber(brokerAddress, brokerPortNumber, topicTransactionSubscriber, clientId, reflectTransaction)
         mqttSubscriber.subscribe()
         logger.debug("Subscribed: $brokerAddress:$topicTransaction ($clientId")
         logger.info("Launched subscriber.")

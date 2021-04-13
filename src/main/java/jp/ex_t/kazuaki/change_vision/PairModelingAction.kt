@@ -13,19 +13,22 @@ import com.change_vision.jude.api.inf.ui.IPluginActionDelegate.UnExpectedExcepti
 import com.change_vision.jude.api.inf.ui.IWindow
 import java.util.*
 import javax.swing.JOptionPane
+import kotlin.io.path.ExperimentalPathApi
 
 class PairModelingAction : IPluginActionDelegate {
     private var isLaunched = false
     private lateinit var pairModeling: PairModeling
 
+    @ExperimentalPathApi
     @Throws(UnExpectedException::class)
     override fun run(window: IWindow) {
         try {
             if (!isLaunched) {
-                val brokerAddress = getHostAddress(window) ?: return
+                val config = Config()
+                config.load()
                 val topic = "debug/astah" //JOptionPane.showInputDialog("Input topic. (Ex: debug/astah)") ?: return
                 val clientId = UUID.randomUUID().toString()
-                pairModeling = PairModeling(topic, clientId, brokerAddress)
+                pairModeling = PairModeling(topic, clientId, config.conf.brokerAddress, config.conf.brokerPortNumber)
                 pairModeling.start()
             } else {
                 // stop系の処理
