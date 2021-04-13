@@ -149,10 +149,12 @@ class MindmapDiagramEventListener(private val entityLUT: EntityLUT, private val 
                     return null
                 }
                 // Root topic and floating topic have no parent, so parent entry is empty. (It means parent id is also empty.)
-                val parentEntry = if (entity.parent == null) Entry("", "") else entityLUT.entries.find { it.mine == entity.parent.id } ?: run {
-                    logger.debug("${entity.parent.id} not found on LUT.")
-                    return null
-                }
+                val parentEntry =
+                    if (entity.parent == null) Entry("", "") else entityLUT.entries.find { it.mine == entity.parent.id }
+                        ?: run {
+                            logger.debug("${entity.parent.id} not found on LUT.")
+                            return null
+                        }
                 ResizeTopic(entity.label, location, size, parentEntry.common, entry.common)
             }
             else -> {
