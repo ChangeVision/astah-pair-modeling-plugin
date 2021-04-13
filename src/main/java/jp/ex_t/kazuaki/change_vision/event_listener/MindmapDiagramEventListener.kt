@@ -122,8 +122,7 @@ class MindmapDiagramEventListener(private val entityLUT: EntityLUT, private val 
 
     private fun createTopic(entity: INodePresentation): CreateTopic? {
         entityLUT.entries.add(Entry(entity.id, entity.id))
-        val parentEntry = entityLUT.entries.find { it.mine == entity.parent.id }
-        if (parentEntry == null) {
+        val parentEntry = entityLUT.entries.find { it.mine == entity.parent.id } ?: run {
             logger.debug("${entity.parent.id} not found on LUT.")
             return null
         }
@@ -166,15 +165,13 @@ class MindmapDiagramEventListener(private val entityLUT: EntityLUT, private val 
 
     private fun deleteTopic(entity: INodePresentation): DeleteTopic? {
         return run {
-            val lut = entityLUT.entries.find { it.mine == entity.id }
-            if (lut == null) {
+            val lut = entityLUT.entries.find { it.mine == entity.id } ?: run {
                 logger.debug("${entity.id} not found on LUT.")
-                null
-            } else {
-                entityLUT.entries.remove(lut)
-                logger.debug("${entity}(INodePresentation) @MindmapDiagram")
-                DeleteTopic(lut.common)
+                return null
             }
+            entityLUT.entries.remove(lut)
+            logger.debug("${entity}(INodePresentation) @MindmapDiagram")
+            DeleteTopic(lut.common)
         }
     }
 
