@@ -506,7 +506,7 @@ class ClassDiagramApplyTransaction(private val entityLUT: EntityLUT) : IApplyTra
         id: String,
         diagramName: String
     ) {
-        logger.debug("Create note presentation.")
+        logger.debug("Create note.")
         val diagram = projectAccessor.findElements(IDiagram::class.java, diagramName).first() as IDiagram
         classDiagramEditor.diagram = diagram
         val entity = classDiagramEditor.createNote(note, location)
