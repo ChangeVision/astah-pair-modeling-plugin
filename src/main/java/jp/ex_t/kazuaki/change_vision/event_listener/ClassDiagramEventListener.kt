@@ -63,7 +63,8 @@ class ClassDiagramEventListener(private val entityLUT: EntityLUT, private val mq
                 is IRealization -> createRealizationModel(entity)
                 is IOperation -> createOperation(entity)
                 is IAttribute -> createAttribute(entity)
-                is INodePresentation -> createClassPresentation(entity)
+                is IComment -> createComment(entity)
+                is INodePresentation -> createNodePresentation(entity)
                 is ILinkPresentation -> createLinkPresentation(entity)
                 else -> {
                     logger.debug("$entity(Unknown)")
@@ -96,6 +97,11 @@ class ClassDiagramEventListener(private val entityLUT: EntityLUT, private val mq
             val modifyTransaction = Transaction(modifyOperations)
             ProjectChangedListener.encodeAndPublish(modifyTransaction, mqttPublisher)
         }
+    }
+
+    private fun createComment(entity: IComment): ClassDiagramOperation? {
+        logger.debug("${entity}(IComment)")
+        return null
     }
 
     private fun deleteClassModel(entity: IClass): DeleteClassModel? {
@@ -335,7 +341,7 @@ class ClassDiagramEventListener(private val entityLUT: EntityLUT, private val mq
         }
     }
 
-    private fun createClassPresentation(entity: INodePresentation): CreateClassPresentation? {
+    private fun createNodePresentation(entity: INodePresentation): ClassDiagramOperation? {
         return when (val diagram = entity.diagram) {
             is IClassDiagram -> {
                 when (val model = entity.model) {
@@ -355,6 +361,13 @@ class ClassDiagramEventListener(private val entityLUT: EntityLUT, private val mq
                         )
                         entityLUT.entries.add(Entry(entity.id, entity.id))
                         CreateClassPresentation(classModelEntry.common, location, diagram.name, entity.id)
+                    }
+                    is IComment -> {
+                        val location = Pair(entity.location.x, entity.location.y)
+                        val size = Pair(entity.width, entity.height)
+                        logger.debug("${entity.label}(INodePresentation) - $model(IComment)")
+                        entityLUT.entries.add(Entry(entity.id, entity.id))
+                        CreateNotePresentation(entity.label, location, size, entity.diagram.name, entity.id)
                     }
                     else -> {
                         logger.debug("${entity.label}(INodePresentation) - $model(Unknown)")

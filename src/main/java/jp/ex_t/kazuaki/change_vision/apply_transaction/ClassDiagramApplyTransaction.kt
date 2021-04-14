@@ -49,6 +49,9 @@ class ClassDiagramApplyTransaction(private val entityLUT: EntityLUT) : IApplyTra
                 is CreateLinkPresentation -> {
                     validateAndCreateLinkPresentation(it)
                 }
+                is CreateNotePresentation -> {
+                    validateAndCreateNotePresentation(it)
+                }
                 is CreateOperation -> {
                     validateAndCreateOperation(it)
                 }
@@ -168,6 +171,13 @@ class ClassDiagramApplyTransaction(private val entityLUT: EntityLUT) : IApplyTra
                 operation.diagramName,
                 operation.id,
             )
+        }
+    }
+
+    private fun validateAndCreateNotePresentation(operation: CreateNotePresentation) {
+        if (operation.id.isNotEmpty() && operation.diagramName.isNotEmpty()) {
+            val location = Point2D.Double(operation.location.first, operation.location.second)
+            createNotePresentation(operation.note, location, operation.size, operation.id, operation.diagramName)
         }
     }
 
@@ -487,6 +497,16 @@ class ClassDiagramApplyTransaction(private val entityLUT: EntityLUT) : IApplyTra
         } catch (e: NotImplementedError) {
             logger.error("Not implemented.", e)
         }
+    }
+
+    private fun createNotePresentation(note: String, location: Point2D, size: Pair<Double, Double>, id: String, diagramName: String) {
+        logger.debug("Create note presentation.")
+        val diagram = projectAccessor.findElements(IDiagram::class.java, diagramName).first() as IDiagram
+        classDiagramEditor.diagram = diagram
+        val entity = classDiagramEditor.createNote(note, location)
+        entity.width = size.first
+        entity.height = size.second
+        entityLUT.entries.add(Entry(entity.id, id))
     }
 
     private fun createOperation(ownerId: String, name: String, returnTypeExpression: String, id: String) {
