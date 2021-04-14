@@ -84,7 +84,7 @@ class ClassDiagramEventListener(private val entityLUT: EntityLUT, private val mq
             logger.debug("Op: $operation -> ")
             when (val entity = it.entity) {
                 is IClass -> changeClassModel(entity)
-                is INodePresentation -> resizeClassPresentation(entity)
+                is INodePresentation -> resizeNodePresentation(entity)
                 is IOperation -> changeOperationNameAndReturnTypeExpression(entity) // break
                 is IAttribute -> changeAttributeNameAndTypeExpression(entity) // break
                 else -> {
@@ -469,7 +469,7 @@ class ClassDiagramEventListener(private val entityLUT: EntityLUT, private val mq
         return ChangeClassModel(entry.common, entity.name, entity.stereotypes.toList())
     }
 
-    private fun resizeClassPresentation(entity: INodePresentation): ResizeClassPresentation? {
+    private fun resizeNodePresentation(entity: INodePresentation): ClassDiagramOperation? {
         return when (val diagram = entity.diagram) {
             is IClassDiagram -> {
                 when (val model = entity.model) {
