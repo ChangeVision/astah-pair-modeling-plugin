@@ -678,6 +678,7 @@ class ClassDiagramApplyTransaction(private val entityLUT: EntityLUT) : IApplyTra
             entityLUT.entries.remove(lutEntry)
             return
         }
+        entityLUT.entries.remove(lutEntry)
         projectAccessor.modelEditorFactory.basicModelEditor.delete(linkModel)
     }
 
@@ -694,6 +695,7 @@ class ClassDiagramApplyTransaction(private val entityLUT: EntityLUT) : IApplyTra
             entityLUT.entries.remove(lutEntry)
             return
         }
+        entityLUT.entries.remove(lutEntry)
         classDiagramEditor.deletePresentation(classPresentation)
     }
 
@@ -710,6 +712,7 @@ class ClassDiagramApplyTransaction(private val entityLUT: EntityLUT) : IApplyTra
             entityLUT.entries.remove(lutEntry)
             return
         }
+        entityLUT.entries.remove(lutEntry)
         classDiagramEditor.deletePresentation(linkPresentation)
     }
 
