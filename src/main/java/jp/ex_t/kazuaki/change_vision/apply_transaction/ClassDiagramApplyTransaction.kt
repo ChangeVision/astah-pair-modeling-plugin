@@ -499,7 +499,13 @@ class ClassDiagramApplyTransaction(private val entityLUT: EntityLUT) : IApplyTra
         }
     }
 
-    private fun createNotePresentation(note: String, location: Point2D, size: Pair<Double, Double>, id: String, diagramName: String) {
+    private fun createNotePresentation(
+        note: String,
+        location: Point2D,
+        size: Pair<Double, Double>,
+        id: String,
+        diagramName: String
+    ) {
         logger.debug("Create note presentation.")
         val diagram = projectAccessor.findElements(IDiagram::class.java, diagramName).first() as IDiagram
         classDiagramEditor.diagram = diagram
