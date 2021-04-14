@@ -490,6 +490,23 @@ class ClassDiagramEventListener(private val entityLUT: EntityLUT, private val mq
                         )
                         ResizeClassPresentation(entry.common, location, size, diagram.name)
                     }
+                    is IComment -> {
+                        val entry = entityLUT.entries.find { it.mine == entity.id } ?: run {
+                            logger.debug("${entity.id} not found on LUT.")
+                            return null
+                        }
+                        val location = Pair(entity.location.x, entity.location.y)
+                        val size = Pair(entity.width, entity.height)
+                        logger.debug(
+                            "${entity.label}(INodePresentation)::${model.name}(IComment, ${
+                                Pair(
+                                    entity.width,
+                                    entity.height
+                                )
+                            } at ${entity.location}) @ClassDiagram${diagram.name}"
+                        )
+                        ResizeNote(entry.common, entity.label, location, size, diagram.name)
+                    }
                     else -> {
                         logger.debug("${entity.label}(INodePresentation) - $model(Unknown)")
                         null

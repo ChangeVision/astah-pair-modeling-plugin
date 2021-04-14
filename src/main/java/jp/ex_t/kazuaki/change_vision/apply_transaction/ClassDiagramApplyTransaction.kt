@@ -61,6 +61,9 @@ class ClassDiagramApplyTransaction(private val entityLUT: EntityLUT) : IApplyTra
                 is ResizeClassPresentation -> {
                     validateAndResizeClassPresentation(it, operations)
                 }
+                is ResizeNote -> {
+                    validateAndResizeNote(it)
+                }
                 is ChangeClassModel -> {
                     validateAndChangeClassModel(it)
                 }
@@ -223,6 +226,13 @@ class ClassDiagramApplyTransaction(private val entityLUT: EntityLUT) : IApplyTra
                 operation.size,
                 operation.diagramName
             )
+        }
+    }
+
+    private fun validateAndResizeNote(operation: ResizeNote) {
+        val location = Point2D.Double(operation.location.first, operation.location.second)
+        if (operation.id.isNotEmpty() && operation.diagramName.isNotEmpty()) {
+            resizeNote(operation.id, operation.note, location, operation.size, operation.diagramName)
         }
     }
 
@@ -569,6 +579,25 @@ class ClassDiagramApplyTransaction(private val entityLUT: EntityLUT) : IApplyTra
         classPresentation.location = location
         classPresentation.width = width
         classPresentation.height = height
+    }
+
+    private fun resizeNote(id: String, note: String, location: Point2D, size: Pair<Double, Double>, diagramName: String) {
+        logger.debug("Resize class presentation.")
+        val (width, height) = size
+        val diagram = projectAccessor.findElements(IDiagram::class.java, diagramName).first() as IDiagram
+        classDiagramEditor.diagram = diagram
+        val entry = entityLUT.entries.find { it.common == id } ?: run {
+            logger.debug("$id not found on LUT.")
+            return
+        }
+        val notePresentation = diagram.presentations.find { it.id == entry.mine } as INodePresentation? ?: run {
+            logger.debug("INodePresentation ${entry.mine} not found but $id found on LUT.")
+            return
+        }
+        notePresentation.label = note
+        notePresentation.location = location
+        notePresentation.width = width
+        notePresentation.height = height
     }
 
     private fun changeClassModel(id: String, name: String, stereotypes: List<String?>) {
