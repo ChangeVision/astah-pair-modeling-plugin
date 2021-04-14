@@ -49,7 +49,7 @@ class ClassDiagramApplyTransaction(private val entityLUT: EntityLUT) : IApplyTra
                 is CreateLinkPresentation -> {
                     validateAndCreateLinkPresentation(it)
                 }
-                is CreateNotePresentation -> {
+                is CreateNote -> {
                     validateAndCreateNotePresentation(it)
                 }
                 is CreateOperation -> {
@@ -174,7 +174,7 @@ class ClassDiagramApplyTransaction(private val entityLUT: EntityLUT) : IApplyTra
         }
     }
 
-    private fun validateAndCreateNotePresentation(operation: CreateNotePresentation) {
+    private fun validateAndCreateNotePresentation(operation: CreateNote) {
         if (operation.id.isNotEmpty() && operation.diagramName.isNotEmpty()) {
             val location = Point2D.Double(operation.location.first, operation.location.second)
             createNotePresentation(operation.note, location, operation.size, operation.id, operation.diagramName)
