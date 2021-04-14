@@ -518,7 +518,13 @@ class ClassDiagramApplyTransaction(private val entityLUT: EntityLUT) : IApplyTra
         }
     }
 
-    private fun createNotePresentation(note: String, location: Point2D, size: Pair<Double, Double>, id: String, diagramName: String) {
+    private fun createNotePresentation(
+        note: String,
+        location: Point2D,
+        size: Pair<Double, Double>,
+        id: String,
+        diagramName: String
+    ) {
         logger.debug("Create note presentation.")
         val diagram = projectAccessor.findElements(IDiagram::class.java, diagramName).first() as IDiagram
         classDiagramEditor.diagram = diagram
@@ -581,7 +587,13 @@ class ClassDiagramApplyTransaction(private val entityLUT: EntityLUT) : IApplyTra
         classPresentation.height = height
     }
 
-    private fun resizeNote(id: String, note: String, location: Point2D, size: Pair<Double, Double>, diagramName: String) {
+    private fun resizeNote(
+        id: String,
+        note: String,
+        location: Point2D,
+        size: Pair<Double, Double>,
+        diagramName: String
+    ) {
         logger.debug("Resize class presentation.")
         val (width, height) = size
         val diagram = projectAccessor.findElements(IDiagram::class.java, diagramName).first() as IDiagram
