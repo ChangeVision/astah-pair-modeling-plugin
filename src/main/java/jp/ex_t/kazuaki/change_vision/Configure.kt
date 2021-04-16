@@ -15,7 +15,8 @@ import kotlin.io.path.*
 
 @ExperimentalPathApi
 class Config {
-    private val path: Path = Path(System.getProperty("user.home")) / Path(".astah") / Path("plugins") / Path("pair-modeling-plugin")
+    private val path: Path =
+        Path(System.getProperty("user.home")) / Path(".astah") / Path("plugins") / Path("pair-modeling-plugin")
     private val fileName: Path = Path("config.json")
     private val initialConfig = Conf("", 1883)
     private val configPath = path / fileName
@@ -26,7 +27,7 @@ class Config {
         if (configPath.exists()) {
             val jsonRawData = configPath.readText()
             logger.debug("Read data: $jsonRawData")
-            conf = Json.decodeFromString(Conf.serializer(), jsonRawData.toString())
+            conf = Json.decodeFromString(Conf.serializer(), jsonRawData)
             logger.debug("Loaded config.")
         } else {
             logger.debug("Config file not found.")
@@ -52,10 +53,14 @@ class Config {
         val lowerBrokerAddress = brokerAddress.lowercase()
         val ipv4AddressPattern =
             Regex("""^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)${'$'}""")
-        val ipv6AddressPattern = Regex("""^(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,7}:|([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,5}(:[0-9a-fA-F]{1,4}){1,2}|([0-9a-fA-F]{1,4}:){1,4}(:[0-9a-fA-F]{1,4}){1,3}|([0-9a-fA-F]{1,4}:){1,3}(:[0-9a-fA-F]{1,4}){1,4}|([0-9a-fA-F]{1,4}:){1,2}(:[0-9a-fA-F]{1,4}){1,5}|[0-9a-fA-F]{1,4}:((:[0-9a-fA-F]{1,4}){1,6})|:((:[0-9a-fA-F]{1,4}){1,7}|:)|fe80:(:[0-9a-fA-F]{0,4}){0,4}%[0-9a-zA-Z]{1,}|::(ffff(:0{1,4}){0,1}:){0,1}((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])|([0-9a-fA-F]{1,4}:){1,4}:((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9]))${'$'}""")
+        val ipv6AddressPattern =
+            Regex("""^(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,7}:|([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,5}(:[0-9a-fA-F]{1,4}){1,2}|([0-9a-fA-F]{1,4}:){1,4}(:[0-9a-fA-F]{1,4}){1,3}|([0-9a-fA-F]{1,4}:){1,3}(:[0-9a-fA-F]{1,4}){1,4}|([0-9a-fA-F]{1,4}:){1,2}(:[0-9a-fA-F]{1,4}){1,5}|[0-9a-fA-F]{1,4}:((:[0-9a-fA-F]{1,4}){1,6})|:((:[0-9a-fA-F]{1,4}){1,7}|:)|fe80:(:[0-9a-fA-F]{0,4}){0,4}%[0-9a-zA-Z]{1,}|::(ffff(:0{1,4}){0,1}:){0,1}((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])|([0-9a-fA-F]{1,4}:){1,4}:((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9]))${'$'}""")
         val domainPattern = Regex("""^([a-z0-9][a-z0-9-]*[a-z0-9]*\.)+[a-z]{2,}${'$'}""")
         val localhost = "localhost"
-        if (ipv4AddressPattern.matches(lowerBrokerAddress) || ipv6AddressPattern.matches(lowerBrokerAddress) || domainPattern.matches(lowerBrokerAddress) || localhost == lowerBrokerAddress) {
+        if (ipv4AddressPattern.matches(lowerBrokerAddress) || ipv6AddressPattern.matches(lowerBrokerAddress) || domainPattern.matches(
+                lowerBrokerAddress
+            ) || localhost == lowerBrokerAddress
+        ) {
             logger.debug("Pattern matched.")
             conf.brokerAddress = lowerBrokerAddress
             return true
@@ -76,7 +81,7 @@ class Config {
         }
     }
 
-    companion object: Logging {
+    companion object : Logging {
         private val logger = logger()
     }
 }
