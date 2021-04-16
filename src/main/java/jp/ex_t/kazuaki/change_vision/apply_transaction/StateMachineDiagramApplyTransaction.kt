@@ -97,10 +97,11 @@ class StateMachineDiagramApplyTransaction(private val entityLUT: EntityLUT) :
             logger.debug("$id not found on LUT.")
             return
         }
-        val pseudostate = diagramViewManager.currentDiagram.presentations.find { it.id == entry.mine } as INodePresentation? ?: run {
-            logger.debug("INodePresentation ${entry.mine} not found but $id found on LUT.")
-            return
-        }
+        val pseudostate =
+            diagramViewManager.currentDiagram.presentations.find { it.id == entry.mine } as INodePresentation? ?: run {
+                logger.debug("INodePresentation ${entry.mine} not found but $id found on LUT.")
+                return
+            }
         pseudostate.location = location
         pseudostate.width = width
         pseudostate.height = height
