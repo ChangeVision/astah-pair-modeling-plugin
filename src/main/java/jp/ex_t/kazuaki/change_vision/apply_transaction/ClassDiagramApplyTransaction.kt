@@ -720,7 +720,7 @@ class ClassDiagramApplyTransaction(private val entityLUT: EntityLUT) : IApplyTra
             return
         }
         entityLUT.entries.remove(lutEntry)
-        projectAccessor.modelEditorFactory.basicModelEditor.delete(linkModel)
+        basicModelEditor.delete(linkModel)
     }
 
     private fun deleteClassPresentation(id: String) {
@@ -770,7 +770,7 @@ class ClassDiagramApplyTransaction(private val entityLUT: EntityLUT) : IApplyTra
             return
         }
         entityLUT.entries.remove(lutEntry)
-        projectAccessor.modelEditorFactory.basicModelEditor.delete(notePresentation.model)
+        basicModelEditor.delete(notePresentation.model)
     }
 
     companion object : Logging {
