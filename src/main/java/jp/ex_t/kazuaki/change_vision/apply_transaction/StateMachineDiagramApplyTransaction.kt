@@ -17,7 +17,8 @@ import jp.ex_t.kazuaki.change_vision.network.EntityLUT
 import jp.ex_t.kazuaki.change_vision.network.Entry
 import jp.ex_t.kazuaki.change_vision.network.StateMachineDiagramOperation
 
-class StateMachineDiagramApplyTransaction(private val entityLUT: EntityLUT): IApplyTransaction<StateMachineDiagramOperation> {
+class StateMachineDiagramApplyTransaction(private val entityLUT: EntityLUT) :
+    IApplyTransaction<StateMachineDiagramOperation> {
     private val api = AstahAPI.getAstahAPI()
     private val projectAccessor = api.projectAccessor
     private val diagramViewManager = api.viewManager.diagramViewManager
@@ -26,7 +27,7 @@ class StateMachineDiagramApplyTransaction(private val entityLUT: EntityLUT): IAp
 
     override fun apply(operations: List<StateMachineDiagramOperation>) {
         operations.forEach {
-            when(it) {
+            when (it) {
                 is CreateStateMachineDiagram -> {
                     validateAndCreateStateMachineDiagram(it)
                 }
@@ -48,7 +49,7 @@ class StateMachineDiagramApplyTransaction(private val entityLUT: EntityLUT): IAp
         diagramViewManager.open(diagram)
     }
 
-    companion object: Logging {
+    companion object : Logging {
         private val logger = logger()
     }
 }

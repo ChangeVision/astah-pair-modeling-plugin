@@ -15,14 +15,16 @@ import jp.ex_t.kazuaki.change_vision.logger
 import jp.ex_t.kazuaki.change_vision.network.*
 import kotlinx.serialization.ExperimentalSerializationApi
 
-class StateMachineDiagramEventListener(private val entityLUT: EntityLUT, private val mqttPublisher: MqttPublisher): IEventListener {
+class StateMachineDiagramEventListener(private val entityLUT: EntityLUT, private val mqttPublisher: MqttPublisher) :
+    IEventListener {
     @ExperimentalSerializationApi
     override fun process(projectEditUnit: List<ProjectEditUnit>) {
         logger.debug("Start process")
         val addProjectEditUnit = projectEditUnit.filter { it.operation == Operation.ADD.ordinal }
         val addDiagramUnit = addProjectEditUnit.filter { it.entity is IStateMachineDiagram }
         addDiagramUnit.forEach {
-            val createDiagramTransaction = Transaction(listOf(createStateMachineDiagram(it.entity as IStateMachineDiagram)))
+            val createDiagramTransaction =
+                Transaction(listOf(createStateMachineDiagram(it.entity as IStateMachineDiagram)))
             ProjectChangedListener.encodeAndPublish(createDiagramTransaction, mqttPublisher)
             return
         }
@@ -36,7 +38,7 @@ class StateMachineDiagramEventListener(private val entityLUT: EntityLUT, private
         return createStateMachineDiagram
     }
 
-    companion object: Logging {
+    companion object : Logging {
         private val logger = logger()
     }
 }

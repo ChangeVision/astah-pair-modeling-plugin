@@ -35,7 +35,7 @@ class ProjectChangedListener(entityLUT: EntityLUT, mqttPublisher: MqttPublisher)
         val projectEditUnit = e.projectEditUnit.filter { it.entity != null }
         if (projectEditUnit.any { it.entity.let { entity -> entity is INodePresentation && entity.diagram is IMindMapDiagram } }) {
             mindmapDiagramEventListener.process(projectEditUnit)
-        } else if (projectEditUnit.any { it.entity.let { entity -> entity is INodePresentation && entity.diagram is IStateMachineDiagram }}) {
+        } else if (projectEditUnit.any { it.entity.let { entity -> entity is INodePresentation && entity.diagram is IStateMachineDiagram } }) {
             stateMachineDiagramEventListener.process(projectEditUnit)
         } else {
             classDiagramEventListener.process(projectEditUnit)
