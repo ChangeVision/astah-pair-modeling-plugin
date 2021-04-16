@@ -55,6 +55,31 @@ class StateMachineDiagramEventListener(private val entityLUT: EntityLUT, private
             ProjectChangedListener.encodeAndPublish(createTransaction, mqttPublisher)
             return
         }
+
+        val modifyProjectEditUnit = projectEditUnit.filter { it.operation == Operation.MODIFY.ordinal }
+        val modifyOperations = modifyProjectEditUnit.mapNotNull {
+            val operation = Operation.values()[it.operation]
+            logger.debug("Op: $operation -> ")
+            when (val entity = it.entity) {
+                is INodePresentation -> {
+                    when (entity.model) {
+                        is IPseudostate -> resizePseudostate(entity)
+                        else -> {
+                            logger.debug("$entity(INodePresentation, Unknown)")
+                            null
+                        }
+                    }
+                }
+                else -> {
+                    logger.debug("$entity(Unknown)")
+                    null
+                }
+            }
+        }
+        if (modifyOperations.isNotEmpty()) {
+            val modifyTransaction = Transaction(modifyOperations)
+            ProjectChangedListener.encodeAndPublish(modifyTransaction, mqttPublisher)
+        }
     }
 
     private fun createStateMachineDiagram(entity: IStateMachineDiagram): CreateStateMachineDiagram {
@@ -77,6 +102,17 @@ class StateMachineDiagramEventListener(private val entityLUT: EntityLUT, private
         entityLUT.entries.add(Entry(entity.id, entity.id))
         logger.debug("$entity(INodePresentation, IPseudostate)")
         return CreatePseudostate(entity.id, location, size, parentEntry.common)
+    }
+
+    private fun resizePseudostate(entity: INodePresentation): ResizePseudostate? {
+        val location = Pair(entity.location.x, entity.location.y)
+        val size = Pair(entity.width, entity.height)
+        val entry = entityLUT.entries.find { it.mine == entity.id } ?: run {
+            logger.debug("${entity.id}(INodePresentation, IPseudostate) not found on LUT.")
+            return null
+        }
+        logger.debug("$entity(INodePresentation, IPseudostate)")
+        return ResizePseudostate(entry.common, location, size)
     }
 
     companion object : Logging {
