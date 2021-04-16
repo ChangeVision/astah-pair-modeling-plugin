@@ -19,11 +19,12 @@ import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence
 
 class MqttSubscriber(
     brokerAddress: String,
+    brokerPortNumber: Int,
     private val topic: String,
     private val clientId: String,
     private val reflectTransaction: ReflectTransaction
 ) : MqttCallback {
-    private var broker: String = "tcp://$brokerAddress:1883"
+    private var broker: String = "tcp://$brokerAddress:$brokerPortNumber"
     private lateinit var mqttClient: MqttClient
     private val clientIdSubscriber = "$clientId/sub"
 
