@@ -76,7 +76,7 @@ class StateMachineDiagramEventListener(private val entityLUT: EntityLUT, private
         val size = Pair(entity.width, entity.height)
         entityLUT.entries.add(Entry(entity.id, entity.id))
         logger.debug("$entity(INodePresentation, IPseudostate)")
-        return CreatePseudostate(entity.id, entity.label, location, size, parentEntry.common)
+        return CreatePseudostate(entity.id, location, size, parentEntry.common)
     }
 
     companion object : Logging {

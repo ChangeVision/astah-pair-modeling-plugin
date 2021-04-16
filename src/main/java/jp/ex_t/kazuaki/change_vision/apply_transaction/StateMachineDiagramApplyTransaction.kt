@@ -44,7 +44,7 @@ class StateMachineDiagramApplyTransaction(private val entityLUT: EntityLUT) :
     private fun validateAndCreatePseudostate(operation: CreatePseudostate) {
         if (operation.id.isNotEmpty()) {
             val location = Point2D.Double(operation.location.first, operation.location.second)
-            createPseudostate(operation.id, operation.label, location, operation.size, operation.parentId)
+            createPseudostate(operation.id, location, operation.size, operation.parentId)
         }
     }
 
@@ -58,7 +58,6 @@ class StateMachineDiagramApplyTransaction(private val entityLUT: EntityLUT) :
 
     private fun createPseudostate(
         id: String,
-        label: String,
         location: Point2D,
         size: Pair<Double, Double>,
         parentId: String
@@ -81,7 +80,6 @@ class StateMachineDiagramApplyTransaction(private val entityLUT: EntityLUT) :
         entityLUT.entries.add(Entry(pseudostate.id, id))
         pseudostate.width = width
         pseudostate.height = height
-        pseudostate.label = label
     }
 
     companion object : Logging {
