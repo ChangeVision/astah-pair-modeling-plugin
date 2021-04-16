@@ -193,3 +193,8 @@ data class DeleteLinkModel(
 data class DeleteLinkPresentation(
     val id: String,
 ) : ClassDiagramOperation()
+
+@Serializable
+data class DeleteNote(
+    val id: String,
+) : ClassDiagramOperation()

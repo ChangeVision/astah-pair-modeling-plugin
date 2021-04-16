@@ -192,7 +192,7 @@ class ClassDiagramEventListener(private val entityLUT: EntityLUT, private val mq
         }
     }
 
-    private fun deleteNodePresentation(entity: INodePresentation): DeleteClassPresentation? {
+    private fun deleteNodePresentation(entity: INodePresentation): ClassDiagramOperation? {
         return when (val model = entity.model) {
             is IClass -> {
                 val lutEntity = entityLUT.entries.find { it.mine == entity.id } ?: run {
@@ -202,6 +202,15 @@ class ClassDiagramEventListener(private val entityLUT: EntityLUT, private val mq
                 entityLUT.entries.remove(lutEntity)
                 logger.debug("${model.name}(INodePresentation, IClass)")
                 DeleteClassPresentation(lutEntity.common)
+            }
+            is IComment -> {
+                val lutEntity = entityLUT.entries.find { it.mine == entity.id } ?: run {
+                    logger.debug("${entity.id}(INodePresentation, IComment) not found on LUT.")
+                    return null
+                }
+                entityLUT.entries.remove(lutEntity)
+                logger.debug("${model.name}(INodePresentation, IComment)")
+                DeleteNote(lutEntity.common)
             }
             else -> {
                 logger.debug("${model}(INodePresentation, Unknown)")
