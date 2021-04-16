@@ -9,6 +9,7 @@
 package jp.ex_t.kazuaki.change_vision.event_listener
 
 import com.change_vision.jude.api.inf.model.IMindMapDiagram
+import com.change_vision.jude.api.inf.model.IStateMachineDiagram
 import com.change_vision.jude.api.inf.presentation.INodePresentation
 import com.change_vision.jude.api.inf.project.ProjectEvent
 import com.change_vision.jude.api.inf.project.ProjectEventListener
@@ -26,6 +27,7 @@ class ProjectChangedListener(entityLUT: EntityLUT, mqttPublisher: MqttPublisher)
         ClassDiagramEventListener(entityLUT, mqttPublisher)
     private val mindmapDiagramEventListener: MindmapDiagramEventListener =
         MindmapDiagramEventListener(entityLUT, mqttPublisher)
+    private val stateMachineDiagramEventListener = StateMachineDiagramEventListener(entityLUT, mqttPublisher)
 
     @ExperimentalSerializationApi
     override fun projectChanged(e: ProjectEvent) {
@@ -33,6 +35,8 @@ class ProjectChangedListener(entityLUT: EntityLUT, mqttPublisher: MqttPublisher)
         val projectEditUnit = e.projectEditUnit.filter { it.entity != null }
         if (projectEditUnit.any { it.entity.let { entity -> entity is INodePresentation && entity.diagram is IMindMapDiagram } }) {
             mindmapDiagramEventListener.process(projectEditUnit)
+        } else if (projectEditUnit.any { it.entity.let { entity -> entity is INodePresentation && entity.diagram is IStateMachineDiagram }}) {
+            stateMachineDiagramEventListener.process(projectEditUnit)
         } else {
             classDiagramEventListener.process(projectEditUnit)
         }
