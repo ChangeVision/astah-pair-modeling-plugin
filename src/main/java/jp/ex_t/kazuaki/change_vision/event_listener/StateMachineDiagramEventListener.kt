@@ -22,6 +22,31 @@ class StateMachineDiagramEventListener(private val entityLUT: EntityLUT, private
     @ExperimentalSerializationApi
     override fun process(projectEditUnit: List<ProjectEditUnit>) {
         logger.debug("Start process")
+        val removeProjectEditUnit = projectEditUnit.filter { it.operation == Operation.REMOVE.ordinal }
+        val removeOperations = removeProjectEditUnit.mapNotNull { editUnit ->
+            Operation.values()[editUnit.operation].let { op -> logger.debug("Op: $op -> ") }
+            when (val entity = editUnit.entity) {
+                is INodePresentation -> {
+                    when (entity.model) {
+                        is IPseudostate -> deletePseudostate(entity)
+                        else -> {
+                            logger.debug("$entity(INodePresentation, Unknown)")
+                            null
+                        }
+                    }
+                }
+                else -> {
+                    logger.debug("$entity(Unknown)")
+                    null
+                }
+            }
+        }
+        if (removeOperations.isNotEmpty()) {
+            val removeTransaction = Transaction(removeOperations)
+            ProjectChangedListener.encodeAndPublish(removeTransaction, mqttPublisher)
+            return
+        }
+
         val addProjectEditUnit = projectEditUnit.filter { it.operation == Operation.ADD.ordinal }
         val addDiagramUnit = addProjectEditUnit.filter { it.entity is IStateMachineDiagram }
         addDiagramUnit.forEach {
@@ -113,6 +138,16 @@ class StateMachineDiagramEventListener(private val entityLUT: EntityLUT, private
         }
         logger.debug("$entity(INodePresentation, IPseudostate)")
         return ResizePseudostate(entry.common, location, size)
+    }
+
+    private fun deletePseudostate(entity: INodePresentation): DeletePseudostate? {
+        val entry = entityLUT.entries.find { it.mine == entity.id } ?: run {
+            logger.debug("${entity.id}(INodePresentation, IPseudostate) not found on LUT.")
+            return null
+        }
+        logger.debug("$entity(INodePresentation, IPseudostate)")
+        entityLUT.entries.remove(entry)
+        return DeletePseudostate(entry.common)
     }
 
     companion object : Logging {
