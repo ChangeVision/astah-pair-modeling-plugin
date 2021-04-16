@@ -138,6 +138,15 @@ data class ResizeClassPresentation(
 ) : ClassDiagramOperation()
 
 @Serializable
+data class ResizeNote(
+    val id: String,
+    val note: String,
+    val location: Pair<Double, Double>,
+    val size: Pair<Double, Double>,
+    val diagramName: String
+) : ClassDiagramOperation()
+
+@Serializable
 data class ChangeClassModel(
     val id: String,
     val name: String,
