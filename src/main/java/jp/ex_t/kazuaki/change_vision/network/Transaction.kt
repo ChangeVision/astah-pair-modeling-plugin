@@ -86,7 +86,7 @@ data class CreatePseudostate(
     val label: String,
     val location: Pair<Double, Double>,
     val size: Pair<Double, Double>,
-    val ownerId: String,
+    val parentId: String,
 ) : StateMachineDiagramOperation()
 
 @Serializable

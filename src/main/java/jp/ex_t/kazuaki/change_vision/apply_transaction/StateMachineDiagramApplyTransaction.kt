@@ -44,7 +44,7 @@ class StateMachineDiagramApplyTransaction(private val entityLUT: EntityLUT) :
     private fun validateAndCreatePseudostate(operation: CreatePseudostate) {
         if (operation.id.isNotEmpty()) {
             val location = Point2D.Double(operation.location.first, operation.location.second)
-            createPseudostate(operation.id, operation.label, location, operation.size, operation.ownerId)
+            createPseudostate(operation.id, operation.label, location, operation.size, operation.parentId)
         }
     }
 
