@@ -81,6 +81,14 @@ data class CreateRealizationModel(
 ) : ClassDiagramOperation()
 
 @Serializable
+data class CreatePseudostate(
+    val id: String,
+    val location: Pair<Double, Double>,
+    val size: Pair<Double, Double>,
+    val parentId: String,
+) : StateMachineDiagramOperation()
+
+@Serializable
 data class CreateClassPresentation(
     val classId: String,
     val location: Pair<Double, Double>,
