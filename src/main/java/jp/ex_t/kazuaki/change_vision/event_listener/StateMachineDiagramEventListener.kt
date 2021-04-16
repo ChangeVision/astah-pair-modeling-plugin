@@ -69,7 +69,7 @@ class StateMachineDiagramEventListener(private val entityLUT: EntityLUT, private
         val parentEntry =
             if (entity.parent == null) Entry("", "") else entityLUT.entries.find { it.mine == entity.parent.id }
                 ?: run {
-                    logger.debug("${entity.id}(IPseudostate) not found on LUT.")
+                    logger.debug("${entity.id}(INodePresentation, IPseudostate) not found on LUT.")
                     return null
                 }
         val location = Pair(entity.location.x, entity.location.y)
