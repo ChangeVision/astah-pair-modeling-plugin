@@ -15,10 +15,7 @@ import com.change_vision.jude.api.inf.ui.IPluginActionDelegate.UnExpectedExcepti
 import jp.ex_t.kazuaki.change_vision.Logging
 import jp.ex_t.kazuaki.change_vision.event_listener.ProjectChangedListener
 import jp.ex_t.kazuaki.change_vision.logger
-import jp.ex_t.kazuaki.change_vision.network.ClassDiagramOperation
-import jp.ex_t.kazuaki.change_vision.network.EntityLUT
-import jp.ex_t.kazuaki.change_vision.network.MindmapDiagramOperation
-import jp.ex_t.kazuaki.change_vision.network.Transaction
+import jp.ex_t.kazuaki.change_vision.network.*
 import javax.swing.SwingUtilities
 
 class ReflectTransaction(entityLUT: EntityLUT, private val projectChangedListener: ProjectChangedListener) {
@@ -26,6 +23,7 @@ class ReflectTransaction(entityLUT: EntityLUT, private val projectChangedListene
     private val projectAccessor: ProjectAccessor = api.projectAccessor
     private val classDiagramApplyTransaction = ClassDiagramApplyTransaction(entityLUT)
     private val mindmapDiagramApplyTransaction = MindmapDiagramApplyTransaction(entityLUT)
+    private val stateMachineDiagramApplyTransaction = StateMachineDiagramApplyTransaction(entityLUT)
 
     @Throws(UnExpectedException::class)
     fun transact(transaction: Transaction) {
@@ -40,6 +38,9 @@ class ReflectTransaction(entityLUT: EntityLUT, private val projectChangedListene
                 )
                 mindmapDiagramApplyTransaction.apply(
                     transaction.operations.filterIsInstance<MindmapDiagramOperation>()
+                )
+                stateMachineDiagramApplyTransaction.apply(
+                    transaction.operations.filterIsInstance<StateMachineDiagramOperation>()
                 )
                 transactionManager.endTransaction()
                 logger.debug("Finished transaction.")

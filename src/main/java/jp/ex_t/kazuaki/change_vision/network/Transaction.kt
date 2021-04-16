@@ -23,6 +23,9 @@ sealed class ClassDiagramOperation : TransactionalOperation()
 sealed class MindmapDiagramOperation : TransactionalOperation()
 
 @Serializable
+sealed class StateMachineDiagramOperation : TransactionalOperation()
+
+@Serializable
 data class CreateClassDiagram(
     val name: String,
     val ownerName: String,
@@ -35,6 +38,13 @@ data class CreateMindmapDiagram(
     val ownerName: String,
     val rootTopicId: String,
 ) : MindmapDiagramOperation()
+
+@Serializable
+data class CreateStateMachineDiagram(
+    val name: String,
+    val ownerName: String,
+    val id: String,
+) : StateMachineDiagramOperation()
 
 @Serializable
 data class CreateClassModel(
