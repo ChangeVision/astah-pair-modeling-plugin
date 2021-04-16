@@ -88,7 +88,7 @@ data class CreateLinkPresentation(
 ) : ClassDiagramOperation()
 
 @Serializable
-data class CreateNotePresentation(
+data class CreateNote(
     val note: String,
     val location: Pair<Double, Double>,
     val size: Pair<Double, Double>,

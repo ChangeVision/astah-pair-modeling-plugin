@@ -27,7 +27,7 @@ class Config {
         if (configPath.exists()) {
             val jsonRawData = configPath.readText()
             logger.debug("Read data: $jsonRawData")
-            conf = Json.decodeFromString(Conf.serializer(), jsonRawData.toString())
+            conf = Json.decodeFromString(Conf.serializer(), jsonRawData)
             logger.debug("Loaded config.")
         } else {
             logger.debug("Config file not found.")
