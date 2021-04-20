@@ -35,6 +35,7 @@ class StateMachineDiagramApplyTransaction(private val entityLUT: EntityLUT) :
                 is ModifyPseudostate -> validateAndModifyPseudostate(it)
                 is ModifyFinalState -> validateAndModifyFinalState(it)
                 is DeletePseudostate -> validateAndDeletePseudostate(it)
+                is DeleteFinalState -> validateAndDeleteFinalState(it)
             }
         }
     }
@@ -76,6 +77,12 @@ class StateMachineDiagramApplyTransaction(private val entityLUT: EntityLUT) :
     private fun validateAndDeletePseudostate(operation: DeletePseudostate) {
         if (operation.id.isNotEmpty()) {
             deletePseudostate(operation.id)
+        }
+    }
+
+    private fun validateAndDeleteFinalState(operation: DeleteFinalState) {
+        if (operation.id.isNotEmpty()) {
+            deleteFinalState(operation.id)
         }
     }
 
@@ -217,6 +224,22 @@ class StateMachineDiagramApplyTransaction(private val entityLUT: EntityLUT) :
             }
         entityLUT.entries.remove(entry)
         basicModelEditor.delete(pseudostate.model)
+    }
+
+    private fun deleteFinalState(id: String) {
+        logger.debug("Delete final state.")
+        stateMachineDiagramEditor.diagram = diagramViewManager.currentDiagram
+        val entry = entityLUT.entries.find { it.common == id } ?: run {
+            logger.debug("$id not found on LUT.")
+            return
+        }
+        val finalState =
+            diagramViewManager.currentDiagram.presentations.find { it.id == entry.mine } as INodePresentation? ?: run {
+                logger.debug("INodePresentation ${entry.mine} not found but $id found on LUT.")
+                return
+            }
+        entityLUT.entries.remove(entry)
+        basicModelEditor.delete(finalState.model)
     }
 
     companion object : Logging {
