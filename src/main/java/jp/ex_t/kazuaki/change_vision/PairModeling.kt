@@ -1,5 +1,5 @@
 /*
- * PairModeling.kt - pair-modeling-prototype
+ * PairModeling.kt - pair-modeling
  * Copyright © 2021 HyodaKazuaki.
  *
  * Released under the MIT License.

@@ -1,5 +1,5 @@
 /*
- * ConfigurationAction.kt - pair-modeling-prototype
+ * ConfigurationAction.kt - pair-modeling
  * Copyright © 2021 HyodaKazuaki.
  *
  * Released under the MIT License.

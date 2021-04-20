@@ -2,7 +2,7 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<properties>
-		<bundle.symbolicName>jp.ex_t.kazuaki.change_vision.pair-modeling-prototype</bundle.symbolicName>
+		<bundle.symbolicName>jp.ex_t.kazuaki.change_vision.pair-modeling</bundle.symbolicName>
 		<bundle.namespace>jp.ex_t.kazuaki.change_vision</bundle.namespace>
 		<plugin.install>true</plugin.install>
 		<astah.version>6.7</astah.version>
@@ -12,7 +12,7 @@
     </properties>
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>jp.ex_t.kazuaki.change_vision</groupId>
-	<artifactId>pair-modeling-prototype</artifactId>
+	<artifactId>pair-modeling</artifactId>
 	<version>1.0-SNAPSHOT</version>
 	<packaging>jar</packaging>
 	<name>%bundle.name</name>

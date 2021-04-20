@@ -1,5 +1,5 @@
 /*
- * ProjectChangedListener.kt - pair-modeling-prototype
+ * ProjectChangedListener.kt - pair-modeling
  * Copyright © 2021 HyodaKazuaki.
  *
  * Released under the MIT License.

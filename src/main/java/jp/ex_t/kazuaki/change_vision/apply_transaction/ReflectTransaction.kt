@@ -1,5 +1,5 @@
 /*
- * ReflectTransaction.kt - pair-modeling-prototype
+ * ReflectTransaction.kt - pair-modeling
  * Copyright © 2021 HyodaKazuaki.
  *
  * Released under the MIT License.

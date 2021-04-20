@@ -1,5 +1,5 @@
 /*
- * EntityLUT.kt - pair-modeling-prototype
+ * EntityLUT.kt - pair-modeling
  * Copyright © 2021 HyodaKazuaki.
  *
  * Released under the MIT License.

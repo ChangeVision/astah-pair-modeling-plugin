@@ -1,5 +1,5 @@
 /*
- * StateMachineDiagramApplyTransaction.kt - pair-modeling-prototype
+ * StateMachineDiagramApplyTransaction.kt - pair-modeling
  * Copyright © 2021 HyodaKazuaki.
  *
  * Released under the MIT License.

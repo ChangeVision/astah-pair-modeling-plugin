@@ -1,5 +1,5 @@
 /*
- * StateMachineDiagramEventListener.java - pair-modeling-prototype
+ * StateMachineDiagramEventListener.java - pair-modeling
  * Copyright © 2021 HyodaKazuaki.
  *
  * Released under the MIT License.
