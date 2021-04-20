@@ -62,8 +62,8 @@ class StateMachineDiagramEventListener(private val entityLUT: EntityLUT, private
                 is INodePresentation -> {
                     when (entity.model) {
                         is IPseudostate -> createPseudostate(entity)
-                        is IState -> createState(entity)
                         is IFinalState -> createFinalState(entity)
+                        is IState -> createState(entity)
                         else -> {
                             logger.debug("$entity(INodePresentation, Unknown)")
                             null
