@@ -212,6 +212,14 @@ data class ResizePseudostate(
 ) : StateMachineDiagramOperation()
 
 @Serializable
+data class ModifyFinalState(
+    val id: String,
+    val location: Pair<Double, Double>,
+    val size: Pair<Double, Double>,
+    val parentId: String
+) : StateMachineDiagramOperation()
+
+@Serializable
 data class DeleteClassModel(
     val id: String,
 ) : ClassDiagramOperation()

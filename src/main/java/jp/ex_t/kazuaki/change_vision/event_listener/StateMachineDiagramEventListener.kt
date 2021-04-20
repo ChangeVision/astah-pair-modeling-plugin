@@ -91,6 +91,7 @@ class StateMachineDiagramEventListener(private val entityLUT: EntityLUT, private
                 is INodePresentation -> {
                     when (entity.model) {
                         is IPseudostate -> resizePseudostate(entity)
+                        is IFinalState -> modifyFinalState(entity)
                         else -> {
                             logger.debug("$entity(INodePresentation, Unknown)")
                             null
@@ -154,6 +155,23 @@ class StateMachineDiagramEventListener(private val entityLUT: EntityLUT, private
         }
         logger.debug("$entity(INodePresentation, IPseudostate)")
         return ResizePseudostate(entry.common, location, size)
+    }
+
+    private fun modifyFinalState(entity: INodePresentation): ModifyFinalState? {
+        val parentEntry =
+            if (entity.parent == null) Entry("", "") else entityLUT.entries.find { it.mine == entity.parent.id }
+                ?: run {
+                    logger.debug("${entity.id}(Parent of INodePresentation, IFinalState) not found on LUT.")
+                    return null
+                }
+        val location = Pair(entity.location.x, entity.location.y)
+        val size = Pair(entity.width, entity.height)
+        val entry = entityLUT.entries.find { it.mine == entity.id } ?: run {
+            logger.debug("${entity.id}(INodePresentation, IFinalState) not found on LUT.")
+            return null
+        }
+        logger.debug("$entity(INodePresentation, IFinalState)")
+        return ModifyFinalState(entry.common, location, size, parentEntry.common)
     }
 
     private fun deletePseudostate(entity: INodePresentation): DeletePseudostate? {
