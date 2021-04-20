@@ -7,6 +7,7 @@
  */
 package jp.ex_t.kazuaki.change_vision.event_listener
 
+import com.change_vision.jude.api.inf.model.IFinalState
 import com.change_vision.jude.api.inf.model.INamedElement
 import com.change_vision.jude.api.inf.model.IPseudostate
 import com.change_vision.jude.api.inf.model.IStateMachineDiagram
@@ -63,6 +64,7 @@ class StateMachineDiagramEventListener(private val entityLUT: EntityLUT, private
                 is INodePresentation -> {
                     when (entity.model) {
                         is IPseudostate -> createPseudostate(entity)
+                        is IFinalState -> createFinalState(entity)
                         else -> {
                             logger.debug("$entity(INodePresentation, Unknown)")
                             null
@@ -127,6 +129,20 @@ class StateMachineDiagramEventListener(private val entityLUT: EntityLUT, private
         entityLUT.entries.add(Entry(entity.id, entity.id))
         logger.debug("$entity(INodePresentation, IPseudostate)")
         return CreatePseudostate(entity.id, location, size, parentEntry.common)
+    }
+
+    private fun createFinalState(entity: INodePresentation): CreateFinalState? {
+        val parentEntry =
+            if (entity.parent == null) Entry("", "") else entityLUT.entries.find { it.mine == entity.parent.id }
+                ?: run {
+                    logger.debug("${entity.id}(INodePresentation, IFinalState) not found on LUT.")
+                    return null
+                }
+        val location = Pair(entity.location.x, entity.location.y)
+        val size = Pair(entity.width, entity.height)
+        entityLUT.entries.add(Entry(entity.id, entity.id))
+        logger.debug("$entity(INodePresentation, IFinalState)")
+        return CreateFinalState(entity.id, location, size, parentEntry.common)
     }
 
     private fun resizePseudostate(entity: INodePresentation): ResizePseudostate? {
