@@ -8,6 +8,7 @@
 package jp.ex_t.kazuaki.change_vision.event_listener
 
 import com.change_vision.jude.api.inf.model.*
+import com.change_vision.jude.api.inf.presentation.ILinkPresentation
 import com.change_vision.jude.api.inf.presentation.INodePresentation
 import com.change_vision.jude.api.inf.project.ProjectEditUnit
 import jp.ex_t.kazuaki.change_vision.Logging
@@ -31,6 +32,18 @@ class StateMachineDiagramEventListener(private val entityLUT: EntityLUT, private
                         is IState -> deleteState(entity)
                         else -> {
                             logger.debug("$entity(INodePresentation, Unknown)")
+                            null
+                        }
+                    }
+                }
+                is ILinkPresentation -> {
+                    when (entity.model) {
+                        is ITransition -> {
+                            logger.debug("$entity(ILinkPresentation, ITransition)")
+                            null
+                        }
+                        else -> {
+                            logger.debug("$entity(ILinkPresentation, Unknown)")
                             null
                         }
                     }
@@ -71,6 +84,15 @@ class StateMachineDiagramEventListener(private val entityLUT: EntityLUT, private
                         }
                     }
                 }
+                is ILinkPresentation -> {
+                    when (entity.model) {
+                        is ITransition -> createTransition(entity)
+                        else -> {
+                            logger.debug("$entity(ILinkPresentation, Unknown)")
+                            null
+                        }
+                    }
+                }
                 else -> {
                     logger.debug("$entity(Unknown)")
                     null
@@ -95,6 +117,18 @@ class StateMachineDiagramEventListener(private val entityLUT: EntityLUT, private
                         is IState -> modifyState(entity)
                         else -> {
                             logger.debug("$entity(INodePresentation, Unknown)")
+                            null
+                        }
+                    }
+                }
+                is ILinkPresentation -> {
+                    when (entity.model) {
+                        is ITransition -> {
+                            logger.debug("$entity(ILinkPresentation, ITransition)")
+                            null
+                        }
+                        else -> {
+                            logger.debug("$entity(ILinkPresentation, Unknown)")
                             null
                         }
                     }
@@ -159,6 +193,22 @@ class StateMachineDiagramEventListener(private val entityLUT: EntityLUT, private
         entityLUT.entries.add(Entry(entity.id, entity.id))
         logger.debug("$entity(INodePresentation, IFinalState)")
         return CreateFinalState(entity.id, location, size, parentEntry.common)
+    }
+
+    private fun createTransition(entity: ILinkPresentation): CreateTransition? {
+        val sourceEntry = entityLUT.entries.find { it.mine == entity.source.id } ?: run {
+            logger.debug("${entity.id}(INodePresentation, IState) not found on LUT.")
+            return null
+        }
+
+        val targetEntry = entityLUT.entries.find { it.mine == entity.target.id } ?: run {
+            logger.debug("${entity.id}(INodePresentation, IState) not found on LUT.")
+            return null
+        }
+
+        entityLUT.entries.add(Entry(entity.id, entity.id))
+        logger.debug("$entity(ILinkPresentation, ITransition)")
+        return CreateTransition(entity.id, entity.label, sourceEntry.common, targetEntry.common)
     }
 
     private fun modifyPseudostate(entity: INodePresentation): ModifyPseudostate? {

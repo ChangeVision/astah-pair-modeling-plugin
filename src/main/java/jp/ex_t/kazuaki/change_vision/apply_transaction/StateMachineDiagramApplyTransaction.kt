@@ -33,6 +33,7 @@ class StateMachineDiagramApplyTransaction(private val entityLUT: EntityLUT) :
                 is CreatePseudostate -> validateAndCreatePseudostate(it)
                 is CreateState -> validateAndCreateState(it)
                 is CreateFinalState -> validateAndCreateFinalState(it)
+                is CreateTransition -> validateAndCreateTransition(it)
                 is ModifyPseudostate -> validateAndModifyPseudostate(it)
                 is ModifyState -> validateAndModifyState(it)
                 is ModifyFinalState -> validateAndModifyFinalState(it)
@@ -67,6 +68,12 @@ class StateMachineDiagramApplyTransaction(private val entityLUT: EntityLUT) :
         if (operation.id.isNotEmpty()) {
             val location = Point2D.Double(operation.location.first, operation.location.second)
             createFinalState(operation.id, location, operation.size, operation.parentId)
+        }
+    }
+
+    private fun validateAndCreateTransition(operation: CreateTransition) {
+        if (operation.id.isNotEmpty() && operation.sourceId.isNotEmpty() && operation.targetId.isNotEmpty()) {
+            createTransition(operation.id, operation.label, operation.sourceId, operation.targetId)
         }
     }
 
@@ -194,6 +201,34 @@ class StateMachineDiagramApplyTransaction(private val entityLUT: EntityLUT) :
         entityLUT.entries.add(Entry(pseudostate.id, id))
         pseudostate.width = width
         pseudostate.height = height
+    }
+
+    private fun createTransition(id: String, label: String, sourceId: String, targetId: String) {
+        logger.debug("Create transition.")
+        stateMachineDiagramEditor.diagram = diagramViewManager.currentDiagram
+        val sourceEntry = entityLUT.entries.find { it.common == sourceId } ?: run {
+            logger.debug("$sourceId not found on LUT.")
+            return
+        }
+        val sourcePresentation =
+            diagramViewManager.currentDiagram.presentations.find { it.id == sourceEntry.mine } as INodePresentation?
+                ?: run {
+                    logger.debug("INodePresentation ${sourceEntry.mine} not found but $sourceId found on LUT.")
+                    return
+                }
+        val targetEntry = entityLUT.entries.find { it.common == targetId } ?: run {
+            logger.debug("$targetId not found on LUT.")
+            return
+        }
+        val targetPresentation =
+            diagramViewManager.currentDiagram.presentations.find { it.id == targetEntry.mine } as INodePresentation?
+                ?: run {
+                    logger.debug("INodePresentation ${targetEntry.mine} not found but $targetId found on LUT.")
+                    return
+                }
+        val transition = stateMachineDiagramEditor.createTransition(sourcePresentation, targetPresentation)
+        entityLUT.entries.add(Entry(transition.id, id))
+        transition.label = label
     }
 
     private fun modifyPseudostate(id: String, location: Point2D, size: Pair<Double, Double>, parentId: String) {
