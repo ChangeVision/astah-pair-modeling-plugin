@@ -89,6 +89,15 @@ data class CreatePseudostate(
 ) : StateMachineDiagramOperation()
 
 @Serializable
+data class CreateState(
+    val id: String,
+    val name: String,
+    val location: Pair<Double, Double>,
+    val size: Pair<Double, Double>,
+    val parentId: String,
+) : StateMachineDiagramOperation()
+
+@Serializable
 data class CreateFinalState(
     val id: String,
     val location: Pair<Double, Double>,
