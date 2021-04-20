@@ -147,6 +147,12 @@ class StateMachineDiagramEventListener(private val entityLUT: EntityLUT, private
     }
 
     private fun modifyPseudostate(entity: INodePresentation): ModifyPseudostate? {
+        val parentEntry =
+            if (entity.parent == null) Entry("", "") else entityLUT.entries.find { it.mine == entity.parent.id }
+                ?: run {
+                    logger.debug("${entity.id}(Parent of INodePresentation, IPseudostate) not found on LUT.")
+                    return null
+                }
         val location = Pair(entity.location.x, entity.location.y)
         val size = Pair(entity.width, entity.height)
         val entry = entityLUT.entries.find { it.mine == entity.id } ?: run {
@@ -154,7 +160,7 @@ class StateMachineDiagramEventListener(private val entityLUT: EntityLUT, private
             return null
         }
         logger.debug("$entity(INodePresentation, IPseudostate)")
-        return ModifyPseudostate(entry.common, location, size)
+        return ModifyPseudostate(entry.common, location, size, parentEntry.common)
     }
 
     private fun modifyFinalState(entity: INodePresentation): ModifyFinalState? {
