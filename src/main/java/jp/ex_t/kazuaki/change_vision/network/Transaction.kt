@@ -290,3 +290,8 @@ data class DeleteState(
 data class DeleteFinalState(
     val id: String,
 ) : StateMachineDiagramOperation()
+
+@Serializable
+data class DeleteTransition(
+    val id: String,
+) : StateMachineDiagramOperation()
