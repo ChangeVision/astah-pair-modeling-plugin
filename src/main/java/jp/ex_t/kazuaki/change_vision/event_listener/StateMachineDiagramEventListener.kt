@@ -120,10 +120,7 @@ class StateMachineDiagramEventListener(private val entityLUT: EntityLUT, private
                 }
                 is ILinkPresentation -> {
                     when (entity.model) {
-                        is ITransition -> {
-                            logger.debug("$entity(ILinkPresentation, ITransition)")
-                            null
-                        }
+                        is ITransition -> modifyTransition(entity)
                         else -> {
                             logger.debug("$entity(ILinkPresentation, Unknown)")
                             null
@@ -257,6 +254,15 @@ class StateMachineDiagramEventListener(private val entityLUT: EntityLUT, private
         }
         logger.debug("$entity(INodePresentation, IFinalState)")
         return ModifyFinalState(entry.common, location, size, parentEntry.common)
+    }
+
+    private fun modifyTransition(entity: ILinkPresentation): ModifyTransition? {
+        val entry = entityLUT.entries.find { it.mine == entity.id } ?: run {
+            logger.debug("${entity.id}(Parent of ILinkPresentation, ITransition) not found on LUT.")
+            return null
+        }
+        logger.debug("$entity(ILinkPresentation, ITransition)")
+        return ModifyTransition(entry.common, entity.label)
     }
 
     private fun deletePseudostate(entity: INodePresentation): DeletePseudostate? {

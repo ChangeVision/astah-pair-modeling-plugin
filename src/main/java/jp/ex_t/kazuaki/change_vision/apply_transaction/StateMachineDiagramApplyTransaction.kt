@@ -38,6 +38,7 @@ class StateMachineDiagramApplyTransaction(private val entityLUT: EntityLUT) :
                 is ModifyPseudostate -> validateAndModifyPseudostate(it)
                 is ModifyState -> validateAndModifyState(it)
                 is ModifyFinalState -> validateAndModifyFinalState(it)
+                is ModifyTransition -> validateAndModifyTransition(it)
                 is DeletePseudostate -> validateAndDeletePseudostate(it)
                 is DeleteState -> validateAndDeleteState(it)
                 is DeleteFinalState -> validateAndDeleteFinalState(it)
@@ -97,6 +98,12 @@ class StateMachineDiagramApplyTransaction(private val entityLUT: EntityLUT) :
         if (operation.id.isNotEmpty()) {
             val location = Point2D.Double(operation.location.first, operation.location.second)
             modifyFinalState(operation.id, location, operation.size, operation.parentId)
+        }
+    }
+
+    private fun validateAndModifyTransition(operation: ModifyTransition) {
+        if (operation.id.isNotEmpty()) {
+            modifyTransition(operation.id, operation.label)
         }
     }
 
@@ -334,6 +341,21 @@ class StateMachineDiagramApplyTransaction(private val entityLUT: EntityLUT) :
         finalState.location = location
         finalState.width = width
         finalState.height = height
+    }
+
+    private fun modifyTransition(id: String, label: String) {
+        logger.debug("Modify transition.")
+        stateMachineDiagramEditor.diagram = diagramViewManager.currentDiagram
+        val entry = entityLUT.entries.find { it.common == id } ?: run {
+            logger.debug("$id not found on LUT.")
+            return
+        }
+        val transition =
+            diagramViewManager.currentDiagram.presentations.find { it.id == entry.mine } as ILinkPresentation? ?: run {
+                logger.debug("ILinkPresentation ${entry.mine} not found but $id found on LUT.")
+                return
+            }
+        transition.label = label
     }
 
     private fun deletePseudostate(id: String) {
