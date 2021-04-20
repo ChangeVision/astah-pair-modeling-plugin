@@ -197,6 +197,13 @@ data class ResizeTopic(
 ) : MindmapDiagramOperation()
 
 @Serializable
+data class ResizePseudostate(
+    val id: String,
+    val location: Pair<Double, Double>,
+    val size: Pair<Double, Double>,
+) : StateMachineDiagramOperation()
+
+@Serializable
 data class DeleteClassModel(
     val id: String,
 ) : ClassDiagramOperation()

@@ -22,7 +22,6 @@ class StateMachineDiagramApplyTransaction(private val entityLUT: EntityLUT) :
     private val projectAccessor = api.projectAccessor
     private val diagramViewManager = api.viewManager.diagramViewManager
     private val stateMachineDiagramEditor = projectAccessor.diagramEditorFactory.stateMachineDiagramEditor
-    private val basicModelEditor = projectAccessor.modelEditorFactory.basicModelEditor
 
     override fun apply(operations: List<StateMachineDiagramOperation>) {
         operations.forEach {
@@ -31,6 +30,7 @@ class StateMachineDiagramApplyTransaction(private val entityLUT: EntityLUT) :
                     validateAndCreateStateMachineDiagram(it)
                 }
                 is CreatePseudostate -> validateAndCreatePseudostate(it)
+                is ResizePseudostate -> validateAndResizePseudostate(it)
             }
         }
     }
@@ -45,6 +45,13 @@ class StateMachineDiagramApplyTransaction(private val entityLUT: EntityLUT) :
         if (operation.id.isNotEmpty()) {
             val location = Point2D.Double(operation.location.first, operation.location.second)
             createPseudostate(operation.id, location, operation.size, operation.parentId)
+        }
+    }
+
+    private fun validateAndResizePseudostate(operation: ResizePseudostate) {
+        if (operation.id.isNotEmpty()) {
+            val location = Point2D.Double(operation.location.first, operation.location.second)
+            resizePseudostate(operation.id, location, operation.size)
         }
     }
 
@@ -78,6 +85,24 @@ class StateMachineDiagramApplyTransaction(private val entityLUT: EntityLUT) :
 
         val pseudostate = stateMachineDiagramEditor.createInitialPseudostate(parentPresentation, location)
         entityLUT.entries.add(Entry(pseudostate.id, id))
+        pseudostate.width = width
+        pseudostate.height = height
+    }
+
+    private fun resizePseudostate(id: String, location: Point2D, size: Pair<Double, Double>) {
+        logger.debug("Resize pseudostate.")
+        val (width, height) = size
+        stateMachineDiagramEditor.diagram = diagramViewManager.currentDiagram
+        val entry = entityLUT.entries.find { it.common == id } ?: run {
+            logger.debug("$id not found on LUT.")
+            return
+        }
+        val pseudostate =
+            diagramViewManager.currentDiagram.presentations.find { it.id == entry.mine } as INodePresentation? ?: run {
+                logger.debug("INodePresentation ${entry.mine} not found but $id found on LUT.")
+                return
+            }
+        pseudostate.location = location
         pseudostate.width = width
         pseudostate.height = height
     }
