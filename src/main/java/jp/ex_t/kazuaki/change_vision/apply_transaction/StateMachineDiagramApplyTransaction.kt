@@ -22,6 +22,7 @@ class StateMachineDiagramApplyTransaction(private val entityLUT: EntityLUT) :
     private val projectAccessor = api.projectAccessor
     private val diagramViewManager = api.viewManager.diagramViewManager
     private val stateMachineDiagramEditor = projectAccessor.diagramEditorFactory.stateMachineDiagramEditor
+    private val basicModelEditor = projectAccessor.modelEditorFactory.basicModelEditor
 
     override fun apply(operations: List<StateMachineDiagramOperation>) {
         operations.forEach {
@@ -31,6 +32,7 @@ class StateMachineDiagramApplyTransaction(private val entityLUT: EntityLUT) :
                 }
                 is CreatePseudostate -> validateAndCreatePseudostate(it)
                 is ResizePseudostate -> validateAndResizePseudostate(it)
+                is DeletePseudostate -> validateAndDeletePseudostate(it)
             }
         }
     }
@@ -52,6 +54,12 @@ class StateMachineDiagramApplyTransaction(private val entityLUT: EntityLUT) :
         if (operation.id.isNotEmpty()) {
             val location = Point2D.Double(operation.location.first, operation.location.second)
             resizePseudostate(operation.id, location, operation.size)
+        }
+    }
+
+    private fun validateAndDeletePseudostate(operation: DeletePseudostate) {
+        if (operation.id.isNotEmpty()) {
+            deletePseudostate(operation.id)
         }
     }
 
@@ -105,6 +113,22 @@ class StateMachineDiagramApplyTransaction(private val entityLUT: EntityLUT) :
         pseudostate.location = location
         pseudostate.width = width
         pseudostate.height = height
+    }
+
+    private fun deletePseudostate(id: String) {
+        logger.debug("Delete pseudostate.")
+        stateMachineDiagramEditor.diagram = diagramViewManager.currentDiagram
+        val entry = entityLUT.entries.find { it.common == id } ?: run {
+            logger.debug("$id not found on LUT.")
+            return
+        }
+        val pseudostate =
+            diagramViewManager.currentDiagram.presentations.find { it.id == entry.mine } as INodePresentation? ?: run {
+                logger.debug("INodePresentation ${entry.mine} not found but $id found on LUT.")
+                return
+            }
+        entityLUT.entries.remove(entry)
+        basicModelEditor.delete(pseudostate.model)
     }
 
     companion object : Logging {

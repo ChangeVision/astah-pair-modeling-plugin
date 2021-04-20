@@ -232,3 +232,8 @@ data class DeleteLinkPresentation(
 data class DeleteNote(
     val id: String,
 ) : ClassDiagramOperation()
+
+@Serializable
+data class DeletePseudostate(
+    val id: String,
+) : StateMachineDiagramOperation()
