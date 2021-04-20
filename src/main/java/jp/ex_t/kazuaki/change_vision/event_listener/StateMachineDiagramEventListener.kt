@@ -90,7 +90,7 @@ class StateMachineDiagramEventListener(private val entityLUT: EntityLUT, private
             when (val entity = it.entity) {
                 is INodePresentation -> {
                     when (entity.model) {
-                        is IPseudostate -> resizePseudostate(entity)
+                        is IPseudostate -> modifyPseudostate(entity)
                         is IFinalState -> modifyFinalState(entity)
                         else -> {
                             logger.debug("$entity(INodePresentation, Unknown)")
@@ -146,7 +146,7 @@ class StateMachineDiagramEventListener(private val entityLUT: EntityLUT, private
         return CreateFinalState(entity.id, location, size, parentEntry.common)
     }
 
-    private fun resizePseudostate(entity: INodePresentation): ResizePseudostate? {
+    private fun modifyPseudostate(entity: INodePresentation): ModifyPseudostate? {
         val location = Pair(entity.location.x, entity.location.y)
         val size = Pair(entity.width, entity.height)
         val entry = entityLUT.entries.find { it.mine == entity.id } ?: run {
@@ -154,7 +154,7 @@ class StateMachineDiagramEventListener(private val entityLUT: EntityLUT, private
             return null
         }
         logger.debug("$entity(INodePresentation, IPseudostate)")
-        return ResizePseudostate(entry.common, location, size)
+        return ModifyPseudostate(entry.common, location, size)
     }
 
     private fun modifyFinalState(entity: INodePresentation): ModifyFinalState? {

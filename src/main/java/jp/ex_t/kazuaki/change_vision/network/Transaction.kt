@@ -205,7 +205,7 @@ data class ResizeTopic(
 ) : MindmapDiagramOperation()
 
 @Serializable
-data class ResizePseudostate(
+data class ModifyPseudostate(
     val id: String,
     val location: Pair<Double, Double>,
     val size: Pair<Double, Double>,
