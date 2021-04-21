@@ -106,6 +106,14 @@ data class CreateFinalState(
 ) : StateMachineDiagramOperation()
 
 @Serializable
+data class CreateTransition(
+    val id: String,
+    val label: String,
+    val sourceId: String,
+    val targetId: String,
+) : StateMachineDiagramOperation()
+
+@Serializable
 data class CreateClassPresentation(
     val classId: String,
     val location: Pair<Double, Double>,
