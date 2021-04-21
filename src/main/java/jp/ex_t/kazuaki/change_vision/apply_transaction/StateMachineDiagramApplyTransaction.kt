@@ -10,6 +10,7 @@ package jp.ex_t.kazuaki.change_vision.apply_transaction
 
 import com.change_vision.jude.api.inf.AstahAPI
 import com.change_vision.jude.api.inf.model.INamedElement
+import com.change_vision.jude.api.inf.presentation.ILinkPresentation
 import com.change_vision.jude.api.inf.presentation.INodePresentation
 import jp.ex_t.kazuaki.change_vision.Logging
 import jp.ex_t.kazuaki.change_vision.logger
@@ -40,6 +41,7 @@ class StateMachineDiagramApplyTransaction(private val entityLUT: EntityLUT) :
                 is DeletePseudostate -> validateAndDeletePseudostate(it)
                 is DeleteState -> validateAndDeleteState(it)
                 is DeleteFinalState -> validateAndDeleteFinalState(it)
+                is DeleteTransition -> validateAndDeleteTransition(it)
             }
         }
     }
@@ -113,6 +115,12 @@ class StateMachineDiagramApplyTransaction(private val entityLUT: EntityLUT) :
     private fun validateAndDeleteFinalState(operation: DeleteFinalState) {
         if (operation.id.isNotEmpty()) {
             deleteFinalState(operation.id)
+        }
+    }
+
+    private fun validateAndDeleteTransition(operation: DeleteTransition) {
+        if (operation.id.isNotEmpty()) {
+            deleteTransition(operation.id)
         }
     }
 
@@ -374,6 +382,22 @@ class StateMachineDiagramApplyTransaction(private val entityLUT: EntityLUT) :
             }
         entityLUT.entries.remove(entry)
         basicModelEditor.delete(finalState.model)
+    }
+
+    private fun deleteTransition(id: String) {
+        logger.debug("Delete transition.")
+        stateMachineDiagramEditor.diagram = diagramViewManager.currentDiagram
+        val entry = entityLUT.entries.find { it.common == id } ?: run {
+            logger.debug("$id not found on LUT.")
+            return
+        }
+        val transition =
+            diagramViewManager.currentDiagram.presentations.find { it.id == entry.mine } as ILinkPresentation? ?: run {
+                logger.debug("ILinkPresentation ${entry.mine} not found but $id found on LUT.")
+                return
+            }
+        entityLUT.entries.remove(entry)
+        basicModelEditor.delete(transition.model)
     }
 
     companion object : Logging {
