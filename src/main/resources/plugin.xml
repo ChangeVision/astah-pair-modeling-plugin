@@ -4,18 +4,18 @@
       <actionSet
             label="%action_set_label"
             visible="true"
-            id="jp.ex_t.kazuaki.change_vision.pair-modeling-prototype.actionSet">
+            id="jp.ex_t.kazuaki.change_vision.pair-modeling.actionSet">
          <menu
-               id="pair-modeling-prototype"
+               id="pair-modeling"
                label="%menu_group"
-               path="tool/pair-modeling-prototype">
+               path="tool/pair-modeling">
          </menu>
          <action
                  label="%menu_label_config"
                  icon="icons/sample.gif"
                  class="jp.ex_t.kazuaki.change_vision.ConfigurationAction"
                  tooltip="%menu_tooltip"
-                 menubarPath="tool/pair-modeling-prototype/"
+                 menubarPath="tool/pair-modeling/"
                  id="jp.ex_t.kazuaki.change_vision.ConfigurationAction">
          </action>
          <action
@@ -23,7 +23,7 @@
                  icon="icons/sample.gif"
                  class="jp.ex_t.kazuaki.change_vision.PairModelingAction"
                  tooltip="%menu_tooltip"
-                 menubarPath="tool/pair-modeling-prototype/"
+                 menubarPath="tool/pair-modeling/"
                  id="jp.ex_t.kazuaki.change_vision.PairModelingAction">
          </action>
      </actionSet>

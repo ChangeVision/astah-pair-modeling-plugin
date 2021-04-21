@@ -6,11 +6,11 @@
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
-        <module name="pair-modeling-prototype" />
+        <module name="pair-modeling" />
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>
-      <module name="pair-modeling-prototype" target="1.8" />
+      <module name="pair-modeling" target="1.8" />
     </bytecodeTargetLevel>
   </component>
 </project>

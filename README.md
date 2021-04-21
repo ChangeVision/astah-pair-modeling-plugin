@@ -1,2 +1,2 @@
-# astah-pair-modeling-plugin-prototype
-astah*でペアモデリングを実現するためのプラグインのプロトタイプ
+# astah-pair-modeling-plugin
+astah*でペアモデリングを実現するためのプラグイン
