@@ -30,6 +30,7 @@ class StateMachineDiagramEventListener(private val entityLUT: EntityLUT, private
                 is INodePresentation -> {
                     when (entity.model) {
                         is IPseudostate -> deletePseudostate(entity)
+                        is IFinalState -> deleteFinalState(entity)
                         else -> {
                             logger.debug("$entity(INodePresentation, Unknown)")
                             null
@@ -188,6 +189,16 @@ class StateMachineDiagramEventListener(private val entityLUT: EntityLUT, private
         logger.debug("$entity(INodePresentation, IPseudostate)")
         entityLUT.entries.remove(entry)
         return DeletePseudostate(entry.common)
+    }
+
+    private fun deleteFinalState(entity: INodePresentation): DeleteFinalState? {
+        val entry = entityLUT.entries.find { it.mine == entity.id } ?: run {
+            logger.debug("${entity.id}(INodePresentation, IFinalState) not found on LUT.")
+            return null
+        }
+        logger.debug("$entity(INodePresentation, IFinalState)")
+        entityLUT.entries.remove(entry)
+        return DeleteFinalState(entry.common)
     }
 
     companion object : Logging {
