@@ -32,7 +32,7 @@ class StateMachineDiagramApplyTransaction(private val entityLUT: EntityLUT) :
                 }
                 is CreatePseudostate -> validateAndCreatePseudostate(it)
                 is CreateFinalState -> validateAndCreateFinalState(it)
-                is ResizePseudostate -> validateAndResizePseudostate(it)
+                is ModifyPseudostate -> validateAndModifyPseudostate(it)
                 is ModifyFinalState -> validateAndModifyFinalState(it)
                 is DeletePseudostate -> validateAndDeletePseudostate(it)
             }
@@ -59,10 +59,10 @@ class StateMachineDiagramApplyTransaction(private val entityLUT: EntityLUT) :
         }
     }
 
-    private fun validateAndResizePseudostate(operation: ResizePseudostate) {
+    private fun validateAndModifyPseudostate(operation: ModifyPseudostate) {
         if (operation.id.isNotEmpty()) {
             val location = Point2D.Double(operation.location.first, operation.location.second)
-            resizePseudostate(operation.id, location, operation.size)
+            modifyPseudostate(operation.id, location, operation.size, operation.parentId)
         }
     }
 
@@ -139,19 +139,33 @@ class StateMachineDiagramApplyTransaction(private val entityLUT: EntityLUT) :
         pseudostate.height = height
     }
 
-    private fun resizePseudostate(id: String, location: Point2D, size: Pair<Double, Double>) {
-        logger.debug("Resize pseudostate.")
+    private fun modifyPseudostate(id: String, location: Point2D, size: Pair<Double, Double>, parentId: String) {
+        logger.debug("Modify pseudostate.")
         val (width, height) = size
         stateMachineDiagramEditor.diagram = diagramViewManager.currentDiagram
         val entry = entityLUT.entries.find { it.common == id } ?: run {
             logger.debug("$id not found on LUT.")
             return
         }
+        val parentEntity = if (parentId.isEmpty()) null else entityLUT.entries.find { it.common == parentId } ?: run {
+            logger.debug("$parentId not found on LUT.")
+            return
+        }
+        val parentPresentation =
+            if (parentEntity == null) null else diagramViewManager.currentDiagram.presentations.find { it.id == parentEntity.mine } as INodePresentation?
+                ?: run {
+                    logger.debug("INodePresentation ${parentEntity.mine} not found but $parentId found on LUT.")
+                    return
+                }
+
         val pseudostate =
             diagramViewManager.currentDiagram.presentations.find { it.id == entry.mine } as INodePresentation? ?: run {
                 logger.debug("INodePresentation ${entry.mine} not found but $id found on LUT.")
                 return
             }
+        if (pseudostate.parent != parentPresentation) {
+            stateMachineDiagramEditor.changeParentOfState(pseudostate, parentPresentation)
+        }
         pseudostate.location = location
         pseudostate.width = width
         pseudostate.height = height
