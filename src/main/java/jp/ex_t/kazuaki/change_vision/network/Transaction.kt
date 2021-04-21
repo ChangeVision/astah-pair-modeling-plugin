@@ -247,6 +247,12 @@ data class ModifyFinalState(
 ) : StateMachineDiagramOperation()
 
 @Serializable
+data class ModifyTransition(
+    val id: String,
+    val label: String,
+) : StateMachineDiagramOperation()
+
+@Serializable
 data class DeleteClassModel(
     val id: String,
 ) : ClassDiagramOperation()
