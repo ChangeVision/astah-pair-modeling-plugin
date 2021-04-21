@@ -274,6 +274,11 @@ data class DeletePseudostate(
 ) : StateMachineDiagramOperation()
 
 @Serializable
+data class DeleteState(
+    val id: String,
+) : StateMachineDiagramOperation()
+
+@Serializable
 data class DeleteFinalState(
     val id: String,
 ) : StateMachineDiagramOperation()
