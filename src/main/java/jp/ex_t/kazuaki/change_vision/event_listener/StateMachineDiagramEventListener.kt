@@ -62,8 +62,8 @@ class StateMachineDiagramEventListener(private val entityLUT: EntityLUT, private
                 is INodePresentation -> {
                     when (entity.model) {
                         is IPseudostate -> createPseudostate(entity)
-                        is IState -> createState(entity)
                         is IFinalState -> createFinalState(entity)
+                        is IState -> createState(entity)
                         else -> {
                             logger.debug("$entity(INodePresentation, Unknown)")
                             null
@@ -91,6 +91,7 @@ class StateMachineDiagramEventListener(private val entityLUT: EntityLUT, private
                     when (entity.model) {
                         is IPseudostate -> modifyPseudostate(entity)
                         is IFinalState -> modifyFinalState(entity)
+                        is IState -> modifyState(entity)
                         else -> {
                             logger.debug("$entity(INodePresentation, Unknown)")
                             null
@@ -174,6 +175,23 @@ class StateMachineDiagramEventListener(private val entityLUT: EntityLUT, private
         }
         logger.debug("$entity(INodePresentation, IPseudostate)")
         return ModifyPseudostate(entry.common, location, size, parentEntry.common)
+    }
+
+    private fun modifyState(entity: INodePresentation): ModifyState? {
+        val parentEntry =
+            if (entity.parent == null) Entry("", "") else entityLUT.entries.find { it.mine == entity.parent.id }
+                ?: run {
+                    logger.debug("${entity.id}(Parent of INodePresentation, IState) not found on LUT.")
+                    return null
+                }
+        val location = Pair(entity.location.x, entity.location.y)
+        val size = Pair(entity.width, entity.height)
+        val entry = entityLUT.entries.find { it.mine == entity.id } ?: run {
+            logger.debug("${entity.id}(INodePresentation, IState) not found on LUT.")
+            return null
+        }
+        logger.debug("$entity(INodePresentation, IState)")
+        return ModifyState(entry.common, entity.label, location, size, parentEntry.common)
     }
 
     private fun modifyFinalState(entity: INodePresentation): ModifyFinalState? {
