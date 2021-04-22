@@ -39,10 +39,8 @@ class StateMachineDiagramApplyTransaction(private val entityLUT: EntityLUT) :
                 is ModifyState -> validateAndModifyState(it)
                 is ModifyFinalState -> validateAndModifyFinalState(it)
                 is ModifyTransition -> validateAndModifyTransition(it)
-                is DeletePseudostate -> validateAndDeletePseudostate(it)
-                is DeleteState -> validateAndDeleteState(it)
-                is DeleteFinalState -> validateAndDeleteFinalState(it)
-                is DeleteTransition -> validateAndDeleteTransition(it)
+                is DeleteStateMachineNodePresentation -> validateAndDeleteNodePresentation(it)
+                is DeleteStateMachineLinkPresentation -> validateAndDeleteLinkPresentation(it)
             }
         }
     }
@@ -107,27 +105,15 @@ class StateMachineDiagramApplyTransaction(private val entityLUT: EntityLUT) :
         }
     }
 
-    private fun validateAndDeletePseudostate(operation: DeletePseudostate) {
+    private fun validateAndDeleteNodePresentation(operation: DeleteStateMachineNodePresentation) {
         if (operation.id.isNotEmpty()) {
-            deletePseudostate(operation.id)
+            deleteNodePresentation(operation.id)
         }
     }
 
-    private fun validateAndDeleteState(operation: DeleteState) {
+    private fun validateAndDeleteLinkPresentation(operation: DeleteStateMachineLinkPresentation) {
         if (operation.id.isNotEmpty()) {
-            deleteState(operation.id)
-        }
-    }
-
-    private fun validateAndDeleteFinalState(operation: DeleteFinalState) {
-        if (operation.id.isNotEmpty()) {
-            deleteFinalState(operation.id)
-        }
-    }
-
-    private fun validateAndDeleteTransition(operation: DeleteTransition) {
-        if (operation.id.isNotEmpty()) {
-            deleteTransition(operation.id)
+            deleteLinkPresentation(operation.id)
         }
     }
 
@@ -358,7 +344,7 @@ class StateMachineDiagramApplyTransaction(private val entityLUT: EntityLUT) :
         transition.label = label
     }
 
-    private fun deletePseudostate(id: String) {
+    private fun deleteNodePresentation(id: String) {
         logger.debug("Delete pseudostate.")
         stateMachineDiagramEditor.diagram = diagramViewManager.currentDiagram
         val entry = entityLUT.entries.find { it.common == id } ?: run {
@@ -374,39 +360,7 @@ class StateMachineDiagramApplyTransaction(private val entityLUT: EntityLUT) :
         basicModelEditor.delete(pseudostate.model)
     }
 
-    private fun deleteState(id: String) {
-        logger.debug("Delete state.")
-        stateMachineDiagramEditor.diagram = diagramViewManager.currentDiagram
-        val entry = entityLUT.entries.find { it.common == id } ?: run {
-            logger.debug("$id not found on LUT.")
-            return
-        }
-        val state =
-            diagramViewManager.currentDiagram.presentations.find { it.id == entry.mine } as INodePresentation? ?: run {
-                logger.debug("INodePresentation ${entry.mine} not found but $id found on LUT.")
-                return
-            }
-        entityLUT.entries.remove(entry)
-        basicModelEditor.delete(state.model)
-    }
-
-    private fun deleteFinalState(id: String) {
-        logger.debug("Delete final state.")
-        stateMachineDiagramEditor.diagram = diagramViewManager.currentDiagram
-        val entry = entityLUT.entries.find { it.common == id } ?: run {
-            logger.debug("$id not found on LUT.")
-            return
-        }
-        val finalState =
-            diagramViewManager.currentDiagram.presentations.find { it.id == entry.mine } as INodePresentation? ?: run {
-                logger.debug("INodePresentation ${entry.mine} not found but $id found on LUT.")
-                return
-            }
-        entityLUT.entries.remove(entry)
-        basicModelEditor.delete(finalState.model)
-    }
-
-    private fun deleteTransition(id: String) {
+    private fun deleteLinkPresentation(id: String) {
         logger.debug("Delete transition.")
         stateMachineDiagramEditor.diagram = diagramViewManager.currentDiagram
         val entry = entityLUT.entries.find { it.common == id } ?: run {
