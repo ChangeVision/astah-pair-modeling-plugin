@@ -31,7 +31,6 @@ class PairModelingAction : IPluginActionDelegate {
                 pairModeling = PairModeling(topic, clientId, config.conf.brokerAddress, config.conf.brokerPortNumber)
                 pairModeling.start()
             } else {
-                // stop系の処理
                 pairModeling.end()
             }
             isLaunched = !isLaunched
