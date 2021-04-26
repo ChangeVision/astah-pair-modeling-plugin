@@ -292,7 +292,7 @@ class StateMachineDiagramApplyTransaction(private val entityLUT: EntityLUT) :
         if (state.parent != parentPresentation) {
             stateMachineDiagramEditor.changeParentOfState(state, parentPresentation)
         }
-        state.label = name
+        (state.model as INamedElement).name = name
         state.location = location
         state.width = width
         state.height = height
@@ -342,7 +342,7 @@ class StateMachineDiagramApplyTransaction(private val entityLUT: EntityLUT) :
                 logger.debug("ILinkPresentation ${entry.mine} not found but $id found on LUT.")
                 return
             }
-        transition.label = label
+        (transition.model as INamedElement).name = label
     }
 
     private fun deleteNodePresentation(id: String) {
