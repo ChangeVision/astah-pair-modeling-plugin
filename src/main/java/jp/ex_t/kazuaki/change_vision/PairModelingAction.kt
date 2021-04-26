@@ -42,18 +42,6 @@ class PairModelingAction : IPluginActionDelegate {
         }
     }
 
-    private fun getHostAddress(window: IWindow): String? {
-        val ipAddress = JOptionPane.showInputDialog(window.parent, "Input IP address or \"localhost\"") ?: return null
-        val ipAddressPattern =
-            Regex("""^((25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])\.){3}(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])${'$'}""")
-        if (!ipAddressPattern.matches(ipAddress) && ipAddress != "localhost") {
-            val message = "IP address must be IPv4 address."
-            JOptionPane.showMessageDialog(window.parent, message, "IP address error", JOptionPane.WARNING_MESSAGE)
-            return null
-        }
-        return ipAddress
-    }
-
     companion object : Logging {
         private val logger = logger()
     }
