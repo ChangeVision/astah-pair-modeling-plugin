@@ -229,7 +229,8 @@ class StateMachineDiagramApplyTransaction(private val entityLUT: EntityLUT) :
                 }
         val transition = stateMachineDiagramEditor.createTransition(sourcePresentation, targetPresentation)
         entityLUT.entries.add(Entry(transition.id, id))
-        transition.label = label
+        // Because of APIs specification, label must be set as model name.
+        (transition.model as INamedElement).name = label
     }
 
     private fun modifyPseudostate(id: String, location: Point2D, size: Pair<Double, Double>, parentId: String) {
