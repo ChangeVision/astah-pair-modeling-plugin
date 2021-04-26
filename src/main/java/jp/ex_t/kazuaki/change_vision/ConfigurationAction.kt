@@ -22,29 +22,29 @@ class ConfigurationAction : IPluginActionDelegate {
 
         val brokerAddress = JOptionPane.showInputDialog(
             window.parent,
-            "Input broker address such as IP address, domain name or \"localhost\".\nIf you want skip it, click \"Cancel\".",
+            "Input broker server address such as IP address, domain name or \"localhost\".\nIf you want to skip it, click \"Cancel\".",
             config.conf.brokerAddress
         )
         if (brokerAddress != null) {
             if (!config.setBrokerAddress(brokerAddress)) {
                 JOptionPane.showMessageDialog(
                     window.parent,
-                    "Broker address invalid.\nInput correctly broker address.",
-                    "Broker address invalid.",
+                    "Broker server address invalid.\nInput correctly broker server address.",
+                    "Broker server address invalid.",
                     JOptionPane.WARNING_MESSAGE
                 )
             }
         }
         val brokerPortNumber = JOptionPane.showInputDialog(
-            "Input broker port number.\nIf you want skip it, click \"Cancel\".",
+            "Input broker server port number.\nIf you want to skip it, click \"Cancel\".",
             config.conf.brokerPortNumber
         )
         if (brokerPortNumber != null) {
             if (!config.setBrokerPortNumber(brokerPortNumber)) {
                 JOptionPane.showMessageDialog(
                     window.parent,
-                    "Broker port number invalid.\nInput correctly broker port number.",
-                    "Broker port number invalid.",
+                    "Broker server port number invalid.\nInput correctly broker server port number.",
+                    "Broker server port number invalid.",
                     JOptionPane.WARNING_MESSAGE
                 )
             }

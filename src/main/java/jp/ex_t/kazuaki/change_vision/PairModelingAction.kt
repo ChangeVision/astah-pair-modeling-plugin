@@ -31,7 +31,6 @@ class PairModelingAction : IPluginActionDelegate {
                 pairModeling = PairModeling(topic, clientId, config.conf.brokerAddress, config.conf.brokerPortNumber)
                 pairModeling.start()
             } else {
-                // stop系の処理
                 pairModeling.end()
             }
             isLaunched = !isLaunched
@@ -41,18 +40,6 @@ class PairModelingAction : IPluginActionDelegate {
             logger.error(message, e)
             throw e
         }
-    }
-
-    private fun getHostAddress(window: IWindow): String? {
-        val ipAddress = JOptionPane.showInputDialog(window.parent, "Input IP address or \"localhost\"") ?: return null
-        val ipAddressPattern =
-            Regex("""^((25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])\.){3}(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])${'$'}""")
-        if (!ipAddressPattern.matches(ipAddress) && ipAddress != "localhost") {
-            val message = "IP address must be IPv4 address."
-            JOptionPane.showMessageDialog(window.parent, message, "IP address error", JOptionPane.WARNING_MESSAGE)
-            return null
-        }
-        return ipAddress
     }
 
     companion object : Logging {
