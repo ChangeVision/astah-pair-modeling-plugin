@@ -13,7 +13,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>jp.ex_t.kazuaki.change_vision</groupId>
 	<artifactId>pair-modeling</artifactId>
-	<version>0.1.0</version>
+	<version>0.2.0</version>
 	<packaging>jar</packaging>
 	<name>%bundle.name</name>
 	<description>%bundle.description</description>
