@@ -26,24 +26,10 @@ class StateMachineDiagramEventListener(private val entityLUT: EntityLUT, private
             Operation.values()[editUnit.operation].let { op -> logger.debug("Op: $op -> ") }
             when (val entity = editUnit.entity) {
                 is INodePresentation -> {
-                    when (entity.model) {
-                        is IPseudostate -> deletePseudostate(entity)
-                        is IFinalState -> deleteFinalState(entity)
-                        is IState -> deleteState(entity)
-                        else -> {
-                            logger.debug("$entity(INodePresentation, Unknown)")
-                            null
-                        }
-                    }
+                    deleteNodePresentation(entity)
                 }
                 is ILinkPresentation -> {
-                    when (entity.model) {
-                        is ITransition -> deleteTransition(entity)
-                        else -> {
-                            logger.debug("$entity(ILinkPresentation, Unknown)")
-                            null
-                        }
-                    }
+                    deleteLinkPresentation(entity)
                 }
                 else -> {
                     logger.debug("$entity(Unknown)")
@@ -265,44 +251,24 @@ class StateMachineDiagramEventListener(private val entityLUT: EntityLUT, private
         return ModifyTransition(entry.common, entity.label)
     }
 
-    private fun deletePseudostate(entity: INodePresentation): DeletePseudostate? {
+    private fun deleteNodePresentation(entity: INodePresentation): DeleteStateMachineNodePresentation? {
         val entry = entityLUT.entries.find { it.mine == entity.id } ?: run {
             logger.debug("${entity.id}(INodePresentation, IPseudostate) not found on LUT.")
             return null
         }
         logger.debug("$entity(INodePresentation, IPseudostate)")
         entityLUT.entries.remove(entry)
-        return DeletePseudostate(entry.common)
+        return DeleteStateMachineNodePresentation(entry.common)
     }
 
-    private fun deleteState(entity: INodePresentation): DeleteState? {
-        val entry = entityLUT.entries.find { it.mine == entity.id } ?: run {
-            logger.debug("${entity.id}(INodePresentation, IState) not found on LUT.")
-            return null
-        }
-        logger.debug("$entity(INodePresentation, IState)")
-        entityLUT.entries.remove(entry)
-        return DeleteState(entry.common)
-    }
-
-    private fun deleteFinalState(entity: INodePresentation): DeleteFinalState? {
-        val entry = entityLUT.entries.find { it.mine == entity.id } ?: run {
-            logger.debug("${entity.id}(INodePresentation, IFinalState) not found on LUT.")
-            return null
-        }
-        logger.debug("$entity(INodePresentation, IFinalState)")
-        entityLUT.entries.remove(entry)
-        return DeleteFinalState(entry.common)
-    }
-
-    private fun deleteTransition(entity: ILinkPresentation): DeleteTransition? {
+    private fun deleteLinkPresentation(entity: ILinkPresentation): DeleteStateMachineLinkPresentation? {
         val entry = entityLUT.entries.find { it.mine == entity.id } ?: run {
             logger.debug("${entity.id}(ILinkPresentation, ITransition) not found on LUT.")
             return null
         }
         logger.debug("$entity(ILinkPresentation, ITransition)")
         entityLUT.entries.remove(entry)
-        return DeleteTransition(entry.common)
+        return DeleteStateMachineLinkPresentation(entry.common)
     }
 
     companion object : Logging {
