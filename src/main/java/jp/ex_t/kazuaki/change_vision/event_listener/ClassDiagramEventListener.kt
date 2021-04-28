@@ -104,50 +104,50 @@ class ClassDiagramEventListener(private val entityLUT: EntityLUT, private val mq
         return null
     }
 
-    private fun deleteClassModel(entity: IClass): DeleteClassModel? {
+    private fun deleteClassModel(entity: IClass): DeleteModel? {
         val lutEntity = entityLUT.entries.find { it.mine == entity.id } ?: run {
             logger.debug("${entity.id}(IClass) not found on LUT.")
             return null
         }
         entityLUT.entries.remove(lutEntity)
         logger.debug("${entity.name}(IClass)")
-        return DeleteClassModel(lutEntity.common)
+        return DeleteModel(lutEntity.common)
     }
 
     private fun deleteAssociationModel(
         entity: IAssociation,
-    ): DeleteLinkModel? {
+    ): DeleteModel? {
         val lutEntity = entityLUT.entries.find { it.mine == entity.id } ?: run {
             logger.debug("${entity.id}(IAssociation) not found on LUT.")
             return null
         }
         entityLUT.entries.remove(lutEntity)
         logger.debug("${entity.name}(IAssociation)")
-        return DeleteLinkModel(lutEntity.common)
+        return DeleteModel(lutEntity.common)
     }
 
     private fun deleteGeneralizationModel(
         entity: IGeneralization,
-    ): DeleteLinkModel? {
+    ): DeleteModel? {
         val lutEntity = entityLUT.entries.find { it.mine == entity.id } ?: run {
             logger.debug("${entity.id}(IGeneralization) not found on LUT.")
             return null
         }
         entityLUT.entries.remove(lutEntity)
         logger.debug("${entity.name}(IGeneralization)")
-        return DeleteLinkModel(lutEntity.common)
+        return DeleteModel(lutEntity.common)
     }
 
     private fun deleteRealizationModel(
         entity: IRealization,
-    ): DeleteLinkModel? {
+    ): DeleteModel? {
         val lutEntity = entityLUT.entries.find { it.mine == entity.id } ?: run {
             logger.debug("${entity.id}(IRealization) not found on LUT.")
             return null
         }
         entityLUT.entries.remove(lutEntity)
         logger.debug("${entity.name}(IRealization)")
-        return DeleteLinkModel(lutEntity.common)
+        return DeleteModel(lutEntity.common)
     }
 
     private fun deleteLinkPresentation(

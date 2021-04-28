@@ -73,11 +73,8 @@ class ClassDiagramApplyTransaction(private val entityLUT: EntityLUT) : IApplyTra
                 is ChangeAttributeNameAndTypeExpression -> {
                     validateAndChangeAttributeNameAndTypeExpression(it)
                 }
-                is DeleteClassModel -> {
-                    validateAndDeleteClassModel(it)
-                }
-                is DeleteLinkModel -> {
-                    validateAndDeleteLinkModel(it)
+                is DeleteModel -> {
+                    validateAndDeleteModel(it)
                 }
                 is DeletePresentation -> {
                     validateAndDeletePresentation(it)
@@ -144,12 +141,6 @@ class ClassDiagramApplyTransaction(private val entityLUT: EntityLUT) : IApplyTra
                 operation.name,
                 operation.id
             )
-        }
-    }
-
-    private fun validateAndDeleteLinkModel(operation: DeleteLinkModel) {
-        if (operation.id.isNotEmpty()) {
-            deleteLinkModel(operation.id)
         }
     }
 
@@ -268,9 +259,9 @@ class ClassDiagramApplyTransaction(private val entityLUT: EntityLUT) : IApplyTra
         }
     }
 
-    private fun validateAndDeleteClassModel(operation: DeleteClassModel) {
+    private fun validateAndDeleteModel(operation: DeleteModel) {
         if (operation.id.isNotEmpty()) {
-            deleteClassModel(operation.id)
+            deleteModel(operation.id)
         }
     }
 
@@ -676,36 +667,21 @@ class ClassDiagramApplyTransaction(private val entityLUT: EntityLUT) : IApplyTra
         attribute.typeExpression = typeExpression
     }
 
-    private fun deleteClassModel(id: String) {
-        logger.debug("Delete class model.")
-        val lutEntry = entityLUT.entries.find { it.common == id } ?: run {
-            logger.debug("$id not found on LUT.")
-            return
-        }
-        val clazz = projectAccessor.findElements(IClass::class.java).find { it.id == lutEntry.mine } ?: run {
-            logger.debug("Class ${lutEntry.mine} not found but $id found on LUT.")
-            entityLUT.entries.remove(lutEntry)
-            return
-        }
-        entityLUT.entries.remove(lutEntry)
-        basicModelEditor.delete(clazz)
-    }
-
-    private fun deleteLinkModel(id: String) {
-        logger.debug("Delete link model.")
+    private fun deleteModel(id: String) {
+        logger.debug("Delete model.")
         val diagram = diagramViewManager.currentDiagram
         classDiagramEditor.diagram = diagram
         val lutEntry = entityLUT.entries.find { it.common == id } ?: run {
             logger.debug("$id not found on LUT.")
             return
         }
-        val linkModel = projectAccessor.findElements(IEntity::class.java).find { it.id == lutEntry.mine } ?: run {
-            logger.debug("Link model ${lutEntry.mine} not found but $id found on LUT.")
+        val model = projectAccessor.findElements(IEntity::class.java).find { it.id == lutEntry.mine } ?: run {
+            logger.debug("Model ${lutEntry.mine} not found but $id found on LUT.")
             entityLUT.entries.remove(lutEntry)
             return
         }
         entityLUT.entries.remove(lutEntry)
-        basicModelEditor.delete(linkModel)
+        basicModelEditor.delete(model)
     }
 
     private fun deletePresentation(id: String) {
