@@ -213,7 +213,7 @@ data class ModifyAttribute(
 ) : ClassDiagramOperation()
 
 @Serializable
-data class ResizeTopic(
+data class ModifyTopic(
     val name: String,
     val location: Pair<Double, Double>,
     val size: Pair<Double, Double>,

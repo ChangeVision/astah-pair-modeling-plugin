@@ -90,7 +90,7 @@ class MindmapDiagramEventListener(private val entityLUT: EntityLUT, private val 
             val operation = Operation.values()[it.operation]
             logger.debug("Op: $operation -> ")
             when (val entity = it.entity) {
-                is INodePresentation -> resizeTopic(entity)
+                is INodePresentation -> modifyTopic(entity)
                 else -> {
                     logger.debug("$entity(Unknown)")
                     null
@@ -129,7 +129,7 @@ class MindmapDiagramEventListener(private val entityLUT: EntityLUT, private val 
         return CreateTopic(parentEntry.common, entity.label, entity.diagram.name, entity.id)
     }
 
-    private fun resizeTopic(entity: INodePresentation): ResizeTopic? {
+    private fun modifyTopic(entity: INodePresentation): ModifyTopic? {
         return when (val diagram = entity.diagram) {
             is IMindMapDiagram -> {
                 val location = Pair(entity.location.x, entity.location.y)
@@ -153,7 +153,7 @@ class MindmapDiagramEventListener(private val entityLUT: EntityLUT, private val 
                             logger.debug("${entity.parent.id} not found on LUT.")
                             return null
                         }
-                ResizeTopic(entity.label, location, size, parentEntry.common, entry.common)
+                ModifyTopic(entity.label, location, size, parentEntry.common, entry.common)
             }
             else -> {
                 logger.debug("${entity.label}(INodePresentation) @UnknownDiagram")
