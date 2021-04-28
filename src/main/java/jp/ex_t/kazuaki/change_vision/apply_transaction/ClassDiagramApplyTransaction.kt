@@ -58,20 +58,20 @@ class ClassDiagramApplyTransaction(private val entityLUT: EntityLUT) : IApplyTra
                 is CreateAttribute -> {
                     validateAndCreateAttribute(it)
                 }
-                is ResizeClassPresentation -> {
-                    validateAndResizeClassPresentation(it, operations)
+                is ModifyClassPresentation -> {
+                    validateAndModifyClassPresentation(it, operations)
                 }
-                is ResizeNote -> {
-                    validateAndResizeNote(it)
+                is ModifyNote -> {
+                    validateAndModifyNote(it)
                 }
-                is ChangeClassModel -> {
-                    validateAndChangeClassModel(it)
+                is ModifyClassModel -> {
+                    validateAndModifyClassModel(it)
                 }
-                is ChangeOperationNameAndReturnTypeExpression -> {
-                    validateAndChangeOperationNameAndReturnTypeExpression(it)
+                is ModifyOperation -> {
+                    validateAndModifyOperation(it)
                 }
-                is ChangeAttributeNameAndTypeExpression -> {
-                    validateAndChangeAttributeNameAndTypeExpression(it)
+                is ModifyAttribute -> {
+                    validateAndModifyAttribute(it)
                 }
                 is DeleteModel -> {
                     validateAndDeleteModel(it)
@@ -199,15 +199,15 @@ class ClassDiagramApplyTransaction(private val entityLUT: EntityLUT) : IApplyTra
         }
     }
 
-    private fun validateAndResizeClassPresentation(
-        operation: ResizeClassPresentation,
+    private fun validateAndModifyClassPresentation(
+        operation: ModifyClassPresentation,
         operations: List<ClassDiagramOperation>
     ) {
         val location = Point2D.Double(operation.location.first, operation.location.second)
-        if (!operations.any { it is ChangeClassModel }
+        if (!operations.any { it is ModifyClassModel }
             && operation.id.isNotEmpty()
             && operation.diagramName.isNotEmpty()) {
-            resizeClassPresentation(
+            modifyClassPresentation(
                 operation.id,
                 location,
                 operation.size,
@@ -216,26 +216,26 @@ class ClassDiagramApplyTransaction(private val entityLUT: EntityLUT) : IApplyTra
         }
     }
 
-    private fun validateAndResizeNote(operation: ResizeNote) {
+    private fun validateAndModifyNote(operation: ModifyNote) {
         val location = Point2D.Double(operation.location.first, operation.location.second)
         if (operation.id.isNotEmpty() && operation.diagramName.isNotEmpty()) {
-            resizeNote(operation.id, operation.note, location, operation.size, operation.diagramName)
+            modifyNote(operation.id, operation.note, location, operation.size, operation.diagramName)
         }
     }
 
-    private fun validateAndChangeClassModel(operation: ChangeClassModel) {
+    private fun validateAndModifyClassModel(operation: ModifyClassModel) {
         if (operation.id.isNotEmpty() && operation.name.isNotEmpty()) {
-            changeClassModel(operation.id, operation.name, operation.stereotypes)
+            modifyClassModel(operation.id, operation.name, operation.stereotypes)
         }
     }
 
-    private fun validateAndChangeOperationNameAndReturnTypeExpression(operation: ChangeOperationNameAndReturnTypeExpression) {
+    private fun validateAndModifyOperation(operation: ModifyOperation) {
         if (operation.ownerId.isNotEmpty()
             && operation.id.isNotEmpty()
             && operation.name.isNotEmpty()
             && operation.returnTypeExpression.isNotEmpty()
         ) {
-            changeOperationNameAndReturnTypeExpression(
+            modifyOperation(
                 operation.ownerId,
                 operation.id,
                 operation.name,
@@ -244,13 +244,13 @@ class ClassDiagramApplyTransaction(private val entityLUT: EntityLUT) : IApplyTra
         }
     }
 
-    private fun validateAndChangeAttributeNameAndTypeExpression(operation: ChangeAttributeNameAndTypeExpression) {
+    private fun validateAndModifyAttribute(operation: ModifyAttribute) {
         if (operation.ownerId.isNotEmpty()
             && operation.id.isNotEmpty()
             && operation.name.isNotEmpty()
             && operation.typeExpression.isNotEmpty()
         ) {
-            changeAttributeNameAndTypeExpression(
+            modifyAttribute(
                 operation.ownerId,
                 operation.id,
                 operation.name,
@@ -540,13 +540,13 @@ class ClassDiagramApplyTransaction(private val entityLUT: EntityLUT) : IApplyTra
         entityLUT.entries.add(Entry(attribute.id, id))
     }
 
-    private fun resizeClassPresentation(
+    private fun modifyClassPresentation(
         id: String,
         location: Point2D,
         size: Pair<Double, Double>,
         diagramName: String
     ) {
-        logger.debug("Resize class presentation.")
+        logger.debug("Modify class presentation.")
         val (width, height) = size
         val diagram = projectAccessor.findElements(IDiagram::class.java, diagramName).first() as IDiagram
         classDiagramEditor.diagram = diagram
@@ -563,7 +563,7 @@ class ClassDiagramApplyTransaction(private val entityLUT: EntityLUT) : IApplyTra
         classPresentation.height = height
     }
 
-    private fun resizeNote(
+    private fun modifyNote(
         id: String,
         note: String,
         location: Point2D,
@@ -588,7 +588,7 @@ class ClassDiagramApplyTransaction(private val entityLUT: EntityLUT) : IApplyTra
         notePresentation.height = height
     }
 
-    private fun changeClassModel(id: String, name: String, stereotypes: List<String?>) {
+    private fun modifyClassModel(id: String, name: String, stereotypes: List<String?>) {
         logger.debug("Change class model name and stereotypes.")
         val entry = entityLUT.entries.find { it.common == id } ?: run {
             logger.debug("$id not found on LUT.")
@@ -610,7 +610,7 @@ class ClassDiagramApplyTransaction(private val entityLUT: EntityLUT) : IApplyTra
         }
     }
 
-    private fun changeOperationNameAndReturnTypeExpression(
+    private fun modifyOperation(
         ownerId: String,
         id: String,
         name: String,
@@ -638,7 +638,7 @@ class ClassDiagramApplyTransaction(private val entityLUT: EntityLUT) : IApplyTra
         operation.returnTypeExpression = returnTypeExpression
     }
 
-    private fun changeAttributeNameAndTypeExpression(
+    private fun modifyAttribute(
         ownerId: String,
         id: String,
         name: String,

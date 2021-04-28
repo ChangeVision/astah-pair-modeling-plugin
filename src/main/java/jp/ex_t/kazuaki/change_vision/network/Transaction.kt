@@ -173,7 +173,7 @@ data class CreateFloatingTopic(
 ) : MindmapDiagramOperation()
 
 @Serializable
-data class ResizeClassPresentation(
+data class ModifyClassPresentation(
     val id: String,
     val location: Pair<Double, Double>,
     val size: Pair<Double, Double>,
@@ -181,7 +181,7 @@ data class ResizeClassPresentation(
 ) : ClassDiagramOperation()
 
 @Serializable
-data class ResizeNote(
+data class ModifyNote(
     val id: String,
     val note: String,
     val location: Pair<Double, Double>,
@@ -190,14 +190,14 @@ data class ResizeNote(
 ) : ClassDiagramOperation()
 
 @Serializable
-data class ChangeClassModel(
+data class ModifyClassModel(
     val id: String,
     val name: String,
     val stereotypes: List<String?> = mutableListOf(),
 ) : ClassDiagramOperation()
 
 @Serializable
-data class ChangeOperationNameAndReturnTypeExpression(
+data class ModifyOperation(
     val ownerId: String,
     val id: String,
     val name: String,
@@ -205,7 +205,7 @@ data class ChangeOperationNameAndReturnTypeExpression(
 ) : ClassDiagramOperation()
 
 @Serializable
-data class ChangeAttributeNameAndTypeExpression(
+data class ModifyAttribute(
     val ownerId: String,
     val id: String,
     val name: String,

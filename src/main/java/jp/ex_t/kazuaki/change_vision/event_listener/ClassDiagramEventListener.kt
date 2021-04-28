@@ -83,10 +83,10 @@ class ClassDiagramEventListener(private val entityLUT: EntityLUT, private val mq
             val operation = Operation.values()[it.operation]
             logger.debug("Op: $operation -> ")
             when (val entity = it.entity) {
-                is IClass -> changeClassModel(entity)
-                is INodePresentation -> resizeNodePresentation(entity)
-                is IOperation -> changeOperationNameAndReturnTypeExpression(entity) // break
-                is IAttribute -> changeAttributeNameAndTypeExpression(entity) // break
+                is IClass -> modifyClassModel(entity)
+                is INodePresentation -> modifyNodePresentation(entity)
+                is IOperation -> modifyOperation(entity) // break
+                is IAttribute -> modifyAttribute(entity) // break
                 else -> {
                     logger.debug("$entity(Unknown)")
                     null
@@ -460,53 +460,21 @@ class ClassDiagramEventListener(private val entityLUT: EntityLUT, private val mq
         }
     }
 
-    private fun changeClassModel(entity: IClass): ChangeClassModel? {
+    private fun modifyClassModel(entity: IClass): ModifyClassModel? {
         val entry = entityLUT.entries.find { it.mine == entity.id } ?: run {
             logger.debug("${entity.id} not found on LUT.")
             return null
         }
         logger.debug("${entity.name}(IClass) which maybe new name has ${entity.stereotypes.toList()} stereotype")
-        return ChangeClassModel(entry.common, entity.name, entity.stereotypes.toList())
+        return ModifyClassModel(entry.common, entity.name, entity.stereotypes.toList())
     }
 
-    private fun resizeNodePresentation(entity: INodePresentation): ClassDiagramOperation? {
+    private fun modifyNodePresentation(entity: INodePresentation): ClassDiagramOperation? {
         return when (val diagram = entity.diagram) {
             is IClassDiagram -> {
                 when (val model = entity.model) {
-                    is IClass -> {
-                        val entry = entityLUT.entries.find { it.mine == entity.id } ?: run {
-                            logger.debug("${entity.id} not found on LUT.")
-                            return null
-                        }
-                        val location = Pair(entity.location.x, entity.location.y)
-                        val size = Pair(entity.width, entity.height)
-                        logger.debug(
-                            "${entity.label}(INodePresentation)::${model.name}(IClass, ${
-                                Pair(
-                                    entity.width,
-                                    entity.height
-                                )
-                            } at ${entity.location}) @ClassDiagram${diagram.name}"
-                        )
-                        ResizeClassPresentation(entry.common, location, size, diagram.name)
-                    }
-                    is IComment -> {
-                        val entry = entityLUT.entries.find { it.mine == entity.id } ?: run {
-                            logger.debug("${entity.id} not found on LUT.")
-                            return null
-                        }
-                        val location = Pair(entity.location.x, entity.location.y)
-                        val size = Pair(entity.width, entity.height)
-                        logger.debug(
-                            "${entity.label}(INodePresentation)::${model.name}(IComment, ${
-                                Pair(
-                                    entity.width,
-                                    entity.height
-                                )
-                            } at ${entity.location}) @ClassDiagram${diagram.name}"
-                        )
-                        ResizeNote(entry.common, entity.label, location, size, diagram.name)
-                    }
+                    is IClass -> modifyClassPresentation(diagram, model, entity)
+                    is IComment -> modifyNote(diagram, model, entity)
                     else -> {
                         logger.debug("${entity.label}(INodePresentation) - $model(Unknown)")
                         null
@@ -520,7 +488,43 @@ class ClassDiagramEventListener(private val entityLUT: EntityLUT, private val mq
         }
     }
 
-    private fun changeOperationNameAndReturnTypeExpression(entity: IOperation): ChangeOperationNameAndReturnTypeExpression? {
+    private fun modifyClassPresentation(diagram: IDiagram, model: IClass, entity: INodePresentation): ModifyClassPresentation? {
+        val entry = entityLUT.entries.find { it.mine == entity.id } ?: run {
+            logger.debug("${entity.id} not found on LUT.")
+            return null
+        }
+        val location = Pair(entity.location.x, entity.location.y)
+        val size = Pair(entity.width, entity.height)
+        logger.debug(
+            "${entity.label}(INodePresentation)::${model.name}(IClass, ${
+                Pair(
+                    entity.width,
+                    entity.height
+                )
+            } at ${entity.location}) @ClassDiagram${diagram.name}"
+        )
+        return ModifyClassPresentation(entry.common, location, size, diagram.name)
+    }
+
+    private fun modifyNote(diagram: IDiagram, model: IComment, entity: INodePresentation): ModifyNote? {
+        val entry = entityLUT.entries.find { it.mine == entity.id } ?: run {
+            logger.debug("${entity.id} not found on LUT.")
+            return null
+        }
+        val location = Pair(entity.location.x, entity.location.y)
+        val size = Pair(entity.width, entity.height)
+        logger.debug(
+            "${entity.label}(INodePresentation)::${model.name}(IComment, ${
+                Pair(
+                    entity.width,
+                    entity.height
+                )
+            } at ${entity.location}) @ClassDiagram${diagram.name}"
+        )
+        return ModifyNote(entry.common, entity.label, location, size, diagram.name)
+    }
+
+    private fun modifyOperation(entity: IOperation): ModifyOperation? {
         return when (val owner = entity.owner) {
             is IClass -> {
                 val ownerEntry = entityLUT.entries.find { it.mine == owner.id } ?: run {
@@ -532,7 +536,7 @@ class ClassDiagramEventListener(private val entityLUT: EntityLUT, private val mq
                     return null
                 }
                 logger.debug("${entity.name}:${entity.returnTypeExpression}/${entity.returnType}(IOperation) - ${entity.owner}(IClass)")
-                ChangeOperationNameAndReturnTypeExpression(
+                ModifyOperation(
                     ownerEntry.common,
                     entry.common,
                     entity.name,
@@ -546,7 +550,7 @@ class ClassDiagramEventListener(private val entityLUT: EntityLUT, private val mq
         }
     }
 
-    private fun changeAttributeNameAndTypeExpression(entity: IAttribute): ChangeAttributeNameAndTypeExpression? {
+    private fun modifyAttribute(entity: IAttribute): ModifyAttribute? {
         return when (val owner = entity.owner) {
             is IClass -> {
                 val ownerEntry = entityLUT.entries.find { it.mine == owner.id } ?: run {
@@ -558,7 +562,7 @@ class ClassDiagramEventListener(private val entityLUT: EntityLUT, private val mq
                     return null
                 }
                 logger.debug("${entity.name}:${entity.typeExpression}/${entity.type}(IAttribute) - ${entity.owner}(IClass)")
-                ChangeAttributeNameAndTypeExpression(
+                ModifyAttribute(
                     ownerEntry.common,
                     entry.common,
                     entity.name,
