@@ -26,7 +26,7 @@ class PairModelingAction : IPluginActionDelegate {
             if (!isLaunched) {
                 val config = Config()
                 config.load()
-                val topic = "debug/astah" //JOptionPane.showInputDialog("Input topic. (Ex: debug/astah)") ?: return
+                val topic = getCommitId() ?: "debug/astah" //JOptionPane.showInputDialog("Input topic. (Ex: debug/astah)") ?: return
                 val clientId = UUID.randomUUID().toString()
                 pairModeling = PairModeling(topic, clientId, config.conf.brokerAddress, config.conf.brokerPortNumber)
                 pairModeling.start()
@@ -39,6 +39,18 @@ class PairModelingAction : IPluginActionDelegate {
             JOptionPane.showMessageDialog(window.parent, message, "Alert", JOptionPane.ERROR_MESSAGE)
             logger.error(message, e)
             throw e
+        }
+    }
+
+    private fun getCommitId(): String? {
+        logger.debug("Get commit id.")
+        val props = Properties()
+        val classLoader: ClassLoader = this.javaClass.classLoader
+        logger.debug("Git properties:")
+        classLoader.getResourceAsStream("git.properties").use {
+            props.load(it)
+            props.map { logger.debug("${it.key}: ${it.value}") }
+            return props.getProperty("git.commit.id.abbrev")
         }
     }
 
