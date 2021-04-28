@@ -272,11 +272,6 @@ data class DeleteNote(
 ) : ClassDiagramOperation()
 
 @Serializable
-data class DeleteStateMachineNodePresentation(
-    val id: String,
-) : StateMachineDiagramOperation()
-
-@Serializable
-data class DeleteStateMachineLinkPresentation(
+data class DeleteStateMachinePresentation(
     val id: String,
 ) : StateMachineDiagramOperation()
