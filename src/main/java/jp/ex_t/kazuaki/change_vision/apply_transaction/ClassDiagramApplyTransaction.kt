@@ -26,7 +26,7 @@ class ClassDiagramApplyTransaction(private val entityLUT: EntityLUT) : IApplyTra
 
     @Throws(BadTransactionException::class)
     override fun apply(operations: List<ClassDiagramOperation>) {
-        operations.forEach { it ->
+        operations.forEach {
             when (it) {
                 is CreateClassDiagram -> {
                     validateAndCreateClassDiagram(it)
