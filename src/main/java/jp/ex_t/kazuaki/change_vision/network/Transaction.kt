@@ -125,7 +125,7 @@ data class CreateClassPresentation(
 data class CreateLinkPresentation(
     val sourceClassId: String,
     val targetClassId: String,
-    val linkType: String,
+    val linkType: LinkType,
     val diagramName: String,
     val id: String,
 ) : ClassDiagramOperation()

@@ -414,7 +414,7 @@ class ClassDiagramEventListener(private val entityLUT: EntityLUT, private val mq
                                 CreateLinkPresentation(
                                     sourceEntry.common,
                                     targetEntry.common,
-                                    "Association",
+                                    LinkType.Association,
                                     entity.diagram.name,
                                     entity.id
                                 )
@@ -425,7 +425,7 @@ class ClassDiagramEventListener(private val entityLUT: EntityLUT, private val mq
                                 CreateLinkPresentation(
                                     sourceEntry.common,
                                     targetEntry.common,
-                                    "Generalization",
+                                    LinkType.Generalization,
                                     entity.diagram.name,
                                     entity.id
                                 )
@@ -436,7 +436,7 @@ class ClassDiagramEventListener(private val entityLUT: EntityLUT, private val mq
                                 CreateLinkPresentation(
                                     sourceEntry.common,
                                     targetEntry.common,
-                                    "Realization",
+                                    LinkType.Realization,
                                     entity.diagram.name,
                                     entity.id
                                 )

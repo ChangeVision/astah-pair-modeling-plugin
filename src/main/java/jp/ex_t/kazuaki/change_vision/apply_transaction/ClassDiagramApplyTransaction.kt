@@ -163,7 +163,6 @@ class ClassDiagramApplyTransaction(private val entityLUT: EntityLUT) : IApplyTra
     private fun validateAndCreateLinkPresentation(operation: CreateLinkPresentation) {
         if (operation.sourceClassId.isNotEmpty()
             && operation.targetClassId.isNotEmpty()
-            && operation.linkType.isNotEmpty()
             && operation.diagramName.isNotEmpty()
             && operation.id.isNotEmpty()
         ) {
@@ -436,27 +435,27 @@ class ClassDiagramApplyTransaction(private val entityLUT: EntityLUT) : IApplyTra
     private fun createLinkPresentation(
         sourceClassId: String,
         targetClassId: String,
-        linkType: String,
+        linkType: LinkType,
         diagramName: String,
         id: String
     ) {
         logger.debug("Create link presentation.")
         @Throws(ClassNotFoundException::class)
-        fun searchModel(linkType: String, sourceClass: IClass, targetClass: IClass): IElement {
+        fun searchModel(linkType: LinkType, sourceClass: IClass, targetClass: IClass): IElement {
             when (linkType) {
-                "Association" -> {
+                LinkType.Association -> {
                     return (sourceClass.attributes.filterNot { it.association == null }.find { sourceClassAttribute ->
                         targetClass.attributes.filterNot { it.association == null }.any { targetClassAttribute ->
                             sourceClassAttribute.association == targetClassAttribute.association
                         }
                     } ?: throw ClassNotFoundException()).association
                 }
-                "Generalization" -> {
+                LinkType.Generalization -> {
                     return sourceClass.generalizations.find {
                         it.superType == targetClass
                     } ?: throw ClassNotFoundException()
                 }
-                "Realization" -> {
+                LinkType.Realization -> {
                     return sourceClass.supplierRealizations.find {
                         it.client == targetClass
                     } ?: throw ClassNotFoundException()
