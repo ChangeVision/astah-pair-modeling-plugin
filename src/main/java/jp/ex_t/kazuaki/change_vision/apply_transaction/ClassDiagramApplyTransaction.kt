@@ -79,11 +79,8 @@ class ClassDiagramApplyTransaction(private val entityLUT: EntityLUT) : IApplyTra
                 is DeleteLinkModel -> {
                     validateAndDeleteLinkModel(it)
                 }
-                is DeleteClassPresentation -> {
-                    validateAndDeleteClassPresentation(it)
-                }
-                is DeleteLinkPresentation -> {
-                    validateAndDeleteLinkPresentation(it, operations)
+                is DeletePresentation -> {
+                    validateAndDeletePresentation(it)
                 }
                 is DeleteNote -> {
                     validateAndDeleteNote(it)
@@ -278,20 +275,9 @@ class ClassDiagramApplyTransaction(private val entityLUT: EntityLUT) : IApplyTra
         }
     }
 
-    private fun validateAndDeleteClassPresentation(operation: DeleteClassPresentation) {
+    private fun validateAndDeletePresentation(operation: DeletePresentation) {
         if (operation.id.isNotEmpty()) {
-            deleteClassPresentation(operation.id)
-        }
-    }
-
-    private fun validateAndDeleteLinkPresentation(
-        operation: DeleteLinkPresentation,
-        operations: List<ClassDiagramOperation>
-    ) {
-        if (!operations.any { it is DeleteLinkModel }) {
-            if (operation.id.isNotEmpty()) {
-                deleteLinkPresentation(operation.id)
-            }
+            deletePresentation(operation.id)
         }
     }
 
@@ -723,8 +709,8 @@ class ClassDiagramApplyTransaction(private val entityLUT: EntityLUT) : IApplyTra
         basicModelEditor.delete(linkModel)
     }
 
-    private fun deleteClassPresentation(id: String) {
-        logger.debug("Delete class model.")
+    private fun deletePresentation(id: String) {
+        logger.debug("Delete presentation.")
         val diagram = diagramViewManager.currentDiagram
         classDiagramEditor.diagram = diagram
         val lutEntry = entityLUT.entries.find { it.common == id } ?: run {
@@ -732,29 +718,12 @@ class ClassDiagramApplyTransaction(private val entityLUT: EntityLUT) : IApplyTra
             return
         }
         val classPresentation = diagram.presentations.find { it.id == lutEntry.mine } ?: run {
-            logger.debug("Class presentation ${lutEntry.mine} not found but $id found on LUT.")
+            logger.debug("Presentation ${lutEntry.mine} not found but $id found on LUT.")
             entityLUT.entries.remove(lutEntry)
             return
         }
         entityLUT.entries.remove(lutEntry)
         classDiagramEditor.deletePresentation(classPresentation)
-    }
-
-    private fun deleteLinkPresentation(id: String) {
-        logger.debug("Delete link presentation.")
-        val diagram = diagramViewManager.currentDiagram
-        classDiagramEditor.diagram = diagram
-        val lutEntry = entityLUT.entries.find { it.common == id } ?: run {
-            logger.debug("$id not found on LUT.")
-            return
-        }
-        val linkPresentation = diagram.presentations.find { it.id == lutEntry.mine } ?: run {
-            logger.debug("Link presentation ${lutEntry.mine} not found but $id found on LUT.")
-            entityLUT.entries.remove(lutEntry)
-            return
-        }
-        entityLUT.entries.remove(lutEntry)
-        classDiagramEditor.deletePresentation(linkPresentation)
     }
 
     private fun deleteNote(id: String) {

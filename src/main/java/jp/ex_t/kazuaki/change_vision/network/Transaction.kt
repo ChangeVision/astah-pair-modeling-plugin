@@ -258,7 +258,7 @@ data class DeleteClassModel(
 ) : ClassDiagramOperation()
 
 @Serializable
-data class DeleteClassPresentation(
+data class DeletePresentation(
     val id: String,
 ) : ClassDiagramOperation()
 
@@ -269,11 +269,6 @@ data class DeleteTopic(
 
 @Serializable
 data class DeleteLinkModel(
-    val id: String,
-) : ClassDiagramOperation()
-
-@Serializable
-data class DeleteLinkPresentation(
     val id: String,
 ) : ClassDiagramOperation()
 

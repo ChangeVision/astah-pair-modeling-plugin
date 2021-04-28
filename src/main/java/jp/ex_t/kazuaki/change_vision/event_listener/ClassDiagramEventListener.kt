@@ -153,7 +153,7 @@ class ClassDiagramEventListener(private val entityLUT: EntityLUT, private val mq
     private fun deleteLinkPresentation(
         entity: ILinkPresentation,
         removeProjectEditUnit: List<ProjectEditUnit>
-    ): DeleteLinkPresentation? {
+    ): DeletePresentation? {
         if (removeProjectEditUnit.any { it.entity is IClass }) {
             return null
         }
@@ -165,7 +165,7 @@ class ClassDiagramEventListener(private val entityLUT: EntityLUT, private val mq
                 }
                 entityLUT.entries.remove(lutEntity)
                 logger.debug("${entity.label}(ILinkPresentation, IAssociation)")
-                DeleteLinkPresentation(lutEntity.common)
+                DeletePresentation(lutEntity.common)
             }
             is IGeneralization -> {
                 val lutEntity = entityLUT.entries.find { it.mine == entity.id } ?: run {
@@ -174,7 +174,7 @@ class ClassDiagramEventListener(private val entityLUT: EntityLUT, private val mq
                 }
                 entityLUT.entries.remove(lutEntity)
                 logger.debug("${model.name}(ILinkPresentation, IGeneralization)")
-                DeleteLinkPresentation(lutEntity.common)
+                DeletePresentation(lutEntity.common)
             }
             is IRealization -> {
                 val lutEntity = entityLUT.entries.find { it.mine == entity.id } ?: run {
@@ -183,7 +183,7 @@ class ClassDiagramEventListener(private val entityLUT: EntityLUT, private val mq
                 }
                 entityLUT.entries.remove(lutEntity)
                 logger.debug("${model.name}(ILinkPresentation, IRealization)")
-                DeleteLinkPresentation(lutEntity.common)
+                DeletePresentation(lutEntity.common)
             }
             else -> {
                 logger.debug("$entity(ILinkPresentation)")
@@ -201,7 +201,7 @@ class ClassDiagramEventListener(private val entityLUT: EntityLUT, private val mq
                 }
                 entityLUT.entries.remove(lutEntity)
                 logger.debug("${model.name}(INodePresentation, IClass)")
-                DeleteClassPresentation(lutEntity.common)
+                DeletePresentation(lutEntity.common)
             }
             is IComment -> {
                 val lutEntity = entityLUT.entries.find { it.mine == entity.id } ?: run {
