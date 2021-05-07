@@ -9,6 +9,7 @@
 package jp.ex_t.kazuaki.change_vision
 
 import com.change_vision.jude.api.inf.ui.IPluginActionDelegate
+import com.change_vision.jude.api.inf.ui.IPluginActionDelegate.UnExpectedException
 import com.change_vision.jude.api.inf.ui.IWindow
 import java.util.*
 import javax.swing.JOptionPane
@@ -20,7 +21,7 @@ class CreateRoomAction: IPluginActionDelegate {
     private lateinit var pairModeling: PairModeling
 
     @ExperimentalPathApi
-    @Throws(IPluginActionDelegate.UnExpectedException::class)
+    @Throws(UnExpectedException::class)
     override fun run(window: IWindow) {
         try {
             if (!isLaunched) {
@@ -38,7 +39,7 @@ class CreateRoomAction: IPluginActionDelegate {
                 pairModeling.end()
             }
             isLaunched = !isLaunched
-        } catch (e: IPluginActionDelegate.UnExpectedException) {
+        } catch (e: UnExpectedException) {
             val message = "Exception occurred."
             JOptionPane.showMessageDialog(window.parent, message, "Alert", JOptionPane.ERROR_MESSAGE)
             logger.error(message, e)
