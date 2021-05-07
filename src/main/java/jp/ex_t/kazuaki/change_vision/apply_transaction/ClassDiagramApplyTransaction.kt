@@ -678,12 +678,11 @@ class ClassDiagramApplyTransaction(private val entityLUT: EntityLUT) : IApplyTra
 
     private fun deleteNote(id: String) {
         logger.debug("Delete note.")
-        val diagram = diagramViewManager.currentDiagram
         val lutEntry = entityLUT.entries.find { it.common == id } ?: run {
             logger.debug("$id not found on LUT.")
             return
         }
-        val notePresentation = diagram.presentations.find { it.id == lutEntry.mine } ?: run {
+        val notePresentation = diagramViewManager.currentDiagram.presentations.find { it.id == lutEntry.mine } ?: run {
             logger.debug("Note presentation ${lutEntry.mine} not found but $id found on LUT.")
             entityLUT.entries.remove(lutEntry)
             return

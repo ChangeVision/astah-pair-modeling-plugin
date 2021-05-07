@@ -318,7 +318,6 @@ class StateMachineDiagramApplyTransaction(private val entityLUT: EntityLUT) :
 
     private fun modifyTransition(id: String, label: String) {
         logger.debug("Modify transition.")
-        stateMachineDiagramEditor.diagram = diagramViewManager.currentDiagram
         val entry = entityLUT.entries.find { it.common == id } ?: run {
             logger.debug("$id not found on LUT.")
             return
