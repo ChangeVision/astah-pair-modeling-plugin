@@ -73,9 +73,6 @@ class ClassDiagramApplyTransaction(private val entityLUT: EntityLUT) : IApplyTra
                 is ModifyAttribute -> {
                     validateAndModifyAttribute(it)
                 }
-                is DeleteModel -> {
-                    validateAndDeleteModel(it)
-                }
                 is DeletePresentation -> {
                     validateAndDeletePresentation(it)
                 }
@@ -256,12 +253,6 @@ class ClassDiagramApplyTransaction(private val entityLUT: EntityLUT) : IApplyTra
                 operation.name,
                 operation.typeExpression
             )
-        }
-    }
-
-    private fun validateAndDeleteModel(operation: DeleteModel) {
-        if (operation.id.isNotEmpty()) {
-            deleteModel(operation.id)
         }
     }
 
@@ -666,23 +657,6 @@ class ClassDiagramApplyTransaction(private val entityLUT: EntityLUT) : IApplyTra
             }
         attribute.name = name
         attribute.typeExpression = typeExpression
-    }
-
-    private fun deleteModel(id: String) {
-        logger.debug("Delete model.")
-        val diagram = diagramViewManager.currentDiagram
-        classDiagramEditor.diagram = diagram
-        val lutEntry = entityLUT.entries.find { it.common == id } ?: run {
-            logger.debug("$id not found on LUT.")
-            return
-        }
-        val model = projectAccessor.findElements(IEntity::class.java).find { it.id == lutEntry.mine } ?: run {
-            logger.debug("Model ${lutEntry.mine} not found but $id found on LUT.")
-            entityLUT.entries.remove(lutEntry)
-            return
-        }
-        entityLUT.entries.remove(lutEntry)
-        basicModelEditor.delete(model)
     }
 
     private fun deletePresentation(id: String) {

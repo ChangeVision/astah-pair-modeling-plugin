@@ -21,6 +21,7 @@ import javax.swing.SwingUtilities
 class ReflectTransaction(entityLUT: EntityLUT, private val projectChangedListener: ProjectChangedListener) {
     private val api: AstahAPI = AstahAPI.getAstahAPI()
     private val projectAccessor: ProjectAccessor = api.projectAccessor
+    private val commonApplyTransaction = CommonApplyTransaction(entityLUT)
     private val classDiagramApplyTransaction = ClassDiagramApplyTransaction(entityLUT)
     private val mindmapDiagramApplyTransaction = MindmapDiagramApplyTransaction(entityLUT)
     private val stateMachineDiagramApplyTransaction = StateMachineDiagramApplyTransaction(entityLUT)
@@ -33,6 +34,9 @@ class ReflectTransaction(entityLUT: EntityLUT, private val projectChangedListene
                 projectAccessor.removeProjectEventListener(projectChangedListener)
                 logger.debug("Start transaction.")
                 transactionManager.beginTransaction()
+                commonApplyTransaction.apply(
+                    transaction.operations.filterIsInstance<CommonOperation>()
+                )
                 classDiagramApplyTransaction.apply(
                     transaction.operations.filterIsInstance<ClassDiagramOperation>()
                 )

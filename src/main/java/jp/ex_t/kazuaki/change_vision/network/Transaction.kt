@@ -17,6 +17,9 @@ data class Transaction(val operations: List<TransactionalOperation>)
 sealed class TransactionalOperation
 
 @Serializable
+sealed class CommonOperation : TransactionalOperation()
+
+@Serializable
 sealed class ClassDiagramOperation : TransactionalOperation()
 
 @Serializable
@@ -253,11 +256,6 @@ data class ModifyTransition(
 ) : StateMachineDiagramOperation()
 
 @Serializable
-data class DeleteModel(
-    val id: String,
-) : ClassDiagramOperation()
-
-@Serializable
 data class DeletePresentation(
     val id: String,
 ) : ClassDiagramOperation()
@@ -266,12 +264,13 @@ data class DeletePresentation(
 data class DeleteTopic(
     val id: String,
 ) : MindmapDiagramOperation()
+
 @Serializable
 data class DeleteNote(
     val id: String,
 ) : ClassDiagramOperation()
 
 @Serializable
-data class DeleteStateMachinePresentation(
+data class DeleteModel(
     val id: String,
-) : StateMachineDiagramOperation()
+) : CommonOperation()

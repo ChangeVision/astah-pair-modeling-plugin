@@ -39,7 +39,6 @@ class StateMachineDiagramApplyTransaction(private val entityLUT: EntityLUT) :
                 is ModifyState -> validateAndModifyState(it)
                 is ModifyFinalState -> validateAndModifyFinalState(it)
                 is ModifyTransition -> validateAndModifyTransition(it)
-                is DeleteStateMachinePresentation -> validateAndDeletePresentation(it)
             }
         }
     }
@@ -104,12 +103,6 @@ class StateMachineDiagramApplyTransaction(private val entityLUT: EntityLUT) :
         }
     }
 
-    private fun validateAndDeletePresentation(operation: DeleteStateMachinePresentation) {
-        if (operation.id.isNotEmpty()) {
-            deletePresentation(operation.id)
-        }
-    }
-
     private fun createStateMachineDiagram(name: String, ownerName: String, id: String) {
         logger.debug("Create state machine diagram.")
         val owner = projectAccessor.findElements(INamedElement::class.java, ownerName).first()
@@ -132,14 +125,14 @@ class StateMachineDiagramApplyTransaction(private val entityLUT: EntityLUT) :
             return
         }
         val parentPresentation =
-            if (parentEntity == null) null else diagramViewManager.currentDiagram.presentations.find { it.id == parentEntity.mine } as INodePresentation?
+            if (parentEntity == null) null else diagramViewManager.currentDiagram.presentations.filterNot { it.model == null }.find { it.model.id == parentEntity.mine } as INodePresentation?
                 ?: run {
                     logger.debug("INodePresentation ${parentEntity.mine} not found but $parentId found on LUT.")
                     return
                 }
 
         val pseudostate = stateMachineDiagramEditor.createInitialPseudostate(parentPresentation, location)
-        entityLUT.entries.add(Entry(pseudostate.id, id))
+        entityLUT.entries.add(Entry(pseudostate.model.id, id))
         pseudostate.width = width
         pseudostate.height = height
     }
@@ -159,14 +152,14 @@ class StateMachineDiagramApplyTransaction(private val entityLUT: EntityLUT) :
             return
         }
         val parentPresentation =
-            if (parentEntity == null) null else diagramViewManager.currentDiagram.presentations.find { it.id == parentEntity.mine } as INodePresentation?
+            if (parentEntity == null) null else diagramViewManager.currentDiagram.presentations.filterNot { it.model == null }.find { it.model.id == parentEntity.mine } as INodePresentation?
                 ?: run {
                     logger.debug("INodePresentation ${parentEntity.mine} not found but $parentId found on LUT.")
                     return
                 }
 
         val state = stateMachineDiagramEditor.createState(name, parentPresentation, location)
-        entityLUT.entries.add(Entry(state.id, id))
+        entityLUT.entries.add(Entry(state.model.id, id))
         state.width = width
         state.height = height
     }
@@ -185,14 +178,14 @@ class StateMachineDiagramApplyTransaction(private val entityLUT: EntityLUT) :
             return
         }
         val parentPresentation =
-            if (parentEntity == null) null else diagramViewManager.currentDiagram.presentations.find { it.id == parentEntity.mine } as INodePresentation?
+            if (parentEntity == null) null else diagramViewManager.currentDiagram.presentations.filterNot { it.model == null }.find { it.model.id == parentEntity.mine } as INodePresentation?
                 ?: run {
                     logger.debug("INodePresentation ${parentEntity.mine} not found but $parentId found on LUT.")
                     return
                 }
 
         val pseudostate = stateMachineDiagramEditor.createFinalState(parentPresentation, location)
-        entityLUT.entries.add(Entry(pseudostate.id, id))
+        entityLUT.entries.add(Entry(pseudostate.model.id, id))
         pseudostate.width = width
         pseudostate.height = height
     }
@@ -205,7 +198,7 @@ class StateMachineDiagramApplyTransaction(private val entityLUT: EntityLUT) :
             return
         }
         val sourcePresentation =
-            diagramViewManager.currentDiagram.presentations.find { it.id == sourceEntry.mine } as INodePresentation?
+            diagramViewManager.currentDiagram.presentations.filterNot { it.model == null }.find { it.model.id == sourceEntry.mine } as INodePresentation?
                 ?: run {
                     logger.debug("INodePresentation ${sourceEntry.mine} not found but $sourceId found on LUT.")
                     return
@@ -215,13 +208,13 @@ class StateMachineDiagramApplyTransaction(private val entityLUT: EntityLUT) :
             return
         }
         val targetPresentation =
-            diagramViewManager.currentDiagram.presentations.find { it.id == targetEntry.mine } as INodePresentation?
+            diagramViewManager.currentDiagram.presentations.filterNot { it.model == null }.find { it.model.id == targetEntry.mine } as INodePresentation?
                 ?: run {
                     logger.debug("INodePresentation ${targetEntry.mine} not found but $targetId found on LUT.")
                     return
                 }
         val transition = stateMachineDiagramEditor.createTransition(sourcePresentation, targetPresentation)
-        entityLUT.entries.add(Entry(transition.id, id))
+        entityLUT.entries.add(Entry(transition.model.id, id))
         // Because of APIs specification, label must be set as model name.
         (transition.model as INamedElement).name = label
     }
@@ -239,14 +232,14 @@ class StateMachineDiagramApplyTransaction(private val entityLUT: EntityLUT) :
             return
         }
         val parentPresentation =
-            if (parentEntity == null) null else diagramViewManager.currentDiagram.presentations.find { it.id == parentEntity.mine } as INodePresentation?
+            if (parentEntity == null) null else diagramViewManager.currentDiagram.presentations.filterNot { it.model == null }.find { it.model.id == parentEntity.mine } as INodePresentation?
                 ?: run {
                     logger.debug("INodePresentation ${parentEntity.mine} not found but $parentId found on LUT.")
                     return
                 }
 
         val pseudostate =
-            diagramViewManager.currentDiagram.presentations.find { it.id == entry.mine } as INodePresentation? ?: run {
+            diagramViewManager.currentDiagram.presentations.filterNot { it.model == null }.find { it.model.id == entry.mine } as INodePresentation? ?: run {
                 logger.debug("INodePresentation ${entry.mine} not found but $id found on LUT.")
                 return
             }
@@ -271,14 +264,14 @@ class StateMachineDiagramApplyTransaction(private val entityLUT: EntityLUT) :
             return
         }
         val parentPresentation =
-            if (parentEntity == null) null else diagramViewManager.currentDiagram.presentations.find { it.id == parentEntity.mine } as INodePresentation?
+            if (parentEntity == null) null else diagramViewManager.currentDiagram.presentations.filterNot { it.model == null }.find { it.model.id == parentEntity.mine } as INodePresentation?
                 ?: run {
                     logger.debug("INodePresentation ${parentEntity.mine} not found but $parentId found on LUT.")
                     return
                 }
 
         val state =
-            diagramViewManager.currentDiagram.presentations.find { it.id == entry.mine } as INodePresentation? ?: run {
+            diagramViewManager.currentDiagram.presentations.filterNot { it.model == null }.find { it.model.id == entry.mine } as INodePresentation? ?: run {
                 logger.debug("INodePresentation ${entry.mine} not found but $id found on LUT.")
                 return
             }
@@ -304,14 +297,14 @@ class StateMachineDiagramApplyTransaction(private val entityLUT: EntityLUT) :
             return
         }
         val parentPresentation =
-            if (parentEntity == null) null else diagramViewManager.currentDiagram.presentations.find { it.id == parentEntity.mine } as INodePresentation?
+            if (parentEntity == null) null else diagramViewManager.currentDiagram.presentations.filterNot { it.model == null }.find { it.model.id == parentEntity.mine } as INodePresentation?
                 ?: run {
                     logger.debug("INodePresentation ${parentEntity.mine} not found but $parentId found on LUT.")
                     return
                 }
 
         val finalState =
-            diagramViewManager.currentDiagram.presentations.find { it.id == entry.mine } as INodePresentation? ?: run {
+            diagramViewManager.currentDiagram.presentations.filterNot { it.model == null }.find { it.model.id == entry.mine } as INodePresentation? ?: run {
                 logger.debug("INodePresentation ${entry.mine} not found but $id found on LUT.")
                 return
             }
@@ -331,27 +324,11 @@ class StateMachineDiagramApplyTransaction(private val entityLUT: EntityLUT) :
             return
         }
         val transition =
-            diagramViewManager.currentDiagram.presentations.find { it.id == entry.mine } as ILinkPresentation? ?: run {
+            diagramViewManager.currentDiagram.presentations.filterNot { it.model == null }.find { it.model.id == entry.mine } as ILinkPresentation? ?: run {
                 logger.debug("ILinkPresentation ${entry.mine} not found but $id found on LUT.")
                 return
             }
         (transition.model as INamedElement).name = label
-    }
-
-    private fun deletePresentation(id: String) {
-        logger.debug("Delete IPresentation.")
-        stateMachineDiagramEditor.diagram = diagramViewManager.currentDiagram
-        val entry = entityLUT.entries.find { it.common == id } ?: run {
-            logger.debug("$id not found on LUT.")
-            return
-        }
-        val presentation =
-            diagramViewManager.currentDiagram.presentations.find { it.id == entry.mine } ?: run {
-                logger.debug("IPresentation ${entry.mine} not found but $id found on LUT.")
-                return
-            }
-        entityLUT.entries.remove(entry)
-        basicModelEditor.delete(presentation.model)
     }
 
     companion object : Logging {
