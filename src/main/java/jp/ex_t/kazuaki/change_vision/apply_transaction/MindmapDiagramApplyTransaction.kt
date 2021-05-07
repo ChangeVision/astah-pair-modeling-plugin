@@ -37,8 +37,8 @@ class MindmapDiagramApplyTransaction(private val entityLUT: EntityLUT) : IApplyT
                 is CreateFloatingTopic -> {
                     validateAndCreateFloatingTopic(it)
                 }
-                is ResizeTopic -> {
-                    validateAndResizeTopic(it)
+                is ModifyTopic -> {
+                    validateAndModifyTopic(it)
                 }
                 is DeleteTopic -> {
                     validateAndDeleteTopic(it)
@@ -70,10 +70,10 @@ class MindmapDiagramApplyTransaction(private val entityLUT: EntityLUT) : IApplyT
         }
     }
 
-    private fun validateAndResizeTopic(operation: ResizeTopic) {
+    private fun validateAndModifyTopic(operation: ModifyTopic) {
         val location = Point2D.Double(operation.location.first, operation.location.second)
         if (operation.name.isNotEmpty() && operation.id.isNotEmpty()) {
-            resizeTopic(operation.name, location, operation.size, operation.parentId, operation.id)
+            modifyTopic(operation.name, location, operation.size, operation.parentId, operation.id)
         }
     }
 
@@ -146,8 +146,8 @@ class MindmapDiagramApplyTransaction(private val entityLUT: EntityLUT) : IApplyT
         entityLUT.entries.add(Entry(topic.id, id))
     }
 
-    private fun resizeTopic(name: String, location: Point2D, size: Pair<Double, Double>, parentId: String, id: String) {
-        logger.debug("Resize topic.")
+    private fun modifyTopic(name: String, location: Point2D, size: Pair<Double, Double>, parentId: String, id: String) {
+        logger.debug("Modify topic.")
         val (width, height) = size
         when (val diagram = api.viewManager.diagramViewManager.currentDiagram) {
             is IMindMapDiagram -> {

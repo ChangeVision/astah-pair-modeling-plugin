@@ -17,6 +17,9 @@ data class Transaction(val operations: List<TransactionalOperation>)
 sealed class TransactionalOperation
 
 @Serializable
+sealed class CommonOperation : TransactionalOperation()
+
+@Serializable
 sealed class ClassDiagramOperation : TransactionalOperation()
 
 @Serializable
@@ -125,7 +128,7 @@ data class CreateClassPresentation(
 data class CreateLinkPresentation(
     val sourceClassId: String,
     val targetClassId: String,
-    val linkType: String,
+    val linkType: LinkType,
     val diagramName: String,
     val id: String,
 ) : ClassDiagramOperation()
@@ -173,7 +176,7 @@ data class CreateFloatingTopic(
 ) : MindmapDiagramOperation()
 
 @Serializable
-data class ResizeClassPresentation(
+data class ModifyClassPresentation(
     val id: String,
     val location: Pair<Double, Double>,
     val size: Pair<Double, Double>,
@@ -181,7 +184,7 @@ data class ResizeClassPresentation(
 ) : ClassDiagramOperation()
 
 @Serializable
-data class ResizeNote(
+data class ModifyNote(
     val id: String,
     val note: String,
     val location: Pair<Double, Double>,
@@ -190,14 +193,14 @@ data class ResizeNote(
 ) : ClassDiagramOperation()
 
 @Serializable
-data class ChangeClassModel(
+data class ModifyClassModel(
     val id: String,
     val name: String,
     val stereotypes: List<String?> = mutableListOf(),
 ) : ClassDiagramOperation()
 
 @Serializable
-data class ChangeOperationNameAndReturnTypeExpression(
+data class ModifyOperation(
     val ownerId: String,
     val id: String,
     val name: String,
@@ -205,7 +208,7 @@ data class ChangeOperationNameAndReturnTypeExpression(
 ) : ClassDiagramOperation()
 
 @Serializable
-data class ChangeAttributeNameAndTypeExpression(
+data class ModifyAttribute(
     val ownerId: String,
     val id: String,
     val name: String,
@@ -213,7 +216,7 @@ data class ChangeAttributeNameAndTypeExpression(
 ) : ClassDiagramOperation()
 
 @Serializable
-data class ResizeTopic(
+data class ModifyTopic(
     val name: String,
     val location: Pair<Double, Double>,
     val size: Pair<Double, Double>,
@@ -253,12 +256,7 @@ data class ModifyTransition(
 ) : StateMachineDiagramOperation()
 
 @Serializable
-data class DeleteClassModel(
-    val id: String,
-) : ClassDiagramOperation()
-
-@Serializable
-data class DeleteClassPresentation(
+data class DeletePresentation(
     val id: String,
 ) : ClassDiagramOperation()
 
@@ -268,26 +266,11 @@ data class DeleteTopic(
 ) : MindmapDiagramOperation()
 
 @Serializable
-data class DeleteLinkModel(
-    val id: String,
-) : ClassDiagramOperation()
-
-@Serializable
-data class DeleteLinkPresentation(
-    val id: String,
-) : ClassDiagramOperation()
-
-@Serializable
 data class DeleteNote(
     val id: String,
 ) : ClassDiagramOperation()
 
 @Serializable
-data class DeleteStateMachineNodePresentation(
+data class DeleteModel(
     val id: String,
-) : StateMachineDiagramOperation()
-
-@Serializable
-data class DeleteStateMachineLinkPresentation(
-    val id: String,
-) : StateMachineDiagramOperation()
+) : CommonOperation()

@@ -26,7 +26,7 @@ class ClassDiagramApplyTransaction(private val entityLUT: EntityLUT) : IApplyTra
 
     @Throws(BadTransactionException::class)
     override fun apply(operations: List<ClassDiagramOperation>) {
-        operations.forEach { it ->
+        operations.forEach {
             when (it) {
                 is CreateClassDiagram -> {
                     validateAndCreateClassDiagram(it)
@@ -58,32 +58,23 @@ class ClassDiagramApplyTransaction(private val entityLUT: EntityLUT) : IApplyTra
                 is CreateAttribute -> {
                     validateAndCreateAttribute(it)
                 }
-                is ResizeClassPresentation -> {
-                    validateAndResizeClassPresentation(it, operations)
+                is ModifyClassPresentation -> {
+                    validateAndModifyClassPresentation(it, operations)
                 }
-                is ResizeNote -> {
-                    validateAndResizeNote(it)
+                is ModifyNote -> {
+                    validateAndModifyNote(it)
                 }
-                is ChangeClassModel -> {
-                    validateAndChangeClassModel(it)
+                is ModifyClassModel -> {
+                    validateAndModifyClassModel(it)
                 }
-                is ChangeOperationNameAndReturnTypeExpression -> {
-                    validateAndChangeOperationNameAndReturnTypeExpression(it)
+                is ModifyOperation -> {
+                    validateAndModifyOperation(it)
                 }
-                is ChangeAttributeNameAndTypeExpression -> {
-                    validateAndChangeAttributeNameAndTypeExpression(it)
+                is ModifyAttribute -> {
+                    validateAndModifyAttribute(it)
                 }
-                is DeleteClassModel -> {
-                    validateAndDeleteClassModel(it)
-                }
-                is DeleteLinkModel -> {
-                    validateAndDeleteLinkModel(it)
-                }
-                is DeleteClassPresentation -> {
-                    validateAndDeleteClassPresentation(it)
-                }
-                is DeleteLinkPresentation -> {
-                    validateAndDeleteLinkPresentation(it, operations)
+                is DeletePresentation -> {
+                    validateAndDeletePresentation(it)
                 }
                 is DeleteNote -> {
                     validateAndDeleteNote(it)
@@ -150,12 +141,6 @@ class ClassDiagramApplyTransaction(private val entityLUT: EntityLUT) : IApplyTra
         }
     }
 
-    private fun validateAndDeleteLinkModel(operation: DeleteLinkModel) {
-        if (operation.id.isNotEmpty()) {
-            deleteLinkModel(operation.id)
-        }
-    }
-
     private fun validateAndCreateClassPresentation(operation: CreateClassPresentation) {
         val location = Point2D.Double(operation.location.first, operation.location.second)
         if (operation.diagramName.isNotEmpty() && operation.classId.isNotEmpty() && operation.id.isNotEmpty()) {
@@ -166,7 +151,6 @@ class ClassDiagramApplyTransaction(private val entityLUT: EntityLUT) : IApplyTra
     private fun validateAndCreateLinkPresentation(operation: CreateLinkPresentation) {
         if (operation.sourceClassId.isNotEmpty()
             && operation.targetClassId.isNotEmpty()
-            && operation.linkType.isNotEmpty()
             && operation.diagramName.isNotEmpty()
             && operation.id.isNotEmpty()
         ) {
@@ -212,15 +196,15 @@ class ClassDiagramApplyTransaction(private val entityLUT: EntityLUT) : IApplyTra
         }
     }
 
-    private fun validateAndResizeClassPresentation(
-        operation: ResizeClassPresentation,
+    private fun validateAndModifyClassPresentation(
+        operation: ModifyClassPresentation,
         operations: List<ClassDiagramOperation>
     ) {
         val location = Point2D.Double(operation.location.first, operation.location.second)
-        if (!operations.any { it is ChangeClassModel }
+        if (!operations.any { it is ModifyClassModel }
             && operation.id.isNotEmpty()
             && operation.diagramName.isNotEmpty()) {
-            resizeClassPresentation(
+            modifyClassPresentation(
                 operation.id,
                 location,
                 operation.size,
@@ -229,26 +213,26 @@ class ClassDiagramApplyTransaction(private val entityLUT: EntityLUT) : IApplyTra
         }
     }
 
-    private fun validateAndResizeNote(operation: ResizeNote) {
+    private fun validateAndModifyNote(operation: ModifyNote) {
         val location = Point2D.Double(operation.location.first, operation.location.second)
         if (operation.id.isNotEmpty() && operation.diagramName.isNotEmpty()) {
-            resizeNote(operation.id, operation.note, location, operation.size, operation.diagramName)
+            modifyNote(operation.id, operation.note, location, operation.size, operation.diagramName)
         }
     }
 
-    private fun validateAndChangeClassModel(operation: ChangeClassModel) {
+    private fun validateAndModifyClassModel(operation: ModifyClassModel) {
         if (operation.id.isNotEmpty() && operation.name.isNotEmpty()) {
-            changeClassModel(operation.id, operation.name, operation.stereotypes)
+            modifyClassModel(operation.id, operation.name, operation.stereotypes)
         }
     }
 
-    private fun validateAndChangeOperationNameAndReturnTypeExpression(operation: ChangeOperationNameAndReturnTypeExpression) {
+    private fun validateAndModifyOperation(operation: ModifyOperation) {
         if (operation.ownerId.isNotEmpty()
             && operation.id.isNotEmpty()
             && operation.name.isNotEmpty()
             && operation.returnTypeExpression.isNotEmpty()
         ) {
-            changeOperationNameAndReturnTypeExpression(
+            modifyOperation(
                 operation.ownerId,
                 operation.id,
                 operation.name,
@@ -257,13 +241,13 @@ class ClassDiagramApplyTransaction(private val entityLUT: EntityLUT) : IApplyTra
         }
     }
 
-    private fun validateAndChangeAttributeNameAndTypeExpression(operation: ChangeAttributeNameAndTypeExpression) {
+    private fun validateAndModifyAttribute(operation: ModifyAttribute) {
         if (operation.ownerId.isNotEmpty()
             && operation.id.isNotEmpty()
             && operation.name.isNotEmpty()
             && operation.typeExpression.isNotEmpty()
         ) {
-            changeAttributeNameAndTypeExpression(
+            modifyAttribute(
                 operation.ownerId,
                 operation.id,
                 operation.name,
@@ -272,26 +256,9 @@ class ClassDiagramApplyTransaction(private val entityLUT: EntityLUT) : IApplyTra
         }
     }
 
-    private fun validateAndDeleteClassModel(operation: DeleteClassModel) {
+    private fun validateAndDeletePresentation(operation: DeletePresentation) {
         if (operation.id.isNotEmpty()) {
-            deleteClassModel(operation.id)
-        }
-    }
-
-    private fun validateAndDeleteClassPresentation(operation: DeleteClassPresentation) {
-        if (operation.id.isNotEmpty()) {
-            deleteClassPresentation(operation.id)
-        }
-    }
-
-    private fun validateAndDeleteLinkPresentation(
-        operation: DeleteLinkPresentation,
-        operations: List<ClassDiagramOperation>
-    ) {
-        if (!operations.any { it is DeleteLinkModel }) {
-            if (operation.id.isNotEmpty()) {
-                deleteLinkPresentation(operation.id)
-            }
+            deletePresentation(operation.id)
         }
     }
 
@@ -447,39 +414,40 @@ class ClassDiagramApplyTransaction(private val entityLUT: EntityLUT) : IApplyTra
         entityLUT.entries.add(Entry(classPresentation.id, id))
     }
 
+    @Throws(ClassNotFoundException::class)
+    private fun searchModel(linkType: LinkType, sourceClass: IClass, targetClass: IClass): IElement {
+        when (linkType) {
+            LinkType.Association -> {
+                return (sourceClass.attributes.filterNot { it.association == null }.find { sourceClassAttribute ->
+                    targetClass.attributes.filterNot { it.association == null }.any { targetClassAttribute ->
+                        sourceClassAttribute.association == targetClassAttribute.association
+                    }
+                } ?: throw ClassNotFoundException()).association
+            }
+            LinkType.Generalization -> {
+                return sourceClass.generalizations.find {
+                    it.superType == targetClass
+                } ?: throw ClassNotFoundException()
+            }
+            LinkType.Realization -> {
+                return sourceClass.supplierRealizations.find {
+                    it.client == targetClass
+                } ?: throw ClassNotFoundException()
+            }
+            else -> {
+                throw NotImplementedError()
+            }
+        }
+    }
+
     private fun createLinkPresentation(
         sourceClassId: String,
         targetClassId: String,
-        linkType: String,
+        linkType: LinkType,
         diagramName: String,
         id: String
     ) {
         logger.debug("Create link presentation.")
-        @Throws(ClassNotFoundException::class)
-        fun searchModel(linkType: String, sourceClass: IClass, targetClass: IClass): IElement {
-            when (linkType) {
-                "Association" -> {
-                    return (sourceClass.attributes.filterNot { it.association == null }.find { sourceClassAttribute ->
-                        targetClass.attributes.filterNot { it.association == null }.any { targetClassAttribute ->
-                            sourceClassAttribute.association == targetClassAttribute.association
-                        }
-                    } ?: throw ClassNotFoundException()).association
-                }
-                "Generalization" -> {
-                    return sourceClass.generalizations.find {
-                        it.superType == targetClass
-                    } ?: throw ClassNotFoundException()
-                }
-                "Realization" -> {
-                    return sourceClass.supplierRealizations.find {
-                        it.client == targetClass
-                    } ?: throw ClassNotFoundException()
-                }
-                else -> {
-                    throw NotImplementedError()
-                }
-            }
-        }
 
         val diagram = projectAccessor.findElements(IDiagram::class.java, diagramName).first() as IDiagram
         classDiagramEditor.diagram = diagram
@@ -564,13 +532,13 @@ class ClassDiagramApplyTransaction(private val entityLUT: EntityLUT) : IApplyTra
         entityLUT.entries.add(Entry(attribute.id, id))
     }
 
-    private fun resizeClassPresentation(
+    private fun modifyClassPresentation(
         id: String,
         location: Point2D,
         size: Pair<Double, Double>,
         diagramName: String
     ) {
-        logger.debug("Resize class presentation.")
+        logger.debug("Modify class presentation.")
         val (width, height) = size
         val diagram = projectAccessor.findElements(IDiagram::class.java, diagramName).first() as IDiagram
         classDiagramEditor.diagram = diagram
@@ -587,7 +555,7 @@ class ClassDiagramApplyTransaction(private val entityLUT: EntityLUT) : IApplyTra
         classPresentation.height = height
     }
 
-    private fun resizeNote(
+    private fun modifyNote(
         id: String,
         note: String,
         location: Point2D,
@@ -612,7 +580,7 @@ class ClassDiagramApplyTransaction(private val entityLUT: EntityLUT) : IApplyTra
         notePresentation.height = height
     }
 
-    private fun changeClassModel(id: String, name: String, stereotypes: List<String?>) {
+    private fun modifyClassModel(id: String, name: String, stereotypes: List<String?>) {
         logger.debug("Change class model name and stereotypes.")
         val entry = entityLUT.entries.find { it.common == id } ?: run {
             logger.debug("$id not found on LUT.")
@@ -634,7 +602,7 @@ class ClassDiagramApplyTransaction(private val entityLUT: EntityLUT) : IApplyTra
         }
     }
 
-    private fun changeOperationNameAndReturnTypeExpression(
+    private fun modifyOperation(
         ownerId: String,
         id: String,
         name: String,
@@ -662,7 +630,7 @@ class ClassDiagramApplyTransaction(private val entityLUT: EntityLUT) : IApplyTra
         operation.returnTypeExpression = returnTypeExpression
     }
 
-    private fun changeAttributeNameAndTypeExpression(
+    private fun modifyAttribute(
         ownerId: String,
         id: String,
         name: String,
@@ -691,40 +659,8 @@ class ClassDiagramApplyTransaction(private val entityLUT: EntityLUT) : IApplyTra
         attribute.typeExpression = typeExpression
     }
 
-    private fun deleteClassModel(id: String) {
-        logger.debug("Delete class model.")
-        val lutEntry = entityLUT.entries.find { it.common == id } ?: run {
-            logger.debug("$id not found on LUT.")
-            return
-        }
-        val clazz = projectAccessor.findElements(IClass::class.java).find { it.id == lutEntry.mine } ?: run {
-            logger.debug("Class ${lutEntry.mine} not found but $id found on LUT.")
-            entityLUT.entries.remove(lutEntry)
-            return
-        }
-        entityLUT.entries.remove(lutEntry)
-        basicModelEditor.delete(clazz)
-    }
-
-    private fun deleteLinkModel(id: String) {
-        logger.debug("Delete link model.")
-        val diagram = diagramViewManager.currentDiagram
-        classDiagramEditor.diagram = diagram
-        val lutEntry = entityLUT.entries.find { it.common == id } ?: run {
-            logger.debug("$id not found on LUT.")
-            return
-        }
-        val linkModel = projectAccessor.findElements(IEntity::class.java).find { it.id == lutEntry.mine } ?: run {
-            logger.debug("Link model ${lutEntry.mine} not found but $id found on LUT.")
-            entityLUT.entries.remove(lutEntry)
-            return
-        }
-        entityLUT.entries.remove(lutEntry)
-        basicModelEditor.delete(linkModel)
-    }
-
-    private fun deleteClassPresentation(id: String) {
-        logger.debug("Delete class model.")
+    private fun deletePresentation(id: String) {
+        logger.debug("Delete presentation.")
         val diagram = diagramViewManager.currentDiagram
         classDiagramEditor.diagram = diagram
         val lutEntry = entityLUT.entries.find { it.common == id } ?: run {
@@ -732,7 +668,7 @@ class ClassDiagramApplyTransaction(private val entityLUT: EntityLUT) : IApplyTra
             return
         }
         val classPresentation = diagram.presentations.find { it.id == lutEntry.mine } ?: run {
-            logger.debug("Class presentation ${lutEntry.mine} not found but $id found on LUT.")
+            logger.debug("Presentation ${lutEntry.mine} not found but $id found on LUT.")
             entityLUT.entries.remove(lutEntry)
             return
         }
@@ -740,31 +676,13 @@ class ClassDiagramApplyTransaction(private val entityLUT: EntityLUT) : IApplyTra
         classDiagramEditor.deletePresentation(classPresentation)
     }
 
-    private fun deleteLinkPresentation(id: String) {
-        logger.debug("Delete link presentation.")
-        val diagram = diagramViewManager.currentDiagram
-        classDiagramEditor.diagram = diagram
-        val lutEntry = entityLUT.entries.find { it.common == id } ?: run {
-            logger.debug("$id not found on LUT.")
-            return
-        }
-        val linkPresentation = diagram.presentations.find { it.id == lutEntry.mine } ?: run {
-            logger.debug("Link presentation ${lutEntry.mine} not found but $id found on LUT.")
-            entityLUT.entries.remove(lutEntry)
-            return
-        }
-        entityLUT.entries.remove(lutEntry)
-        classDiagramEditor.deletePresentation(linkPresentation)
-    }
-
     private fun deleteNote(id: String) {
         logger.debug("Delete note.")
-        val diagram = diagramViewManager.currentDiagram
         val lutEntry = entityLUT.entries.find { it.common == id } ?: run {
             logger.debug("$id not found on LUT.")
             return
         }
-        val notePresentation = diagram.presentations.find { it.id == lutEntry.mine } ?: run {
+        val notePresentation = diagramViewManager.currentDiagram.presentations.find { it.id == lutEntry.mine } ?: run {
             logger.debug("Note presentation ${lutEntry.mine} not found but $id found on LUT.")
             entityLUT.entries.remove(lutEntry)
             return

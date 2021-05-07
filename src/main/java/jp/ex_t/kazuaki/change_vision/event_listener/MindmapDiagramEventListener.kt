@@ -28,7 +28,6 @@ class MindmapDiagramEventListener(private val entityLUT: EntityLUT, private val 
             Operation.values()[editUnit.operation].let { op -> logger.debug("Op: $op -> ") }
             when (val entity = editUnit.entity) {
                 is INodePresentation -> deleteTopic(entity)
-
                 else -> {
                     logger.debug("$entity(Unknown)")
                     null
@@ -42,29 +41,29 @@ class MindmapDiagramEventListener(private val entityLUT: EntityLUT, private val 
         }
 
         val addProjectEditUnit = projectEditUnit.filter { it.operation == Operation.ADD.ordinal }
-        val createOperations = mutableListOf<MindmapDiagramOperation>()
-        for (it in addProjectEditUnit) {
+        val addDiagramUnit = addProjectEditUnit.filter { it.entity is IMindMapDiagram }
+        addDiagramUnit.forEach {
+            val createDiagramTransaction = Transaction(listOf(createMindMapDiagram(it.entity as IMindMapDiagram)))
+            ProjectChangedListener.encodeAndPublish(createDiagramTransaction, mqttPublisher)
+            return
+        }
+
+        val otherAddUnit = addProjectEditUnit - addDiagramUnit
+        val createOperations = otherAddUnit.mapNotNull {
             val operation = Operation.values()[it.operation]
             logger.debug("Op: $operation -> ")
             when (val entity = it.entity) {
-                is IMindMapDiagram -> {
-                    createOperations.add(createMindMapDiagram(entity))
-                    break
-                }
                 is INodePresentation -> {
                     when (entity.diagram) {
                         is IMindMapDiagram -> {
                             when (entity.parent) {
-                                null -> {
-                                    createOperations.add(createFloatingTopic(entity))
-                                }
-                                else -> {
-                                    createOperations.add(createTopic(entity) ?: return)
-                                }
+                                null -> createFloatingTopic(entity)
+                                else -> createTopic(entity) ?: return
                             }
                         }
                         else -> {
                             logger.debug("${entity.label}(Unknown)")
+                            null
                         }
                     }
                 }
@@ -72,9 +71,11 @@ class MindmapDiagramEventListener(private val entityLUT: EntityLUT, private val 
                     val source = entity.source.model
                     val target = entity.target.model
                     logger.debug("$source(Unknown) - ${entity.label}(ILinkPresentation) - $target(Unknown)")
+                    null
                 }
                 else -> {
                     logger.debug("$entity(Unknown)")
+                    null
                 }
             }
         }
@@ -85,16 +86,14 @@ class MindmapDiagramEventListener(private val entityLUT: EntityLUT, private val 
         }
 
         val modifyProjectEditUnit = projectEditUnit.filter { it.operation == Operation.MODIFY.ordinal }
-        val modifyOperations = mutableListOf<MindmapDiagramOperation>()
-        for (it in modifyProjectEditUnit) {
+        val modifyOperations = modifyProjectEditUnit.mapNotNull {
             val operation = Operation.values()[it.operation]
             logger.debug("Op: $operation -> ")
             when (val entity = it.entity) {
-                is INodePresentation -> {
-                    modifyOperations.add(resizeTopic(entity) ?: continue)
-                }
+                is INodePresentation -> modifyTopic(entity)
                 else -> {
                     logger.debug("$entity(Unknown)")
+                    null
                 }
             }
         }
@@ -130,7 +129,7 @@ class MindmapDiagramEventListener(private val entityLUT: EntityLUT, private val 
         return CreateTopic(parentEntry.common, entity.label, entity.diagram.name, entity.id)
     }
 
-    private fun resizeTopic(entity: INodePresentation): ResizeTopic? {
+    private fun modifyTopic(entity: INodePresentation): ModifyTopic? {
         return when (val diagram = entity.diagram) {
             is IMindMapDiagram -> {
                 val location = Pair(entity.location.x, entity.location.y)
@@ -154,7 +153,7 @@ class MindmapDiagramEventListener(private val entityLUT: EntityLUT, private val 
                             logger.debug("${entity.parent.id} not found on LUT.")
                             return null
                         }
-                ResizeTopic(entity.label, location, size, parentEntry.common, entry.common)
+                ModifyTopic(entity.label, location, size, parentEntry.common, entry.common)
             }
             else -> {
                 logger.debug("${entity.label}(INodePresentation) @UnknownDiagram")
