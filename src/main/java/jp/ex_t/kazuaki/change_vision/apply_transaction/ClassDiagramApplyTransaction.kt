@@ -423,6 +423,32 @@ class ClassDiagramApplyTransaction(private val entityLUT: EntityLUT) : IApplyTra
         entityLUT.entries.add(Entry(classPresentation.id, id))
     }
 
+    @Throws(ClassNotFoundException::class)
+    private fun searchModel(linkType: LinkType, sourceClass: IClass, targetClass: IClass): IElement {
+        when (linkType) {
+            LinkType.Association -> {
+                return (sourceClass.attributes.filterNot { it.association == null }.find { sourceClassAttribute ->
+                    targetClass.attributes.filterNot { it.association == null }.any { targetClassAttribute ->
+                        sourceClassAttribute.association == targetClassAttribute.association
+                    }
+                } ?: throw ClassNotFoundException()).association
+            }
+            LinkType.Generalization -> {
+                return sourceClass.generalizations.find {
+                    it.superType == targetClass
+                } ?: throw ClassNotFoundException()
+            }
+            LinkType.Realization -> {
+                return sourceClass.supplierRealizations.find {
+                    it.client == targetClass
+                } ?: throw ClassNotFoundException()
+            }
+            else -> {
+                throw NotImplementedError()
+            }
+        }
+    }
+
     private fun createLinkPresentation(
         sourceClassId: String,
         targetClassId: String,
@@ -431,31 +457,6 @@ class ClassDiagramApplyTransaction(private val entityLUT: EntityLUT) : IApplyTra
         id: String
     ) {
         logger.debug("Create link presentation.")
-        @Throws(ClassNotFoundException::class)
-        fun searchModel(linkType: LinkType, sourceClass: IClass, targetClass: IClass): IElement {
-            when (linkType) {
-                LinkType.Association -> {
-                    return (sourceClass.attributes.filterNot { it.association == null }.find { sourceClassAttribute ->
-                        targetClass.attributes.filterNot { it.association == null }.any { targetClassAttribute ->
-                            sourceClassAttribute.association == targetClassAttribute.association
-                        }
-                    } ?: throw ClassNotFoundException()).association
-                }
-                LinkType.Generalization -> {
-                    return sourceClass.generalizations.find {
-                        it.superType == targetClass
-                    } ?: throw ClassNotFoundException()
-                }
-                LinkType.Realization -> {
-                    return sourceClass.supplierRealizations.find {
-                        it.client == targetClass
-                    } ?: throw ClassNotFoundException()
-                }
-                else -> {
-                    throw NotImplementedError()
-                }
-            }
-        }
 
         val diagram = projectAccessor.findElements(IDiagram::class.java, diagramName).first() as IDiagram
         classDiagramEditor.diagram = diagram
