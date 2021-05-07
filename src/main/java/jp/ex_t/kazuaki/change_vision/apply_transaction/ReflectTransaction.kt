@@ -32,6 +32,7 @@ class ReflectTransaction(entityLUT: EntityLUT, private val projectChangedListene
             val transactionManager = projectAccessor.transactionManager
             try {
                 projectAccessor.removeProjectEventListener(projectChangedListener)
+                val selectedElements = api.viewManager.diagramViewManager.selectedPresentations
                 logger.debug("Start transaction.")
                 transactionManager.beginTransaction()
                 commonApplyTransaction.apply(
@@ -48,7 +49,7 @@ class ReflectTransaction(entityLUT: EntityLUT, private val projectChangedListene
                 )
                 transactionManager.endTransaction()
                 logger.debug("Finished transaction.")
-                api.viewManager.diagramViewManager.select(emptyArray())
+                api.viewManager.diagramViewManager.select(selectedElements)
             } catch (e: BadTransactionException) {
                 transactionManager.abortTransaction()
                 logger.warn("Failed to transaction.", e)
