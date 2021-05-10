@@ -14,7 +14,7 @@ import java.util.*
 import javax.swing.JOptionPane
 import kotlin.io.path.ExperimentalPathApi
 
-class JoinRoomAction:IPluginActionDelegate {
+class JoinRoomAction : IPluginActionDelegate {
     private var isLaunched = false
     private lateinit var pairModeling: PairModeling
 
@@ -41,7 +41,7 @@ class JoinRoomAction:IPluginActionDelegate {
         }
     }
 
-    companion object: Logging{
+    companion object : Logging {
         private val logger = logger()
     }
 }

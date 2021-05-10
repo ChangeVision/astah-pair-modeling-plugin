@@ -26,7 +26,8 @@ class PairModelingAction : IPluginActionDelegate {
             if (!isLaunched) {
                 val config = Config()
                 config.load()
-                val topic = getCommitId() ?: "debug/astah" //JOptionPane.showInputDialog("Input topic. (Ex: debug/astah)") ?: return
+                val topic = getCommitId()
+                    ?: "debug/astah" //JOptionPane.showInputDialog("Input topic. (Ex: debug/astah)") ?: return
                 val clientId = UUID.randomUUID().toString()
                 pairModeling = PairModeling(topic, clientId, config.conf.brokerAddress, config.conf.brokerPortNumber)
                 pairModeling.start()

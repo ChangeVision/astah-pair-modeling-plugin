@@ -488,7 +488,11 @@ class ClassDiagramEventListener(private val entityLUT: EntityLUT, private val mq
         }
     }
 
-    private fun modifyClassPresentation(diagram: IDiagram, model: IClass, entity: INodePresentation): ModifyClassPresentation? {
+    private fun modifyClassPresentation(
+        diagram: IDiagram,
+        model: IClass,
+        entity: INodePresentation
+    ): ModifyClassPresentation? {
         val entry = entityLUT.entries.find { it.mine == entity.id } ?: run {
             logger.debug("${entity.id} not found on LUT.")
             return null

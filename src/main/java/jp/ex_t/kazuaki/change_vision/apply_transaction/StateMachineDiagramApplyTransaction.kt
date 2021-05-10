@@ -125,7 +125,8 @@ class StateMachineDiagramApplyTransaction(private val entityLUT: EntityLUT) :
             return
         }
         val parentPresentation =
-            if (parentEntity == null) null else diagramViewManager.currentDiagram.presentations.filterNot { it.model == null }.find { it.model.id == parentEntity.mine } as INodePresentation?
+            if (parentEntity == null) null else diagramViewManager.currentDiagram.presentations.filterNot { it.model == null }
+                .find { it.model.id == parentEntity.mine } as INodePresentation?
                 ?: run {
                     logger.debug("INodePresentation ${parentEntity.mine} not found but $parentId found on LUT.")
                     return
@@ -152,7 +153,8 @@ class StateMachineDiagramApplyTransaction(private val entityLUT: EntityLUT) :
             return
         }
         val parentPresentation =
-            if (parentEntity == null) null else diagramViewManager.currentDiagram.presentations.filterNot { it.model == null }.find { it.model.id == parentEntity.mine } as INodePresentation?
+            if (parentEntity == null) null else diagramViewManager.currentDiagram.presentations.filterNot { it.model == null }
+                .find { it.model.id == parentEntity.mine } as INodePresentation?
                 ?: run {
                     logger.debug("INodePresentation ${parentEntity.mine} not found but $parentId found on LUT.")
                     return
@@ -178,7 +180,8 @@ class StateMachineDiagramApplyTransaction(private val entityLUT: EntityLUT) :
             return
         }
         val parentPresentation =
-            if (parentEntity == null) null else diagramViewManager.currentDiagram.presentations.filterNot { it.model == null }.find { it.model.id == parentEntity.mine } as INodePresentation?
+            if (parentEntity == null) null else diagramViewManager.currentDiagram.presentations.filterNot { it.model == null }
+                .find { it.model.id == parentEntity.mine } as INodePresentation?
                 ?: run {
                     logger.debug("INodePresentation ${parentEntity.mine} not found but $parentId found on LUT.")
                     return
@@ -198,7 +201,8 @@ class StateMachineDiagramApplyTransaction(private val entityLUT: EntityLUT) :
             return
         }
         val sourcePresentation =
-            diagramViewManager.currentDiagram.presentations.filterNot { it.model == null }.find { it.model.id == sourceEntry.mine } as INodePresentation?
+            diagramViewManager.currentDiagram.presentations.filterNot { it.model == null }
+                .find { it.model.id == sourceEntry.mine } as INodePresentation?
                 ?: run {
                     logger.debug("INodePresentation ${sourceEntry.mine} not found but $sourceId found on LUT.")
                     return
@@ -208,7 +212,8 @@ class StateMachineDiagramApplyTransaction(private val entityLUT: EntityLUT) :
             return
         }
         val targetPresentation =
-            diagramViewManager.currentDiagram.presentations.filterNot { it.model == null }.find { it.model.id == targetEntry.mine } as INodePresentation?
+            diagramViewManager.currentDiagram.presentations.filterNot { it.model == null }
+                .find { it.model.id == targetEntry.mine } as INodePresentation?
                 ?: run {
                     logger.debug("INodePresentation ${targetEntry.mine} not found but $targetId found on LUT.")
                     return
@@ -232,14 +237,16 @@ class StateMachineDiagramApplyTransaction(private val entityLUT: EntityLUT) :
             return
         }
         val parentPresentation =
-            if (parentEntity == null) null else diagramViewManager.currentDiagram.presentations.filterNot { it.model == null }.find { it.model.id == parentEntity.mine } as INodePresentation?
+            if (parentEntity == null) null else diagramViewManager.currentDiagram.presentations.filterNot { it.model == null }
+                .find { it.model.id == parentEntity.mine } as INodePresentation?
                 ?: run {
                     logger.debug("INodePresentation ${parentEntity.mine} not found but $parentId found on LUT.")
                     return
                 }
 
         val pseudostate =
-            diagramViewManager.currentDiagram.presentations.filterNot { it.model == null }.find { it.model.id == entry.mine } as INodePresentation? ?: run {
+            diagramViewManager.currentDiagram.presentations.filterNot { it.model == null }
+                .find { it.model.id == entry.mine } as INodePresentation? ?: run {
                 logger.debug("INodePresentation ${entry.mine} not found but $id found on LUT.")
                 return
             }
@@ -264,14 +271,16 @@ class StateMachineDiagramApplyTransaction(private val entityLUT: EntityLUT) :
             return
         }
         val parentPresentation =
-            if (parentEntity == null) null else diagramViewManager.currentDiagram.presentations.filterNot { it.model == null }.find { it.model.id == parentEntity.mine } as INodePresentation?
+            if (parentEntity == null) null else diagramViewManager.currentDiagram.presentations.filterNot { it.model == null }
+                .find { it.model.id == parentEntity.mine } as INodePresentation?
                 ?: run {
                     logger.debug("INodePresentation ${parentEntity.mine} not found but $parentId found on LUT.")
                     return
                 }
 
         val state =
-            diagramViewManager.currentDiagram.presentations.filterNot { it.model == null }.find { it.model.id == entry.mine } as INodePresentation? ?: run {
+            diagramViewManager.currentDiagram.presentations.filterNot { it.model == null }
+                .find { it.model.id == entry.mine } as INodePresentation? ?: run {
                 logger.debug("INodePresentation ${entry.mine} not found but $id found on LUT.")
                 return
             }
@@ -297,14 +306,16 @@ class StateMachineDiagramApplyTransaction(private val entityLUT: EntityLUT) :
             return
         }
         val parentPresentation =
-            if (parentEntity == null) null else diagramViewManager.currentDiagram.presentations.filterNot { it.model == null }.find { it.model.id == parentEntity.mine } as INodePresentation?
+            if (parentEntity == null) null else diagramViewManager.currentDiagram.presentations.filterNot { it.model == null }
+                .find { it.model.id == parentEntity.mine } as INodePresentation?
                 ?: run {
                     logger.debug("INodePresentation ${parentEntity.mine} not found but $parentId found on LUT.")
                     return
                 }
 
         val finalState =
-            diagramViewManager.currentDiagram.presentations.filterNot { it.model == null }.find { it.model.id == entry.mine } as INodePresentation? ?: run {
+            diagramViewManager.currentDiagram.presentations.filterNot { it.model == null }
+                .find { it.model.id == entry.mine } as INodePresentation? ?: run {
                 logger.debug("INodePresentation ${entry.mine} not found but $id found on LUT.")
                 return
             }
@@ -323,7 +334,8 @@ class StateMachineDiagramApplyTransaction(private val entityLUT: EntityLUT) :
             return
         }
         val transition =
-            diagramViewManager.currentDiagram.presentations.filterNot { it.model == null }.find { it.model.id == entry.mine } as ILinkPresentation? ?: run {
+            diagramViewManager.currentDiagram.presentations.filterNot { it.model == null }
+                .find { it.model.id == entry.mine } as ILinkPresentation? ?: run {
                 logger.debug("ILinkPresentation ${entry.mine} not found but $id found on LUT.")
                 return
             }

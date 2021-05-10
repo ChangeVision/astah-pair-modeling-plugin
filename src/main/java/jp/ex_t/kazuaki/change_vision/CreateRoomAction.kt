@@ -16,7 +16,7 @@ import javax.swing.JOptionPane
 import javax.swing.JTextArea
 import kotlin.io.path.ExperimentalPathApi
 
-class CreateRoomAction: IPluginActionDelegate {
+class CreateRoomAction : IPluginActionDelegate {
     private var isLaunched = false
     private lateinit var pairModeling: PairModeling
 
@@ -28,9 +28,11 @@ class CreateRoomAction: IPluginActionDelegate {
                 val config = Config()
                 config.load()
                 val topic = generatePassword()
-                val jTextArea = JTextArea("Your AIKOTOBA is\n" +
-                        topic + "\n" +
-                        "Tell collaborator this AIKOTOBA and enjoy pair modeling!")
+                val jTextArea = JTextArea(
+                    "Your AIKOTOBA is\n" +
+                            topic + "\n" +
+                            "Tell collaborator this AIKOTOBA and enjoy pair modeling!"
+                )
                 JOptionPane.showMessageDialog(window.parent, jTextArea, "AIKOTOBA", JOptionPane.INFORMATION_MESSAGE)
                 val clientId = UUID.randomUUID().toString()
                 pairModeling = PairModeling(topic, clientId, config.conf.brokerAddress, config.conf.brokerPortNumber)
@@ -52,7 +54,7 @@ class CreateRoomAction: IPluginActionDelegate {
         return uuid.replace("-", "")
     }
 
-    companion object: Logging {
+    companion object : Logging {
         private val logger = logger()
     }
 }
