@@ -22,6 +22,8 @@ class PairModeling(
     private val brokerPortNumber: Int
 ) {
     private val topicTransaction = "$topic/transaction"
+    var isLaunched: Boolean = false
+        private set
 
     // TODO: もしプロジェクト全体が欲しいとなった場合はトピックを別で生やす
     // TODO: もしチャットが欲しいとなった場合はトピックを別で生やす
@@ -32,6 +34,7 @@ class PairModeling(
     private lateinit var entityLUT: EntityLUT
 
     fun start() {
+        check(isLaunched.not()) { "Pair modeling has already launched." }
         val api = AstahAPI.getAstahAPI()
         val projectAccessor = api.projectAccessor
 
@@ -55,6 +58,7 @@ class PairModeling(
     }
 
     fun end() {
+        check(isLaunched) { "Pair modeling has not launched." }
         val api = AstahAPI.getAstahAPI()
         val projectAccessor = api.projectAccessor
 
@@ -69,5 +73,14 @@ class PairModeling(
 
     companion object : Logging {
         private val logger = logger()
+        private var instance: PairModeling? = null
+        fun getInstance(
+            topic: String,
+            clientId: String,
+            brokerAddress: String,
+            brokerPortNumber: Int
+        ) = instance ?: synchronized(this) {
+            instance ?: PairModeling(topic, clientId, brokerAddress, brokerPortNumber).also { instance = it }
+        }
     }
 }
