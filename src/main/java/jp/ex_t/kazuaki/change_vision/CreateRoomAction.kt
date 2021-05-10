@@ -1,5 +1,5 @@
 /*
- * PairModelingAction.kt - pair-modeling
+ * CreateRoomAction.kt - pair-modeling
  * Copyright © 2021 HyodaKazuaki.
  *
  * Released under the MIT License.
@@ -13,9 +13,10 @@ import com.change_vision.jude.api.inf.ui.IPluginActionDelegate.UnExpectedExcepti
 import com.change_vision.jude.api.inf.ui.IWindow
 import java.util.*
 import javax.swing.JOptionPane
+import javax.swing.JTextArea
 import kotlin.io.path.ExperimentalPathApi
 
-class PairModelingAction : IPluginActionDelegate {
+class CreateRoomAction : IPluginActionDelegate {
     private val pairModeling: PairModeling = PairModeling.getInstance()
 
     @ExperimentalPathApi
@@ -25,11 +26,15 @@ class PairModelingAction : IPluginActionDelegate {
             if (pairModeling.isLaunched.not()) {
                 val config = Config()
                 config.load()
-                val topic = getCommitId()
-                    ?: "debug/astah" //JOptionPane.showInputDialog("Input topic. (Ex: debug/astah)") ?: return
+                val topic = generatePassword()
+                val jTextArea = JTextArea(
+                    "Your AIKOTOBA is\n" +
+                            topic + "\n" +
+                            "Tell collaborator this AIKOTOBA and enjoy pair modeling!"
+                )
                 val clientId = UUID.randomUUID().toString()
-
                 pairModeling.start(topic, clientId, config.conf.brokerAddress, config.conf.brokerPortNumber)
+                JOptionPane.showMessageDialog(window.parent, jTextArea, "AIKOTOBA", JOptionPane.INFORMATION_MESSAGE)
             } else {
                 pairModeling.end()
             }
@@ -41,16 +46,9 @@ class PairModelingAction : IPluginActionDelegate {
         }
     }
 
-    private fun getCommitId(): String? {
-        logger.debug("Get commit id.")
-        val props = Properties()
-        val classLoader: ClassLoader = this.javaClass.classLoader
-        logger.debug("Git properties:")
-        classLoader.getResourceAsStream("git.properties").use {
-            props.load(it)
-            props.map { logger.debug("${it.key}: ${it.value}") }
-            return props.getProperty("git.commit.id.abbrev")
-        }
+    private fun generatePassword(): String {
+        val uuid = UUID.randomUUID().toString()
+        return uuid.replace("-", "")
     }
 
     companion object : Logging {

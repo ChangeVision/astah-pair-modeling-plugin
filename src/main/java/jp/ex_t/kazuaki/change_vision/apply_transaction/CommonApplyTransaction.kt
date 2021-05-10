@@ -52,7 +52,7 @@ class CommonApplyTransaction(private val entityLUT: EntityLUT) : IApplyTransacti
         basicModelEditor.delete(model)
     }
 
-    companion object: Logging {
+    companion object : Logging {
         private val logger = logger()
     }
 }
