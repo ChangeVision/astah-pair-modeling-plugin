@@ -17,14 +17,13 @@ import javax.swing.JTextArea
 import kotlin.io.path.ExperimentalPathApi
 
 class CreateRoomAction : IPluginActionDelegate {
-    private var isLaunched = false
-    private lateinit var pairModeling: PairModeling
+    private val pairModeling: PairModeling = PairModeling.getInstance()
 
     @ExperimentalPathApi
     @Throws(UnExpectedException::class)
     override fun run(window: IWindow) {
         try {
-            if (!isLaunched) {
+            if (pairModeling.isLaunched.not()) {
                 val config = Config()
                 config.load()
                 val topic = generatePassword()
@@ -35,12 +34,10 @@ class CreateRoomAction : IPluginActionDelegate {
                 )
                 JOptionPane.showMessageDialog(window.parent, jTextArea, "AIKOTOBA", JOptionPane.INFORMATION_MESSAGE)
                 val clientId = UUID.randomUUID().toString()
-                pairModeling = PairModeling(topic, clientId, config.conf.brokerAddress, config.conf.brokerPortNumber)
-                pairModeling.start()
+                pairModeling.start(topic, clientId, config.conf.brokerAddress, config.conf.brokerPortNumber)
             } else {
                 pairModeling.end()
             }
-            isLaunched = !isLaunched
         } catch (e: UnExpectedException) {
             val message = "Exception occurred."
             JOptionPane.showMessageDialog(window.parent, message, "Alert", JOptionPane.ERROR_MESSAGE)

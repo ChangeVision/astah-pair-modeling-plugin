@@ -15,24 +15,21 @@ import javax.swing.JOptionPane
 import kotlin.io.path.ExperimentalPathApi
 
 class JoinRoomAction : IPluginActionDelegate {
-    private var isLaunched = false
-    private lateinit var pairModeling: PairModeling
+    private val pairModeling: PairModeling = PairModeling.getInstance()
 
     @ExperimentalPathApi
     @Throws(IPluginActionDelegate.UnExpectedException::class)
     override fun run(window: IWindow) {
         try {
-            if (!isLaunched) {
+            if (pairModeling.isLaunched.not()) {
                 val config = Config()
                 config.load()
                 val topic = JOptionPane.showInputDialog(window.parent, "Input AIKOTOBA which host tell you.") ?: return
                 val clientId = UUID.randomUUID().toString()
-                pairModeling = PairModeling(topic, clientId, config.conf.brokerAddress, config.conf.brokerPortNumber)
-                pairModeling.start()
+                pairModeling.start(topic, clientId, config.conf.brokerAddress, config.conf.brokerPortNumber)
             } else {
                 pairModeling.end()
             }
-            isLaunched = !isLaunched
         } catch (e: IPluginActionDelegate.UnExpectedException) {
             val message = "Exception occurred."
             JOptionPane.showMessageDialog(window.parent, message, "Alert", JOptionPane.ERROR_MESSAGE)
