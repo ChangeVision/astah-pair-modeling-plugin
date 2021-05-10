@@ -15,13 +15,7 @@ import jp.ex_t.kazuaki.change_vision.network.EntityLUT
 import jp.ex_t.kazuaki.change_vision.network.MqttPublisher
 import jp.ex_t.kazuaki.change_vision.network.MqttSubscriber
 
-class PairModeling(
-    topic: String,
-    private val clientId: String,
-    private val brokerAddress: String,
-    private val brokerPortNumber: Int
-) {
-    private val topicTransaction = "$topic/transaction"
+class PairModeling {
     var isLaunched: Boolean = false
         private set
 
@@ -33,8 +27,14 @@ class PairModeling(
     private lateinit var reflectTransaction: ReflectTransaction
     private lateinit var entityLUT: EntityLUT
 
-    fun start() {
+    fun start(
+        topic: String,
+        clientId: String,
+        brokerAddress: String,
+        brokerPortNumber: Int
+    ) {
         check(isLaunched.not()) { "Pair modeling has already launched." }
+        val topicTransaction = "$topic/transaction"
         val api = AstahAPI.getAstahAPI()
         val projectAccessor = api.projectAccessor
 
@@ -76,13 +76,8 @@ class PairModeling(
     companion object : Logging {
         private val logger = logger()
         private var instance: PairModeling? = null
-        fun getInstance(
-            topic: String,
-            clientId: String,
-            brokerAddress: String,
-            brokerPortNumber: Int
-        ) = instance ?: synchronized(this) {
-            instance ?: PairModeling(topic, clientId, brokerAddress, brokerPortNumber).also { instance = it }
+        fun getInstance() = instance ?: synchronized(this) {
+            instance ?: PairModeling().also { instance = it }
         }
     }
 }
