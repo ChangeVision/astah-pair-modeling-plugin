@@ -18,6 +18,7 @@ import jp.ex_t.kazuaki.change_vision.network.MqttSubscriber
 class PairModeling {
     var isLaunched: Boolean = false
         private set
+    private val menuTextChanger = MenuTextChanger()
 
     // TODO: もしプロジェクト全体が欲しいとなった場合はトピックを別で生やす
     // TODO: もしチャットが欲しいとなった場合はトピックを別で生やす
@@ -55,6 +56,7 @@ class PairModeling {
         mqttSubscriber.subscribe()
         logger.debug("Subscribed: $brokerAddress:$topicTransaction ($clientId")
         logger.info("Launched subscriber.")
+        menuTextChanger.setAfter()
         isLaunched = isLaunched.not()
     }
 
@@ -70,6 +72,7 @@ class PairModeling {
         logger.debug("Stopping publisher...")
         projectAccessor.removeProjectEventListener(projectChangedListener)
         logger.info("Stopped publisher.")
+        menuTextChanger.setBefore()
         isLaunched = isLaunched.not()
     }
 
