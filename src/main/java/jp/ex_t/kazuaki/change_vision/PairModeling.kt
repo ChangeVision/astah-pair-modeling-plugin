@@ -55,6 +55,7 @@ class PairModeling(
         mqttSubscriber.subscribe()
         logger.debug("Subscribed: $brokerAddress:$topicTransaction ($clientId")
         logger.info("Launched subscriber.")
+        isLaunched = isLaunched.not()
     }
 
     fun end() {
@@ -69,6 +70,7 @@ class PairModeling(
         logger.debug("Stopping publisher...")
         projectAccessor.removeProjectEventListener(projectChangedListener)
         logger.info("Stopped publisher.")
+        isLaunched = isLaunched.not()
     }
 
     companion object : Logging {
