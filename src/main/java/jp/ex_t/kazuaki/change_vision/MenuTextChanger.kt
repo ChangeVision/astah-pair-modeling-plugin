@@ -20,13 +20,13 @@ class MenuTextChanger {
         arrayListOf(
             ActionTextSet(
                 "jp.ex_t.kazuaki.change_vision.CreateRoomAction",
-                "ルームを作成する",
-                "ルームから抜ける",
+                "Create the Room",
+                "Exit the Room",
             ),
             ActionTextSet(
                 "jp.ex_t.kazuaki.change_vision.JoinRoomAction",
-                "ルームに参加する",
-                "ルームから抜ける",
+                "Join the Room",
+                "Exit the Room",
             ),
         )
 
