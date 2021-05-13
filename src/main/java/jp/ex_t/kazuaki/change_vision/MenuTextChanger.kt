@@ -32,7 +32,7 @@ class MenuTextChanger {
 
     private fun getPairModelingMenu(): JMenu? {
         val toolMenu = api.viewManager.mainFrame.jMenuBar.components.find { it.name == toolMenuId } as JMenu? ?: run {
-            logger.error("Pair modeling menu not found.")
+            logger.error("Tool menu not found.")
             return null
         }
         val pairModelingMenu = toolMenu.menuComponents.find { it.name == pairModelingId } as JMenu? ?: run {
