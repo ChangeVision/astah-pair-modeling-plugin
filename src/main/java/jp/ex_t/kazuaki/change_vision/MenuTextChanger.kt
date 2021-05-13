@@ -9,24 +9,26 @@
 package jp.ex_t.kazuaki.change_vision
 
 import com.change_vision.jude.api.inf.AstahAPI
+import java.util.*
 import javax.swing.JMenu
 import javax.swing.JMenuItem
 
 class MenuTextChanger {
     private val api = AstahAPI.getAstahAPI()
+    private val resourceBundle = ResourceBundle.getBundle("plugin")
     private val toolMenuId = "managementview.menu.tool"
     private val pairModelingId = "$toolMenuId.pair-modeling"
     private val actionTextSet =
         arrayListOf(
             ActionTextSet(
                 "jp.ex_t.kazuaki.change_vision.CreateRoomAction",
-                "Create the Room",
-                "Exit the Room",
+                "menu_label_create_room",
+                "menu_label_exit_room",
             ),
             ActionTextSet(
                 "jp.ex_t.kazuaki.change_vision.JoinRoomAction",
-                "Join the Room",
-                "Exit the Room",
+                "menu_label_join_room",
+                "menu_label_exit_room",
             ),
         )
 
@@ -53,7 +55,7 @@ class MenuTextChanger {
                         logger.error("Pair modeling menu ${actionText.id} not found.")
                         return
                     }
-            action.text = actionText.beforeText
+            action.text = resourceBundle.getString(actionText.beforeTextId)
         }
     }
 
@@ -68,7 +70,7 @@ class MenuTextChanger {
                         logger.error("Pair modeling menu ${actionText.id} not found.")
                         return
                     }
-            action.text = actionText.afterText
+            action.text = resourceBundle.getString(actionText.afterTextId)
         }
     }
 
@@ -83,6 +85,6 @@ class MenuTextChanger {
 
 data class ActionTextSet(
     val id: String,
-    val beforeText: String,
-    val afterText: String,
+    val beforeTextId: String,
+    val afterTextId: String,
 )
