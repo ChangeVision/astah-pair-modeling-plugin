@@ -17,7 +17,7 @@ class MenuTextChanger {
     private val toolMenuId = "managementview.menu.tool"
     private val pairModelingId = "$toolMenuId.pair-modeling"
     private val actionTextSet =
-        arrayListOf<ActionTextSet>(
+        arrayListOf(
             ActionTextSet(
                 "jp.ex_t.kazuaki.change_vision.CreateRoomAction",
                 "ルームを作成する",
