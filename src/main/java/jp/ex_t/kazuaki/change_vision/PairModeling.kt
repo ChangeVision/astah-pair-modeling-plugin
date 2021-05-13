@@ -18,7 +18,7 @@ import jp.ex_t.kazuaki.change_vision.network.MqttSubscriber
 class PairModeling {
     var isLaunched: Boolean = false
         private set
-    private val menuTextChanger = MenuTextChanger()
+    private val menuTextChanger = MenuTextChanger.getInstance()
 
     // TODO: もしプロジェクト全体が欲しいとなった場合はトピックを別で生やす
     // TODO: もしチャットが欲しいとなった場合はトピックを別で生やす

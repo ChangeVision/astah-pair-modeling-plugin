@@ -72,6 +72,10 @@ class MenuTextChanger {
 
     companion object : Logging {
         private val logger = logger()
+        private var instance: MenuTextChanger? = null
+        fun getInstance() = instance ?: synchronized(this) {
+            instance ?: MenuTextChanger().also { instance = it }
+        }
     }
 }
 
