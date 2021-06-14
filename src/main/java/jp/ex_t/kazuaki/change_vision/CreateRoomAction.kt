@@ -18,6 +18,8 @@ import kotlin.io.path.ExperimentalPathApi
 
 class CreateRoomAction : IPluginActionDelegate {
     private val pairModeling: PairModeling = PairModeling.getInstance()
+    private val menuTextChanger = MenuTextChanger.getInstance()
+    private val menuId = "jp.ex_t.kazuaki.change_vision.CreateRoomAction"
 
     @ExperimentalPathApi
     @Throws(UnExpectedException::class)
@@ -35,8 +37,12 @@ class CreateRoomAction : IPluginActionDelegate {
                 val clientId = UUID.randomUUID().toString()
                 pairModeling.start(topic, clientId, config.conf.brokerAddress, config.conf.brokerPortNumber)
                 JOptionPane.showMessageDialog(window.parent, jTextArea, "AIKOTOBA", JOptionPane.INFORMATION_MESSAGE)
+                menuTextChanger.setAfterText(menuId)
+                menuTextChanger.disable(menuId)
             } else {
                 pairModeling.end()
+                menuTextChanger.setBeforeText(menuId)
+                menuTextChanger.enable(menuId)
             }
         } catch (e: UnExpectedException) {
             val message = "Exception occurred."
