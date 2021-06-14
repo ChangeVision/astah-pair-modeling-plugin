@@ -27,6 +27,7 @@ class MqttPublisher(brokerAddress: String, brokerPortNumber: Int, private val to
             val mqttClient = MqttClient(broker, clientIdPublisher, MemoryPersistence())
             val mqttConnectOptions = MqttConnectOptions()
             mqttConnectOptions.isCleanSession = false
+            mqttConnectOptions.connectionTimeout = 10
 
             mqttClient.connect(mqttConnectOptions)
             logger.info("Connected to broker $broker.")

@@ -35,6 +35,7 @@ class MqttSubscriber(
         mqttClient.setCallback(this)
         val mqttConnectOptions = MqttConnectOptions()
         mqttConnectOptions.isCleanSession = false
+        mqttConnectOptions.connectionTimeout = 10
 
         mqttClient.connect(mqttConnectOptions)
         logger.info("Connected to broker $broker")
