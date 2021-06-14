@@ -44,11 +44,11 @@ class MenuTextChanger {
         return pairModelingMenu
     }
 
-    fun setBefore() {
+    fun setBeforeText(id: String) {
         val pairModelingMenu = getPairModelingMenu() ?: run {
             return
         }
-        actionTextSet.forEach { actionText ->
+        actionTextSet.filter { it.id == id }.forEach { actionText ->
             val action =
                 pairModelingMenu.menuComponents.find { it.name == "$pairModelingId.${actionText.id}" } as JMenuItem?
                     ?: run {
@@ -59,11 +59,11 @@ class MenuTextChanger {
         }
     }
 
-    fun setAfter() {
+    fun setAfterText(id: String) {
         val pairModelingMenu = getPairModelingMenu() ?: run {
             return
         }
-        actionTextSet.forEach { actionText ->
+        actionTextSet.filter { it.id == id }.forEach { actionText ->
             val action =
                 pairModelingMenu.menuComponents.find { it.name == "$pairModelingId.${actionText.id}" } as JMenuItem?
                     ?: run {
@@ -71,6 +71,36 @@ class MenuTextChanger {
                         return
                     }
             action.text = resourceBundle.getString(actionText.afterTextId)
+        }
+    }
+
+    fun disable(id: String) {
+        val pairModelingMenu = getPairModelingMenu() ?: run {
+            return
+        }
+        actionTextSet.filterNot { it.id == id }.forEach { actionText ->
+            val action =
+                pairModelingMenu.menuComponents.find { it.name == "$pairModelingId.${actionText.id}" } as JMenuItem?
+                    ?: run {
+                        logger.error("Pair modeling menu ${actionText.id} not found.")
+                        return
+                    }
+            action.isEnabled = false
+        }
+    }
+
+    fun enable(id: String) {
+        val pairModelingMenu = getPairModelingMenu() ?: run {
+            return
+        }
+        actionTextSet.filterNot { it.id == id }.forEach { actionText ->
+            val action =
+                pairModelingMenu.menuComponents.find { it.name == "$pairModelingId.${actionText.id}" } as JMenuItem?
+                    ?: run {
+                        logger.error("Pair modeling menu ${actionText.id} not found.")
+                        return
+                    }
+            action.isEnabled = true
         }
     }
 
