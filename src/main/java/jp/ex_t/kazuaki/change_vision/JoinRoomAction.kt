@@ -40,7 +40,6 @@ class JoinRoomAction : IPluginActionDelegate {
             val message = "Exception occurred."
             JOptionPane.showMessageDialog(window.parent, message, "Alert", JOptionPane.ERROR_MESSAGE)
             logger.error(message, e)
-            throw e
         }
     }
 
