@@ -48,7 +48,7 @@ class PairModeling {
         mqttPublisher = MqttPublisher(brokerAddress, brokerPortNumber, topicTransactionPublisher, clientId)
         projectChangedListener = ProjectChangedListener(entityLUT, mqttPublisher)
         projectAccessor.addProjectEventListener(projectChangedListener)
-        logger.debug("Published: $brokerAddress:$topicTransaction ($clientId")
+        logger.debug("Published: $brokerAddress:$topicTransaction ($clientId)")
         logger.info("Launched publisher.")
 
         try {
@@ -64,7 +64,7 @@ class PairModeling {
                     transactionReceiver
                 )
             mqttSubscriber.subscribe()
-            logger.debug("Subscribed: $brokerAddress:$topicTransaction ($clientId")
+            logger.debug("Subscribed: $brokerAddress:$topicTransaction ($clientId)")
             logger.info("Launched subscriber.")
             isLaunched = isLaunched.not()
         } catch (e: MqttException) {
