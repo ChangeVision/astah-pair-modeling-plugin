@@ -38,7 +38,7 @@ class ReceiveTransaction(entityLUT: EntityLUT, private val projectChangedListene
     }
 
     @Throws(UnExpectedException::class)
-    fun transact(transaction: Transaction) {
+    private fun transact(transaction: Transaction) {
         SwingUtilities.invokeLater {
             val transactionManager = projectAccessor.transactionManager
             try {
