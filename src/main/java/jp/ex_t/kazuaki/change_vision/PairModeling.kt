@@ -9,11 +9,14 @@
 package jp.ex_t.kazuaki.change_vision
 
 import com.change_vision.jude.api.inf.AstahAPI
+import com.change_vision.jude.api.inf.ui.IPluginActionDelegate.UnExpectedException
 import jp.ex_t.kazuaki.change_vision.apply_transaction.ReflectTransaction
 import jp.ex_t.kazuaki.change_vision.event_listener.ProjectChangedListener
 import jp.ex_t.kazuaki.change_vision.network.EntityLUT
 import jp.ex_t.kazuaki.change_vision.network.MqttPublisher
 import jp.ex_t.kazuaki.change_vision.network.MqttSubscriber
+import org.eclipse.paho.client.mqttv3.MqttException
+import java.net.SocketTimeoutException
 
 class PairModeling {
     var isLaunched: Boolean = false
@@ -27,6 +30,7 @@ class PairModeling {
     private lateinit var reflectTransaction: ReflectTransaction
     private lateinit var entityLUT: EntityLUT
 
+    @Throws(UnExpectedException::class)
     fun start(
         topic: String,
         clientId: String,
@@ -47,15 +51,29 @@ class PairModeling {
         logger.debug("Published: $brokerAddress:$topicTransaction ($clientId")
         logger.info("Launched publisher.")
 
-        logger.debug("Launching subscriber...")
-        val topicTransactionSubscriber = "$topicTransaction/#"
-        reflectTransaction = ReflectTransaction(entityLUT, projectChangedListener)
-        mqttSubscriber =
-            MqttSubscriber(brokerAddress, brokerPortNumber, topicTransactionSubscriber, clientId, reflectTransaction)
-        mqttSubscriber.subscribe()
-        logger.debug("Subscribed: $brokerAddress:$topicTransaction ($clientId")
-        logger.info("Launched subscriber.")
-        isLaunched = isLaunched.not()
+        try {
+            logger.debug("Launching subscriber...")
+            val topicTransactionSubscriber = "$topicTransaction/#"
+            reflectTransaction = ReflectTransaction(entityLUT, projectChangedListener)
+            mqttSubscriber =
+                MqttSubscriber(
+                    brokerAddress,
+                    brokerPortNumber,
+                    topicTransactionSubscriber,
+                    clientId,
+                    reflectTransaction
+                )
+            mqttSubscriber.subscribe()
+            logger.debug("Subscribed: $brokerAddress:$topicTransaction ($clientId")
+            logger.info("Launched subscriber.")
+            isLaunched = isLaunched.not()
+        } catch (e: MqttException) {
+            if (e.cause is SocketTimeoutException) {
+                projectAccessor.removeProjectEventListener(projectChangedListener)
+                logger.error("MQTT broker timeout.", e)
+                throw UnExpectedException()
+            }
+        }
     }
 
     fun end() {
