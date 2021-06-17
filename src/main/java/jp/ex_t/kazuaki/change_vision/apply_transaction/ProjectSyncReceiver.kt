@@ -13,6 +13,7 @@ import com.change_vision.jude.api.inf.model.IClass
 import com.change_vision.jude.api.inf.model.IClassDiagram
 import com.change_vision.jude.api.inf.model.IMindMapDiagram
 import com.change_vision.jude.api.inf.model.INamedElement
+import com.change_vision.jude.api.inf.presentation.INodePresentation
 import jp.ex_t.kazuaki.change_vision.Logging
 import jp.ex_t.kazuaki.change_vision.logger
 import jp.ex_t.kazuaki.change_vision.network.*
@@ -44,13 +45,15 @@ class ProjectSyncReceiver(
     @ExperimentalSerializationApi
     private fun sync() {
         logger.debug("Project Sync")
-        entityLUT.entries.add(Entry(projectAccessor.project.id, projectAccessor.project.id))
-        val createProjectTransaction = Transaction(listOf(CreateProject(projectAccessor.project.id)))
+        val project = projectAccessor.project
+
+        entityLUT.entries.add(Entry(project.id, project.id))
+        val createProjectTransaction = Transaction(listOf(CreateProject(project.id)))
         encodeAndPublish(createProjectTransaction)
 
         // TODO: 2. プロジェクトの起点から一つずつ(対応している)エンティティを送る
-        // 図要素
-        val createDiagramOperations = projectAccessor.project.diagrams.mapNotNull {
+        // diagram
+        val createDiagramOperations = project.diagrams.mapNotNull {
             when (it) {
                 is IClassDiagram -> createClassDiagram(it)
                 is IMindMapDiagram -> createMindMapDiagram(it)
@@ -65,9 +68,9 @@ class ProjectSyncReceiver(
             encodeAndPublish(createTransaction)
         }
 
-        val rootModel = projectAccessor.project
-        logger.debug("$rootModel owned entities: ${rootModel.ownedElements.map { it.name ?: "No name" }}}")
-        val createOperations = rootModel.ownedElements.mapNotNull {
+        // model
+        logger.debug("$project owned entities: ${project.ownedElements.map { it.name ?: "No name" }}}")
+        val createModelOperations = project.ownedElements.mapNotNull {
             when (it) {
                 is IClass -> createClassModel(it)
                 else -> {
@@ -76,10 +79,26 @@ class ProjectSyncReceiver(
                 }
             }
         }
-        if (createOperations.isNotEmpty()) {
-            val createTransaction = Transaction(createOperations)
+        if (createModelOperations.isNotEmpty()) {
+            val createTransaction = Transaction(createModelOperations)
             encodeAndPublish(createTransaction)
         }
+
+        // presentation
+        project.diagrams.filter { it is IMindMapDiagram }.forEach {
+            val diagram = it as IMindMapDiagram
+            val createMindmapDiagramFloatingTopicOperation = diagram.floatingTopics.mapNotNull {
+                createFloatingTopic(it)
+            }
+            if (createMindmapDiagramFloatingTopicOperation.isNotEmpty()) {
+                val createTransaction = Transaction(createMindmapDiagramFloatingTopicOperation)
+                encodeAndPublish(createTransaction)
+            }
+        }
+    }
+
+    private fun getTopics(topics: Array<INodePresentation>): List<CreateTopic> {
+        TODO("Get children topics whose parent is root or floating topic.")
     }
 
     private fun createClassDiagram(entity: IClassDiagram): ClassDiagramOperation {
@@ -110,6 +129,14 @@ class ProjectSyncReceiver(
         val createClassModel = CreateClassModel(entity.name, owner.name, entity.stereotypes.toList(), entity.id)
         logger.debug("${entity.name}(IClass)")
         return createClassModel
+    }
+
+    private fun createFloatingTopic(entity: INodePresentation): CreateFloatingTopic {
+        val location = Pair(entity.location.x, entity.location.y)
+        val size = Pair(entity.width, entity.height)
+        entityLUT.entries.add(Entry(entity.id, entity.id))
+        logger.debug("${entity.label}(INodePresentation, FloatingTopic)")
+        return CreateFloatingTopic(entity.label, location, size, entity.diagram.name, entity.id)
     }
 
     @ExperimentalSerializationApi
