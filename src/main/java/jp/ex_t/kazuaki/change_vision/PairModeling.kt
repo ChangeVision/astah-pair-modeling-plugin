@@ -29,7 +29,6 @@ class PairModeling {
     private lateinit var mqttPublisher: MqttPublisher
     private lateinit var projectChangedListener: ProjectChangedListener
     private lateinit var mqttSubscriber: MqttSubscriber
-    private lateinit var transactionReceiver: TransactionReceiver
     private lateinit var entityLUT: EntityLUT
 
     @Throws(UnExpectedException::class)
@@ -54,7 +53,7 @@ class PairModeling {
         try {
             logger.debug("Launching subscriber...")
             val topicTransactionSubscriber = "$topicTransaction/#"
-            transactionReceiver = TransactionReceiver(entityLUT, projectChangedListener)
+            val transactionReceiver = TransactionReceiver(entityLUT, projectChangedListener)
             mqttSubscriber =
                 MqttSubscriber(
                     brokerAddress,
