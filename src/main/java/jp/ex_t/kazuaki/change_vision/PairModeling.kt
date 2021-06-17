@@ -10,11 +10,11 @@ package jp.ex_t.kazuaki.change_vision
 
 import com.change_vision.jude.api.inf.AstahAPI
 import com.change_vision.jude.api.inf.ui.IPluginActionDelegate.UnExpectedException
-import jp.ex_t.kazuaki.change_vision.apply_transaction.ReflectTransaction
 import jp.ex_t.kazuaki.change_vision.event_listener.ProjectChangedListener
 import jp.ex_t.kazuaki.change_vision.network.EntityLUT
 import jp.ex_t.kazuaki.change_vision.network.MqttPublisher
 import jp.ex_t.kazuaki.change_vision.network.MqttSubscriber
+import jp.ex_t.kazuaki.change_vision.network.ReceiveTransaction
 import org.eclipse.paho.client.mqttv3.MqttException
 import java.net.SocketTimeoutException
 
@@ -29,7 +29,7 @@ class PairModeling {
     private lateinit var mqttPublisher: MqttPublisher
     private lateinit var projectChangedListener: ProjectChangedListener
     private lateinit var mqttSubscriber: MqttSubscriber
-    private lateinit var reflectTransaction: ReflectTransaction
+    private lateinit var receiveTransaction: ReceiveTransaction
     private lateinit var entityLUT: EntityLUT
 
     @Throws(UnExpectedException::class)
@@ -54,14 +54,14 @@ class PairModeling {
         try {
             logger.debug("Launching subscriber...")
             val topicTransactionSubscriber = "$topicTransaction/#"
-            reflectTransaction = ReflectTransaction(entityLUT, projectChangedListener)
+            receiveTransaction = ReceiveTransaction(entityLUT, projectChangedListener)
             mqttSubscriber =
                 MqttSubscriber(
                     brokerAddress,
                     brokerPortNumber,
                     topicTransactionSubscriber,
                     clientId,
-                    reflectTransaction
+                    receiveTransaction
                 )
             mqttSubscriber.subscribe()
             logger.debug("Subscribed: $brokerAddress:$topicTransaction ($clientId")

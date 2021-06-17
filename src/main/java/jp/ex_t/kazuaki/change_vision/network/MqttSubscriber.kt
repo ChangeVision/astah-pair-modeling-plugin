@@ -9,11 +9,7 @@
 package jp.ex_t.kazuaki.change_vision.network
 
 import jp.ex_t.kazuaki.change_vision.Logging
-import jp.ex_t.kazuaki.change_vision.apply_transaction.ReflectTransaction
 import jp.ex_t.kazuaki.change_vision.logger
-import kotlinx.serialization.ExperimentalSerializationApi
-import kotlinx.serialization.cbor.Cbor
-import kotlinx.serialization.decodeFromByteArray
 import org.eclipse.paho.client.mqttv3.*
 import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence
 
@@ -22,7 +18,7 @@ class MqttSubscriber(
     brokerPortNumber: Int,
     private val topic: String,
     private val clientId: String,
-    private val reflectTransaction: ReflectTransaction
+    private val receiver: IReceiver
 ) : MqttCallback {
     private var broker: String = "tcp://$brokerAddress:$brokerPortNumber"
     private lateinit var mqttClient: MqttClient
@@ -55,16 +51,13 @@ class MqttSubscriber(
         // TODO: retry?
     }
 
-    @ExperimentalSerializationApi
     override fun messageArrived(topic: String, message: MqttMessage) {
         // If the message was send by myself,  ignore this one.
         val receivedClientId = topic.split("/").last()
         if (receivedClientId == clientId) {
             return
         }
-        val receivedMessage = Cbor.decodeFromByteArray<Transaction>(message.payload)
-        logger.debug("Received: $receivedMessage ($topic)")
-        reflectTransaction.transact(receivedMessage)
+        receiver.receive(topic, message.payload)
     }
 
     override fun deliveryComplete(token: IMqttDeliveryToken) {

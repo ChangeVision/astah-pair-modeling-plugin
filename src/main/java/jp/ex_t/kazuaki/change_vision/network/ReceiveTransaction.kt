@@ -1,30 +1,44 @@
 /*
- * ReflectTransaction.kt - pair-modeling
+ * ReceiveTransaction.kt - pair-modeling
  * Copyright © 2021 HyodaKazuaki.
  *
  * Released under the MIT License.
  * see https://opensource.org/licenses/MIT
  */
 
-package jp.ex_t.kazuaki.change_vision.apply_transaction
+package jp.ex_t.kazuaki.change_vision.network
 
 import com.change_vision.jude.api.inf.AstahAPI
 import com.change_vision.jude.api.inf.exception.BadTransactionException
 import com.change_vision.jude.api.inf.project.ProjectAccessor
 import com.change_vision.jude.api.inf.ui.IPluginActionDelegate.UnExpectedException
 import jp.ex_t.kazuaki.change_vision.Logging
+import jp.ex_t.kazuaki.change_vision.apply_transaction.ClassDiagramApplyTransaction
+import jp.ex_t.kazuaki.change_vision.apply_transaction.CommonApplyTransaction
+import jp.ex_t.kazuaki.change_vision.apply_transaction.MindmapDiagramApplyTransaction
+import jp.ex_t.kazuaki.change_vision.apply_transaction.StateMachineDiagramApplyTransaction
 import jp.ex_t.kazuaki.change_vision.event_listener.ProjectChangedListener
 import jp.ex_t.kazuaki.change_vision.logger
-import jp.ex_t.kazuaki.change_vision.network.*
+import kotlinx.serialization.ExperimentalSerializationApi
+import kotlinx.serialization.cbor.Cbor
+import kotlinx.serialization.decodeFromByteArray
 import javax.swing.SwingUtilities
 
-class ReflectTransaction(entityLUT: EntityLUT, private val projectChangedListener: ProjectChangedListener) {
+class ReceiveTransaction(entityLUT: EntityLUT, private val projectChangedListener: ProjectChangedListener) :
+    IReceiver {
     private val api: AstahAPI = AstahAPI.getAstahAPI()
     private val projectAccessor: ProjectAccessor = api.projectAccessor
     private val commonApplyTransaction = CommonApplyTransaction(entityLUT)
     private val classDiagramApplyTransaction = ClassDiagramApplyTransaction(entityLUT)
     private val mindmapDiagramApplyTransaction = MindmapDiagramApplyTransaction(entityLUT)
     private val stateMachineDiagramApplyTransaction = StateMachineDiagramApplyTransaction(entityLUT)
+
+    @ExperimentalSerializationApi
+    override fun receive(topic: String, payload: ByteArray) {
+        val receivedMessage = Cbor.decodeFromByteArray<Transaction>(payload)
+        logger.debug("Received: $receivedMessage ($topic)")
+        transact(receivedMessage)
+    }
 
     @Throws(UnExpectedException::class)
     fun transact(transaction: Transaction) {
