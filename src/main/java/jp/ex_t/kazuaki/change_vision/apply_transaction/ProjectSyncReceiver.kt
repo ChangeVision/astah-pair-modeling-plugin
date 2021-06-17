@@ -10,6 +10,7 @@ package jp.ex_t.kazuaki.change_vision.apply_transaction
 
 import com.change_vision.jude.api.inf.AstahAPI
 import com.change_vision.jude.api.inf.model.IClass
+import com.change_vision.jude.api.inf.model.IClassDiagram
 import com.change_vision.jude.api.inf.model.INamedElement
 import jp.ex_t.kazuaki.change_vision.Logging
 import jp.ex_t.kazuaki.change_vision.logger
@@ -47,7 +48,23 @@ class ProjectSyncReceiver(
         encodeAndPublish(createProjectTransaction)
 
         // TODO: 2. プロジェクトの起点から一つずつ(対応している)エンティティを送る
+        // 図要素
+        val createDiagramOperations = projectAccessor.project.diagrams.mapNotNull {
+            when (it) {
+                is IClassDiagram -> createClassDiagram(it)
+                else -> {
+                    logger.debug("${it}(Unknown diagram)")
+                    null
+                }
+            }
+        }
+        if (createDiagramOperations.isNotEmpty()) {
+            val createTransaction = Transaction(createDiagramOperations)
+            encodeAndPublish(createTransaction)
+        }
+
         val rootModel = projectAccessor.project
+        logger.debug("$rootModel owned entities: ${rootModel.ownedElements.map { it.name ?: "No name" }}}")
         val createOperations = rootModel.ownedElements.mapNotNull {
             when (it) {
                 is IClass -> createClassModel(it)
@@ -61,6 +78,15 @@ class ProjectSyncReceiver(
             val createTransaction = Transaction(createOperations)
             encodeAndPublish(createTransaction)
         }
+    }
+
+    private fun createClassDiagram(entity: IClassDiagram): ClassDiagramOperation {
+        val owner = entity.owner as INamedElement
+        // TODO: ownerのIDをどうにかして共有させる
+        val createClassDiagram = CreateClassDiagram(entity.name, owner.name, entity.id)
+        entityLUT.entries.add(Entry(entity.id, entity.id))
+        logger.debug("${entity.name}(IClassDiagram)")
+        return createClassDiagram
     }
 
     private fun createClassModel(entity: IClass): CreateClassModel {
