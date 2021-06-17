@@ -10,7 +10,7 @@ package jp.ex_t.kazuaki.change_vision
 
 import com.change_vision.jude.api.inf.AstahAPI
 import com.change_vision.jude.api.inf.ui.IPluginActionDelegate.UnExpectedException
-import jp.ex_t.kazuaki.change_vision.apply_transaction.ReceiveTransaction
+import jp.ex_t.kazuaki.change_vision.apply_transaction.TransactionReceiver
 import jp.ex_t.kazuaki.change_vision.event_listener.ProjectChangedListener
 import jp.ex_t.kazuaki.change_vision.network.EntityLUT
 import jp.ex_t.kazuaki.change_vision.network.MqttPublisher
@@ -29,7 +29,7 @@ class PairModeling {
     private lateinit var mqttPublisher: MqttPublisher
     private lateinit var projectChangedListener: ProjectChangedListener
     private lateinit var mqttSubscriber: MqttSubscriber
-    private lateinit var receiveTransaction: ReceiveTransaction
+    private lateinit var transactionReceiver: TransactionReceiver
     private lateinit var entityLUT: EntityLUT
 
     @Throws(UnExpectedException::class)
@@ -54,14 +54,14 @@ class PairModeling {
         try {
             logger.debug("Launching subscriber...")
             val topicTransactionSubscriber = "$topicTransaction/#"
-            receiveTransaction = ReceiveTransaction(entityLUT, projectChangedListener)
+            transactionReceiver = TransactionReceiver(entityLUT, projectChangedListener)
             mqttSubscriber =
                 MqttSubscriber(
                     brokerAddress,
                     brokerPortNumber,
                     topicTransactionSubscriber,
                     clientId,
-                    receiveTransaction
+                    transactionReceiver
                 )
             mqttSubscriber.subscribe()
             logger.debug("Subscribed: $brokerAddress:$topicTransaction ($clientId")

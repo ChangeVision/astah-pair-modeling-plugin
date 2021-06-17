@@ -21,7 +21,7 @@ import kotlinx.serialization.cbor.Cbor
 import kotlinx.serialization.decodeFromByteArray
 import javax.swing.SwingUtilities
 
-class ReceiveTransaction(entityLUT: EntityLUT, private val projectChangedListener: ProjectChangedListener) :
+class TransactionReceiver(entityLUT: EntityLUT, private val projectChangedListener: ProjectChangedListener) :
     IReceiver {
     private val api: AstahAPI = AstahAPI.getAstahAPI()
     private val projectAccessor: ProjectAccessor = api.projectAccessor
