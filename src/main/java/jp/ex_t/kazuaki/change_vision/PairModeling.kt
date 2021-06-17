@@ -26,7 +26,6 @@ class PairModeling {
 
     // TODO: もしプロジェクト全体が欲しいとなった場合はトピックを別で生やす
     // TODO: もしチャットが欲しいとなった場合はトピックを別で生やす
-    private lateinit var mqttPublisher: MqttPublisher
     private lateinit var projectChangedListener: ProjectChangedListener
     private lateinit var mqttSubscriber: MqttSubscriber
     private lateinit var entityLUT: EntityLUT
@@ -44,7 +43,7 @@ class PairModeling {
         logger.debug("Launching publisher...")
         entityLUT = EntityLUT()
         val topicTransactionPublisher = "$topicTransaction/$clientId"
-        mqttPublisher = MqttPublisher(brokerAddress, brokerPortNumber, topicTransactionPublisher, clientId)
+        val mqttPublisher = MqttPublisher(brokerAddress, brokerPortNumber, topicTransactionPublisher, clientId)
         projectChangedListener = ProjectChangedListener(entityLUT, mqttPublisher)
         projectAccessor.addProjectEventListener(projectChangedListener)
         logger.debug("Published: $brokerAddress:$topicTransaction ($clientId)")
