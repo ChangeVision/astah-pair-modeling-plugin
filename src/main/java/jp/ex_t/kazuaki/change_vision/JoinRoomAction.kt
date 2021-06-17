@@ -28,7 +28,7 @@ class JoinRoomAction : IPluginActionDelegate {
                 config.load()
                 val topic = JOptionPane.showInputDialog(window.parent, "Input AIKOTOBA which host tell you.") ?: return
                 val clientId = UUID.randomUUID().toString()
-                pairModeling.start(topic, clientId, config.conf.brokerAddress, config.conf.brokerPortNumber)
+                pairModeling.join(topic, clientId, config.conf.brokerAddress, config.conf.brokerPortNumber)
                 menuTextChanger.setAfterText(menuId)
                 menuTextChanger.disable(menuId)
             } else {
