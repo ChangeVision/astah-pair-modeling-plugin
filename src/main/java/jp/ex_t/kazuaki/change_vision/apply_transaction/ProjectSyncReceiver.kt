@@ -11,6 +11,7 @@ package jp.ex_t.kazuaki.change_vision.apply_transaction
 import com.change_vision.jude.api.inf.AstahAPI
 import com.change_vision.jude.api.inf.model.IClass
 import com.change_vision.jude.api.inf.model.IClassDiagram
+import com.change_vision.jude.api.inf.model.IMindMapDiagram
 import com.change_vision.jude.api.inf.model.INamedElement
 import jp.ex_t.kazuaki.change_vision.Logging
 import jp.ex_t.kazuaki.change_vision.logger
@@ -52,6 +53,7 @@ class ProjectSyncReceiver(
         val createDiagramOperations = projectAccessor.project.diagrams.mapNotNull {
             when (it) {
                 is IClassDiagram -> createClassDiagram(it)
+                is IMindMapDiagram -> createMindMapDiagram(it)
                 else -> {
                     logger.debug("${it}(Unknown diagram)")
                     null
@@ -87,6 +89,14 @@ class ProjectSyncReceiver(
         entityLUT.entries.add(Entry(entity.id, entity.id))
         logger.debug("${entity.name}(IClassDiagram)")
         return createClassDiagram
+    }
+
+    private fun createMindMapDiagram(entity: IMindMapDiagram): CreateMindmapDiagram {
+        val owner = entity.owner as INamedElement
+        val rootTopic = entity.root
+        logger.debug("${entity.name}(IMindMapDiagram)")
+        entityLUT.entries.add(Entry(rootTopic.id, rootTopic.id))
+        return CreateMindmapDiagram(entity.name, owner.name, rootTopic.id)
     }
 
     private fun createClassModel(entity: IClass): CreateClassModel {
