@@ -16,6 +16,9 @@ import jp.ex_t.kazuaki.change_vision.event_listener.ProjectChangedListener
 import jp.ex_t.kazuaki.change_vision.network.EntityLUT
 import jp.ex_t.kazuaki.change_vision.network.MqttPublisher
 import jp.ex_t.kazuaki.change_vision.network.MqttSubscriber
+import kotlinx.serialization.ExperimentalSerializationApi
+import kotlinx.serialization.cbor.Cbor
+import kotlinx.serialization.encodeToByteArray
 import org.eclipse.paho.client.mqttv3.MqttException
 import java.net.SocketTimeoutException
 
@@ -29,8 +32,6 @@ class PairModeling {
     // TODO: もしチャットが欲しいとなった場合はトピックを別で生やす
     private lateinit var projectChangedListener: ProjectChangedListener
     private lateinit var mqttSubscriber: MqttSubscriber
-    private lateinit var transactionReceiver: TransactionReceiver
-    private lateinit var projectSyncReceiver: ProjectSyncReceiver
 
     @Throws(UnExpectedException::class)
     fun create(
@@ -68,23 +69,29 @@ class PairModeling {
         }
 
         val topicTransactionSubscriber = "$topicTransaction/#"
-        transactionReceiver = TransactionReceiver(entityLUT, projectChangedListener, clientId)
+        val transactionReceiver = TransactionReceiver(entityLUT, projectChangedListener, clientId)
+        mqttSubscriber.subscribe(
+            topicTransactionSubscriber,
+            transactionReceiver,
+        )
+        logger.debug("Subscribed: $brokerAddress:$topicTransaction ($clientId)")
+        logger.info("Launched subscriber.")
+
         // プロジェクト同期用のsubscriberを用意
         val topicProjectSync = "$topic/projectsync"
         val topicProjectSyncSubscriber = "$topicProjectSync/#"
-        projectSyncReceiver = ProjectSyncReceiver(mqttPublisher, clientId)
+        val projectSyncReceiver = ProjectSyncReceiver(mqttPublisher, clientId)
         mqttSubscriber.subscribe(
-            arrayOf(topicTransactionSubscriber, topicProjectSyncSubscriber),
-            arrayOf(transactionReceiver, projectSyncReceiver)
+            topicProjectSyncSubscriber,
+            projectSyncReceiver,
         )
-        logger.debug("Subscribed: $brokerAddress:$topicTransaction ($clientId)")
         logger.debug("Subscribed: $brokerAddress:$topicProjectSync ($clientId)")
-        logger.info("Launched subscriber.")
         logger.info("Launched project sync subscriber.")
 
         isLaunched = isLaunched.not()
     }
 
+    @ExperimentalSerializationApi
     @Throws(UnExpectedException::class)
     fun join(
         topic: String,
@@ -124,7 +131,7 @@ class PairModeling {
         }
         val topicTransactionSubscriber = "$topicTransaction/#"
         val transactionReceiver = TransactionReceiver(entityLUT, projectChangedListener, clientId)
-        mqttSubscriber.subscribe(arrayOf(topicTransactionSubscriber), arrayOf(transactionReceiver))
+        mqttSubscriber.subscribe(topicTransactionSubscriber, transactionReceiver)
         logger.debug("Subscribed: $brokerAddress:$topicTransaction ($clientId)")
         logger.info("Launched subscriber.")
 
@@ -134,7 +141,7 @@ class PairModeling {
         val topicProjectSyncPublisher = "$topicProjectSync/$clientId"
         val projectSyncMqttPublisher =
             MqttPublisher(brokerAddress, brokerPortNumber, topicProjectSyncPublisher, clientId)
-        projectSyncMqttPublisher.publish("projectsync".encodeToByteArray())
+        projectSyncMqttPublisher.publish(Cbor.encodeToByteArray("projectsync"))
         logger.debug("Published: $brokerAddress:$topicProjectSync ($clientId)")
         logger.info("Launched project sync publisher.")
         isLaunched = isLaunched.not()

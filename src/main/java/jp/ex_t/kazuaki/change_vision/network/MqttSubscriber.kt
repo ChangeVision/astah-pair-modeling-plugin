@@ -28,9 +28,10 @@ class MqttSubscriber(brokerAddress: String, brokerPortNumber: Int, clientId: Str
         logger.info("Connected to broker $broker")
     }
 
-    fun subscribe(topics: Array<String>, receivers: Array<Receiver>) {
-        val qos = IntArray(topics.size) { 2 }
-        mqttClient.subscribeWithResponse(topics, qos, receivers)
+    fun subscribe(topic: String, receiver: Receiver) {
+        val qos = 2
+        mqttClient.subscribe(topic, qos, receiver)
+        logger.info("Subscribed $topic")
     }
 
     fun close() {
