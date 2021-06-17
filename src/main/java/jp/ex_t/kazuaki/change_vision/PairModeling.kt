@@ -19,6 +19,8 @@ import org.eclipse.paho.client.mqttv3.MqttException
 import java.net.SocketTimeoutException
 
 class PairModeling {
+    private val api = AstahAPI.getAstahAPI()
+    private val projectAccessor = api.projectAccessor
     var isLaunched: Boolean = false
         private set
 
@@ -39,8 +41,6 @@ class PairModeling {
     ) {
         check(isLaunched.not()) { "Pair modeling has already launched." }
         val topicTransaction = "$topic/transaction"
-        val api = AstahAPI.getAstahAPI()
-        val projectAccessor = api.projectAccessor
 
         logger.debug("Launching publisher...")
         entityLUT = EntityLUT()
@@ -78,8 +78,6 @@ class PairModeling {
 
     fun end() {
         check(isLaunched) { "Pair modeling has not launched." }
-        val api = AstahAPI.getAstahAPI()
-        val projectAccessor = api.projectAccessor
 
         logger.debug("Stopping subscriber...")
         mqttSubscriber.close()
