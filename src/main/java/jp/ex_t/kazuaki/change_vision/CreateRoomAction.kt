@@ -35,7 +35,7 @@ class CreateRoomAction : IPluginActionDelegate {
                             "Tell collaborator this AIKOTOBA and enjoy pair modeling!"
                 )
                 val clientId = UUID.randomUUID().toString()
-                pairModeling.start(topic, clientId, config.conf.brokerAddress, config.conf.brokerPortNumber)
+                pairModeling.create(topic, clientId, config.conf.brokerAddress, config.conf.brokerPortNumber)
                 JOptionPane.showMessageDialog(window.parent, jTextArea, "AIKOTOBA", JOptionPane.INFORMATION_MESSAGE)
                 menuTextChanger.setAfterText(menuId)
                 menuTextChanger.disable(menuId)
