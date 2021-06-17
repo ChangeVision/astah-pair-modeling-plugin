@@ -11,14 +11,17 @@ package jp.ex_t.kazuaki.change_vision.apply_transaction
 import com.change_vision.jude.api.inf.AstahAPI
 import jp.ex_t.kazuaki.change_vision.Logging
 import jp.ex_t.kazuaki.change_vision.logger
+import jp.ex_t.kazuaki.change_vision.network.CreateProject
 import jp.ex_t.kazuaki.change_vision.network.MqttPublisher
 import jp.ex_t.kazuaki.change_vision.network.Receiver
+import jp.ex_t.kazuaki.change_vision.network.Transaction
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.cbor.Cbor
 import kotlinx.serialization.decodeFromByteArray
+import kotlinx.serialization.encodeToByteArray
 import org.eclipse.paho.client.mqttv3.MqttMessage
 
-class ProjectSyncReceiver(mqttPublisher: MqttPublisher, clientId: String) : Receiver(clientId) {
+class ProjectSyncReceiver(private val mqttPublisher: MqttPublisher, clientId: String) : Receiver(clientId) {
     private val api = AstahAPI.getAstahAPI()
     private val projectAccessor = api.projectAccessor
 
@@ -32,10 +35,19 @@ class ProjectSyncReceiver(mqttPublisher: MqttPublisher, clientId: String) : Rece
         }
     }
 
+    @ExperimentalSerializationApi
     private fun sync() {
         // TODO: 1. プロジェクトを新規作成させる
         // TODO: 2. プロジェクトの起点から一つずつ(対応している)エンティティを送る
         logger.debug("Project Sync")
+        val createProjectTransaction = Transaction(listOf(CreateProject(projectAccessor.project.id)))
+        encodeAndPublish(createProjectTransaction)
+    }
+
+    @ExperimentalSerializationApi
+    private fun encodeAndPublish(transaction: Transaction) {
+        val byteArray = Cbor.encodeToByteArray(transaction)
+        mqttPublisher.publish(byteArray)
     }
 
     companion object : Logging {
