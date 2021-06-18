@@ -10,6 +10,7 @@ package jp.ex_t.kazuaki.change_vision.apply_transaction
 
 import com.change_vision.jude.api.inf.AstahAPI
 import com.change_vision.jude.api.inf.model.*
+import com.change_vision.jude.api.inf.presentation.ILinkPresentation
 import com.change_vision.jude.api.inf.presentation.INodePresentation
 import jp.ex_t.kazuaki.change_vision.Logging
 import jp.ex_t.kazuaki.change_vision.logger
@@ -143,6 +144,14 @@ class ProjectSyncReceiver(
                 }
             if (createNodePresentationOperation.isNotEmpty()) {
                 val createTransaction = Transaction(createNodePresentationOperation)
+                encodeAndPublish(createTransaction)
+            }
+            val createLinkPresentationOperation =
+                diagram.presentations.filterIsInstance<ILinkPresentation>().mapNotNull {
+                    createLinkPresentation(it)
+                }
+            if (createLinkPresentationOperation.isNotEmpty()) {
+                val createTransaction = Transaction(createLinkPresentationOperation)
                 encodeAndPublish(createTransaction)
             }
         }
@@ -301,6 +310,75 @@ class ProjectSyncReceiver(
         logger.debug("${entity.label}(INodePresentation) - ${entity.model}(IComment)")
         entityLUT.entries.add(Entry(entity.id, entity.id))
         return CreateNote(entity.label, location, size, entity.diagram.name, entity.id)
+    }
+
+    private fun createLinkPresentation(entity: ILinkPresentation): CreateLinkPresentation? {
+        val source = entity.source.model
+        val target = entity.target.model
+        logger.debug("Model: ${entity.model::class.java}")
+        return when (source) {
+            is IClass -> {
+                when (target) {
+                    is IClass -> {
+                        val sourceEntry = entityLUT.entries.find { it.mine == source.id } ?: run {
+                            logger.debug("${source.id} not found on LUT.")
+                            return null
+                        }
+                        val targetEntry = entityLUT.entries.find { it.mine == target.id } ?: run {
+                            logger.debug("${target.id} not found on LUT.")
+                            return null
+                        }
+                        when (entity.model) {
+                            is IAssociation -> {
+                                logger.debug("${source.name}(IClass) - ${entity.label}(ILinkPresentation::IAssociation) - ${target.name}(IClass)")
+                                entityLUT.entries.add(Entry(entity.id, entity.id))
+                                CreateLinkPresentation(
+                                    sourceEntry.common,
+                                    targetEntry.common,
+                                    LinkType.Association,
+                                    entity.diagram.name,
+                                    entity.id
+                                )
+                            }
+                            is IGeneralization -> {
+                                logger.debug("${source.name}(IClass) - ${entity.label}(ILinkPresentation::IGeneralization) - ${target.name}(IClass)")
+                                entityLUT.entries.add(Entry(entity.id, entity.id))
+                                CreateLinkPresentation(
+                                    sourceEntry.common,
+                                    targetEntry.common,
+                                    LinkType.Generalization,
+                                    entity.diagram.name,
+                                    entity.id
+                                )
+                            }
+                            is IRealization -> {
+                                logger.debug("${source.name}(IClass, interface) - ${entity.label}(ILinkPresentation::IRealization) - ${target.name}(IClass)")
+                                entityLUT.entries.add(Entry(entity.id, entity.id))
+                                CreateLinkPresentation(
+                                    sourceEntry.common,
+                                    targetEntry.common,
+                                    LinkType.Realization,
+                                    entity.diagram.name,
+                                    entity.id
+                                )
+                            }
+                            else -> {
+                                logger.debug("${source.name}(IClass) - ${entity.label}(ILinkPresentation::Unknown) - ${target.name}(IClass)")
+                                null
+                            }
+                        }
+                    }
+                    else -> {
+                        logger.debug("${source.name}(IClass) - ${entity.label}(ILinkPresentation) - $target(Unknown)")
+                        null
+                    }
+                }
+            }
+            else -> {
+                logger.debug("$source(Unknown) - ${entity.label}(ILinkPresentation) - $target(Unknown)")
+                null
+            }
+        }
     }
 
     @ExperimentalSerializationApi
