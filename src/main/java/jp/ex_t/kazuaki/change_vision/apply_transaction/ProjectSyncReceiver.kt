@@ -81,7 +81,7 @@ class ProjectSyncReceiver(
             val createTransaction = Transaction(createModelOperations)
             encodeAndPublish(createTransaction)
         }
-        // attributes, operations
+        // attributes, operations, associations
         project.ownedElements.filterIsInstance<IClass>().forEach {
             val createAttributeOperations = it.attributes.mapNotNull { attribute ->
                 createAttribute(attribute)
@@ -97,6 +97,18 @@ class ProjectSyncReceiver(
                 val createTransaction = Transaction(createOperationOperations)
                 encodeAndPublish(createTransaction)
             }
+        }
+        val associations =
+            project.ownedElements.filterIsInstance<IClass>().map { it.attributes.mapNotNull { it.association } }
+                .flatten()
+        val createAssociationOperations =
+            associations.distinctBy { association -> association.memberEnds.toSet() }
+                .mapNotNull { association ->
+                    createAssociationModel(association)
+                }
+        if (createAssociationOperations.isNotEmpty()) {
+            val createTransaction = Transaction(createAssociationOperations)
+            encodeAndPublish(createTransaction)
         }
 
         // presentation
@@ -203,6 +215,47 @@ class ProjectSyncReceiver(
         logger.debug("${entity.name}(IAttribute) - ${owner}(IClass)")
         entityLUT.entries.add(Entry(entity.id, entity.id))
         return CreateAttribute(ownerEntry.common, entity.name, entity.typeExpression, entity.id)
+    }
+
+    private fun createAssociationModel(entity: IAssociation): CreateAssociationModel? {
+        val sourceClass = entity.memberEnds.first().owner
+        val destinationClass = entity.memberEnds.last().owner
+        return when (sourceClass) {
+            is IClass -> {
+                when (destinationClass) {
+                    is IClass -> {
+                        val sourceClassEntry = entityLUT.entries.find { it.mine == sourceClass.id } ?: run {
+                            logger.debug("${sourceClass.id} not found on LUT.")
+                            return null
+                        }
+                        val destinationClassEntry = entityLUT.entries.find { it.mine == destinationClass.id } ?: run {
+                            logger.debug("${destinationClass.id} not found on LUT.")
+                            return null
+                        }
+                        val sourceClassNavigability = entity.memberEnds.first().navigability
+                        val destinationClassNavigability = entity.memberEnds.last().navigability
+                        logger.debug("${sourceClass.name}(IClass, $sourceClassNavigability) - ${entity.name}(IAssociation) - ${destinationClass.name}(IClass, $destinationClassNavigability)")
+                        entityLUT.entries.add(Entry(entity.id, entity.id))
+                        CreateAssociationModel(
+                            sourceClassEntry.common,
+                            sourceClassNavigability,
+                            destinationClassEntry.common,
+                            destinationClassNavigability,
+                            entity.name,
+                            entity.id,
+                        )
+                    }
+                    else -> {
+                        logger.debug("${sourceClass.name}(IClass) - ${entity.name}(IAssociation) - $destinationClass(Unknown)")
+                        null
+                    }
+                }
+            }
+            else -> {
+                logger.debug("$sourceClass(Unknown) - ${entity.name}(IAssociation) - $destinationClass(Unknown)")
+                null
+            }
+        }
     }
 
     private fun createFloatingTopic(entity: INodePresentation): CreateFloatingTopic {
