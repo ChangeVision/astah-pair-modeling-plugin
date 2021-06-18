@@ -81,6 +81,16 @@ class ProjectSyncReceiver(
             val createTransaction = Transaction(createModelOperations)
             encodeAndPublish(createTransaction)
         }
+        // attributes, operations
+        project.ownedElements.filterIsInstance<IClass>().forEach {
+            val createAttributeOperations = it.attributes.mapNotNull { attribute ->
+                createAttribute(attribute)
+            }
+            if (createAttributeOperations.isNotEmpty()) {
+                val createTransaction = Transaction(createAttributeOperations)
+                encodeAndPublish(createTransaction)
+            }
+        }
 
         // presentation
         project.diagrams.filter { it is IMindMapDiagram }.forEach {
@@ -164,6 +174,17 @@ class ProjectSyncReceiver(
         val createClassModel = CreateClassModel(entity.name, owner.name, entity.stereotypes.toList(), entity.id)
         logger.debug("${entity.name}(IClass)")
         return createClassModel
+    }
+
+    private fun createAttribute(entity: IAttribute): CreateAttribute? {
+        val owner = entity.owner
+        val ownerEntry = entityLUT.entries.find { it.mine == owner.id } ?: run {
+            logger.debug("${owner.id} not found on LUT.")
+            return null
+        }
+        logger.debug("${entity.name}(IAttribute) - ${owner}(IClass)")
+        entityLUT.entries.add(Entry(entity.id, entity.id))
+        return CreateAttribute(ownerEntry.common, entity.name, entity.typeExpression, entity.id)
     }
 
     private fun createFloatingTopic(entity: INodePresentation): CreateFloatingTopic {
