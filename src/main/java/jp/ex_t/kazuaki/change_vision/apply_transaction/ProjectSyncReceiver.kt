@@ -22,6 +22,7 @@ import kotlinx.serialization.cbor.Cbor
 import kotlinx.serialization.decodeFromByteArray
 import kotlinx.serialization.encodeToByteArray
 import org.eclipse.paho.client.mqttv3.MqttMessage
+import java.util.*
 
 class ProjectSyncReceiver(
     private val entityLUT: EntityLUT,
@@ -94,11 +95,31 @@ class ProjectSyncReceiver(
                 val createTransaction = Transaction(createMindmapDiagramFloatingTopicOperation)
                 encodeAndPublish(createTransaction)
             }
+
+            val rootTopics = mutableListOf(diagram.root) + diagram.floatingTopics
+            val createMindmapDiagramTopicOperation = getTopics(rootTopics)
+            if (createMindmapDiagramTopicOperation.isNotEmpty()) {
+                val createTransaction = Transaction(createMindmapDiagramTopicOperation)
+                encodeAndPublish(createTransaction)
+            }
         }
     }
 
-    private fun getTopics(topics: Array<INodePresentation>): List<CreateTopic> {
-        TODO("Get children topics whose parent is root or floating topic.")
+    private fun getTopics(rootTopics: List<INodePresentation>): List<CreateTopic> {
+        // add children topics of root / floating topics to ArrayDeque
+        val queue = ArrayDeque<INodePresentation>()
+        rootTopics.filterNot { it.children == null }
+            .forEach { parentTopic -> parentTopic.children.forEach { queue.add(it) } }
+
+        val operations = mutableListOf<CreateTopic>()
+        // get children topics by breadth first search
+        while (true) {
+            val topic = queue.poll() ?: break
+            operations.add(createTopic(topic) ?: continue)
+            topic.children.filterNotNull().forEach { queue.add(it) }
+        }
+
+        return operations.toList()
     }
 
     private fun createClassDiagram(entity: IClassDiagram): ClassDiagramOperation {
@@ -137,6 +158,16 @@ class ProjectSyncReceiver(
         entityLUT.entries.add(Entry(entity.id, entity.id))
         logger.debug("${entity.label}(INodePresentation, FloatingTopic)")
         return CreateFloatingTopic(entity.label, location, size, entity.diagram.name, entity.id)
+    }
+
+    private fun createTopic(entity: INodePresentation): CreateTopic? {
+        entityLUT.entries.add(Entry(entity.id, entity.id))
+        val parentEntry = entityLUT.entries.find { it.mine == entity.parent.id } ?: run {
+            logger.debug("${entity.parent.id} not found on LUT.")
+            return null
+        }
+        logger.debug("${entity.parent.label}(INodePresentation) - ${entity.label}(INodePresentation)")
+        return CreateTopic(parentEntry.common, entity.label, entity.diagram.name, entity.id)
     }
 
     @ExperimentalSerializationApi
