@@ -103,6 +103,21 @@ class ProjectSyncReceiver(
                 encodeAndPublish(createTransaction)
             }
         }
+        project.diagrams.filter { it is IClassDiagram }.forEach { diagram ->
+            val createOperation = diagram.presentations.mapNotNull {
+                when (it.model) {
+                    is IClass -> createClassPresentation(it as INodePresentation)
+                    else -> {
+                        logger.debug("$it(Unknown presentation)")
+                        null
+                    }
+                }
+            }
+            if (createOperation.isNotEmpty()) {
+                val createTransaction = Transaction(createOperation)
+                encodeAndPublish(createTransaction)
+            }
+        }
     }
 
     private fun getTopics(rootTopics: List<INodePresentation>): List<CreateTopic> {
@@ -168,6 +183,25 @@ class ProjectSyncReceiver(
         }
         logger.debug("${entity.parent.label}(INodePresentation) - ${entity.label}(INodePresentation)")
         return CreateTopic(parentEntry.common, entity.label, entity.diagram.name, entity.id)
+    }
+
+    private fun createClassPresentation(entity: INodePresentation): CreateClassPresentation? {
+        val model = entity.model as IClass
+        val classModelEntry = entityLUT.entries.find { it.mine == model.id } ?: run {
+            logger.debug("${model.id} not found on LUT.")
+            return null
+        }
+        val location = Pair(entity.location.x, entity.location.y)
+        logger.debug(
+            "${entity.label}(INodePresentation)::${model.name}(IClass, ${
+                Pair(
+                    entity.width,
+                    entity.height
+                )
+            } at ${entity.location})"
+        )
+        entityLUT.entries.add(Entry(entity.id, entity.id))
+        return CreateClassPresentation(classModelEntry.common, location, entity.diagram.name, entity.id)
     }
 
     @ExperimentalSerializationApi
