@@ -9,10 +9,7 @@
 package jp.ex_t.kazuaki.change_vision.apply_transaction
 
 import com.change_vision.jude.api.inf.AstahAPI
-import com.change_vision.jude.api.inf.model.IClass
-import com.change_vision.jude.api.inf.model.IClassDiagram
-import com.change_vision.jude.api.inf.model.IMindMapDiagram
-import com.change_vision.jude.api.inf.model.INamedElement
+import com.change_vision.jude.api.inf.model.*
 import com.change_vision.jude.api.inf.presentation.INodePresentation
 import jp.ex_t.kazuaki.change_vision.Logging
 import jp.ex_t.kazuaki.change_vision.logger
@@ -107,6 +104,7 @@ class ProjectSyncReceiver(
             val createOperation = diagram.presentations.mapNotNull {
                 when (it.model) {
                     is IClass -> createClassPresentation(it as INodePresentation)
+                    is IComment -> createNotePresentation(it as INodePresentation)
                     else -> {
                         logger.debug("$it(Unknown presentation)")
                         null
@@ -202,6 +200,14 @@ class ProjectSyncReceiver(
         )
         entityLUT.entries.add(Entry(entity.id, entity.id))
         return CreateClassPresentation(classModelEntry.common, location, entity.diagram.name, entity.id)
+    }
+
+    fun createNotePresentation(entity: INodePresentation): CreateNote {
+        val location = Pair(entity.location.x, entity.location.y)
+        val size = Pair(entity.width, entity.height)
+        logger.debug("${entity.label}(INodePresentation) - ${entity.model}(IComment)")
+        entityLUT.entries.add(Entry(entity.id, entity.id))
+        return CreateNote(entity.label, location, size, entity.diagram.name, entity.id)
     }
 
     @ExperimentalSerializationApi
