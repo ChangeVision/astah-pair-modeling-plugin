@@ -90,6 +90,13 @@ class ProjectSyncReceiver(
                 val createTransaction = Transaction(createAttributeOperations)
                 encodeAndPublish(createTransaction)
             }
+            val createOperationOperations = it.operations.mapNotNull { operation ->
+                createOperation(operation)
+            }
+            if (createOperationOperations.isNotEmpty()) {
+                val createTransaction = Transaction(createOperationOperations)
+                encodeAndPublish(createTransaction)
+            }
         }
 
         // presentation
@@ -174,6 +181,17 @@ class ProjectSyncReceiver(
         val createClassModel = CreateClassModel(entity.name, owner.name, entity.stereotypes.toList(), entity.id)
         logger.debug("${entity.name}(IClass)")
         return createClassModel
+    }
+
+    private fun createOperation(entity: IOperation): CreateOperation? {
+        val owner = entity.owner
+        val ownerEntry = entityLUT.entries.find { it.mine == owner.id } ?: run {
+            logger.debug("${owner.id} not found on LUT.")
+            return null
+        }
+        logger.debug("${entity.name}(IOperation) - $owner(IClass)")
+        entityLUT.entries.add(Entry(entity.id, entity.id))
+        return CreateOperation(ownerEntry.common, entity.name, entity.returnTypeExpression, entity.id)
     }
 
     private fun createAttribute(entity: IAttribute): CreateAttribute? {
