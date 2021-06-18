@@ -101,18 +101,19 @@ class ProjectSyncReceiver(
             }
         }
         project.diagrams.filter { it is IClassDiagram }.forEach { diagram ->
-            val createOperation = diagram.presentations.mapNotNull {
-                when (it.model) {
-                    is IClass -> createClassPresentation(it as INodePresentation)
-                    is IComment -> createNotePresentation(it as INodePresentation)
-                    else -> {
-                        logger.debug("$it(Unknown presentation)")
-                        null
+            val createNodePresentationOperation =
+                diagram.presentations.filterIsInstance<INodePresentation>().mapNotNull {
+                    when (it.model) {
+                        is IClass -> createClassPresentation(it)
+                        is IComment -> createNotePresentation(it)
+                        else -> {
+                            logger.debug("$it(Unknown INodePresentation)")
+                            null
+                        }
                     }
                 }
-            }
-            if (createOperation.isNotEmpty()) {
-                val createTransaction = Transaction(createOperation)
+            if (createNodePresentationOperation.isNotEmpty()) {
+                val createTransaction = Transaction(createNodePresentationOperation)
                 encodeAndPublish(createTransaction)
             }
         }
