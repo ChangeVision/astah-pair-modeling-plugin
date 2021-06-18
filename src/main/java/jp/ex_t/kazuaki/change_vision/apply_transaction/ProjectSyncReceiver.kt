@@ -49,7 +49,7 @@ class ProjectSyncReceiver(
         val project = projectAccessor.project
 
         entityLUT.entries.add(Entry(project.id, project.id))
-        val createProjectTransaction = Transaction(listOf(CreateProject(project.id)))
+        val createProjectTransaction = Transaction(listOf(CreateProject(project.name, project.id)))
         encodeAndPublish(createProjectTransaction)
 
         // TODO: 2. プロジェクトの起点から一つずつ(対応している)エンティティを送る

@@ -29,7 +29,7 @@ sealed class MindmapDiagramOperation : TransactionalOperation()
 sealed class StateMachineDiagramOperation : TransactionalOperation()
 
 @Serializable
-data class CreateProject(val id: String) : CommonOperation()
+data class CreateProject(val name: String, val id: String) : CommonOperation()
 
 @Serializable
 data class CreateClassDiagram(

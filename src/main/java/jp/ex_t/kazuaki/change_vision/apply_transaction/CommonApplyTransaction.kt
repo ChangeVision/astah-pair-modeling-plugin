@@ -31,8 +31,8 @@ class CommonApplyTransaction(private val entityLUT: EntityLUT) : IApplyTransacti
     }
 
     private fun validateAndCreateProject(operation: CreateProject) {
-        if (operation.id.isNotEmpty()) {
-            createProject(operation.id)
+        if (operation.name.isNotEmpty() && operation.id.isNotEmpty()) {
+            createProject(operation.name, operation.id)
         }
     }
 
@@ -42,9 +42,10 @@ class CommonApplyTransaction(private val entityLUT: EntityLUT) : IApplyTransacti
         }
     }
 
-    private fun createProject(id: String) {
+    private fun createProject(name: String, id: String) {
         logger.debug("Create project.")
         projectAccessor.create()
+        projectAccessor.project.name = name
 
         entityLUT.entries.add(Entry(projectAccessor.project.id, id))
     }
