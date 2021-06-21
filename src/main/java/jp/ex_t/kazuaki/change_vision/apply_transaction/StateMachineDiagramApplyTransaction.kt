@@ -9,6 +9,7 @@
 package jp.ex_t.kazuaki.change_vision.apply_transaction
 
 import com.change_vision.jude.api.inf.AstahAPI
+import com.change_vision.jude.api.inf.model.IDiagram
 import com.change_vision.jude.api.inf.model.INamedElement
 import com.change_vision.jude.api.inf.presentation.ILinkPresentation
 import com.change_vision.jude.api.inf.presentation.INodePresentation
@@ -50,29 +51,42 @@ class StateMachineDiagramApplyTransaction(private val entityLUT: EntityLUT) :
     }
 
     private fun validateAndCreatePseudostate(operation: CreatePseudostate) {
-        if (operation.id.isNotEmpty()) {
+        if (operation.id.isNotEmpty() && operation.diagramName.isNotEmpty()) {
             val location = Point2D.Double(operation.location.first, operation.location.second)
-            createPseudostate(operation.id, location, operation.size, operation.parentId)
+            createPseudostate(operation.id, location, operation.size, operation.parentId, operation.diagramName)
         }
     }
 
     private fun validateAndCreateState(operation: CreateState) {
-        if (operation.id.isNotEmpty()) {
+        if (operation.id.isNotEmpty() && operation.diagramName.isNotEmpty()) {
             val location = Point2D.Double(operation.location.first, operation.location.second)
-            createState(operation.id, operation.name, location, operation.size, operation.parentId)
+            createState(
+                operation.id,
+                operation.name,
+                location,
+                operation.size,
+                operation.parentId,
+                operation.diagramName
+            )
         }
     }
 
     private fun validateAndCreateFinalState(operation: CreateFinalState) {
-        if (operation.id.isNotEmpty()) {
+        if (operation.id.isNotEmpty() && operation.diagramName.isNotEmpty()) {
             val location = Point2D.Double(operation.location.first, operation.location.second)
-            createFinalState(operation.id, location, operation.size, operation.parentId)
+            createFinalState(operation.id, location, operation.size, operation.parentId, operation.diagramName)
         }
     }
 
     private fun validateAndCreateTransition(operation: CreateTransition) {
-        if (operation.id.isNotEmpty() && operation.sourceId.isNotEmpty() && operation.targetId.isNotEmpty()) {
-            createTransition(operation.id, operation.label, operation.sourceId, operation.targetId)
+        if (operation.id.isNotEmpty() && operation.sourceId.isNotEmpty() && operation.targetId.isNotEmpty() && operation.diagramName.isNotEmpty()) {
+            createTransition(
+                operation.id,
+                operation.label,
+                operation.sourceId,
+                operation.targetId,
+                operation.diagramName
+            )
         }
     }
 
@@ -115,11 +129,13 @@ class StateMachineDiagramApplyTransaction(private val entityLUT: EntityLUT) :
         id: String,
         location: Point2D,
         size: Pair<Double, Double>,
-        parentId: String
+        parentId: String,
+        diagramName: String
     ) {
         logger.debug("Create pseudostate.")
         val (width, height) = size
-        stateMachineDiagramEditor.diagram = diagramViewManager.currentDiagram
+        val diagram = projectAccessor.findElements(IDiagram::class.java, diagramName).first() as IDiagram
+        stateMachineDiagramEditor.diagram = diagram
         val parentEntity = if (parentId.isEmpty()) null else entityLUT.entries.find { it.common == parentId } ?: run {
             logger.debug("$parentId not found on LUT.")
             return
@@ -143,11 +159,13 @@ class StateMachineDiagramApplyTransaction(private val entityLUT: EntityLUT) :
         name: String,
         location: Point2D,
         size: Pair<Double, Double>,
-        parentId: String
+        parentId: String,
+        diagramName: String
     ) {
         logger.debug("Create state.")
         val (width, height) = size
-        stateMachineDiagramEditor.diagram = diagramViewManager.currentDiagram
+        val diagram = projectAccessor.findElements(IDiagram::class.java, diagramName).first() as IDiagram
+        stateMachineDiagramEditor.diagram = diagram
         val parentEntity = if (parentId.isEmpty()) null else entityLUT.entries.find { it.common == parentId } ?: run {
             logger.debug("$parentId not found on LUT.")
             return
@@ -170,11 +188,13 @@ class StateMachineDiagramApplyTransaction(private val entityLUT: EntityLUT) :
         id: String,
         location: Point2D,
         size: Pair<Double, Double>,
-        parentId: String
+        parentId: String,
+        diagramName: String
     ) {
         logger.debug("Create FinalState.")
         val (width, height) = size
-        stateMachineDiagramEditor.diagram = diagramViewManager.currentDiagram
+        val diagram = projectAccessor.findElements(IDiagram::class.java, diagramName).first() as IDiagram
+        stateMachineDiagramEditor.diagram = diagram
         val parentEntity = if (parentId.isEmpty()) null else entityLUT.entries.find { it.common == parentId } ?: run {
             logger.debug("$parentId not found on LUT.")
             return
@@ -193,9 +213,10 @@ class StateMachineDiagramApplyTransaction(private val entityLUT: EntityLUT) :
         pseudostate.height = height
     }
 
-    private fun createTransition(id: String, label: String, sourceId: String, targetId: String) {
+    private fun createTransition(id: String, label: String, sourceId: String, targetId: String, diagramName: String) {
         logger.debug("Create transition.")
-        stateMachineDiagramEditor.diagram = diagramViewManager.currentDiagram
+        val diagram = projectAccessor.findElements(IDiagram::class.java, diagramName).first() as IDiagram
+        stateMachineDiagramEditor.diagram = diagram
         val sourceEntry = entityLUT.entries.find { it.common == sourceId } ?: run {
             logger.debug("$sourceId not found on LUT.")
             return

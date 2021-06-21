@@ -1,5 +1,5 @@
 /*
- * StateMachineDiagramEventListener.java - pair-modeling
+ * StateMachineDiagramEventListener.kt - pair-modeling
  * Copyright © 2021 HyodaKazuaki.
  *
  * Released under the MIT License.
@@ -143,7 +143,7 @@ class StateMachineDiagramEventListener(private val entityLUT: EntityLUT, private
         val entry = Entry(entity.model.id, entity.model.id)
         entityLUT.entries.add(entry)
         logger.debug("$entity(INodePresentation, IPseudostate)")
-        return CreatePseudostate(entry.common, location, size, parentEntry.common)
+        return CreatePseudostate(entry.common, location, size, parentEntry.common, entity.diagram.name)
     }
 
     private fun createState(entity: INodePresentation): CreateState? {
@@ -158,7 +158,7 @@ class StateMachineDiagramEventListener(private val entityLUT: EntityLUT, private
         val entry = Entry(entity.model.id, entity.model.id)
         entityLUT.entries.add(entry)
         logger.debug("$entity(INodePresentation, IState)")
-        return CreateState(entry.common, entity.label, location, size, parentEntry.common)
+        return CreateState(entry.common, entity.label, location, size, parentEntry.common, entity.diagram.name)
     }
 
     private fun createFinalState(entity: INodePresentation): CreateFinalState? {
@@ -173,7 +173,7 @@ class StateMachineDiagramEventListener(private val entityLUT: EntityLUT, private
         val entry = Entry(entity.model.id, entity.model.id)
         entityLUT.entries.add(entry)
         logger.debug("$entity(INodePresentation, IFinalState)")
-        return CreateFinalState(entry.common, location, size, parentEntry.common)
+        return CreateFinalState(entry.common, location, size, parentEntry.common, entity.diagram.name)
     }
 
     private fun createTransition(entity: ILinkPresentation): CreateTransition? {
@@ -190,7 +190,7 @@ class StateMachineDiagramEventListener(private val entityLUT: EntityLUT, private
         val entry = Entry(entity.model.id, entity.model.id)
         entityLUT.entries.add(entry)
         logger.debug("$entity(ILinkPresentation, ITransition)")
-        return CreateTransition(entry.common, entity.label, sourceEntry.common, targetEntry.common)
+        return CreateTransition(entry.common, entity.label, sourceEntry.common, targetEntry.common, entity.diagram.name)
     }
 
     private fun modifyPseudostate(entity: INodePresentation): ModifyPseudostate? {
