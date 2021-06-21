@@ -101,7 +101,7 @@ class ProjectSyncReceiver(
             }
         }
 
-        // associations, generalizations
+        // associations, generalizations, realizations
         val associationsDuplicated =
             project.ownedElements.filterIsInstance<IClass>()
                 .map { it.attributes.mapNotNull { attribute -> attribute.association } }
