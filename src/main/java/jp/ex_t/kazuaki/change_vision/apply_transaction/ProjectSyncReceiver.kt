@@ -82,7 +82,7 @@ class ProjectSyncReceiver(
             val createTransaction = Transaction(createModelOperations)
             encodeAndPublish(createTransaction)
         }
-        // attributes, operations, associations
+        // attributes, operations
         project.ownedElements.filterIsInstance<IClass>().forEach {
             val createAttributeOperations = it.attributes.mapNotNull { attribute ->
                 createAttribute(attribute)
@@ -99,6 +99,8 @@ class ProjectSyncReceiver(
                 encodeAndPublish(createTransaction)
             }
         }
+
+        // associations, generalizations
         val associationsDuplicated =
             project.ownedElements.filterIsInstance<IClass>()
                 .map { it.attributes.mapNotNull { attribute -> attribute.association } }
@@ -116,6 +118,14 @@ class ProjectSyncReceiver(
         if (createAssociationOperations.isNotEmpty()) {
             val createTransaction = Transaction(createAssociationOperations)
             logger.debug("association: $createTransaction")
+            encodeAndPublish(createTransaction)
+        }
+        val createGeneralizationOperations = project.ownedElements.filterIsInstance<IClass>()
+            .map { it.generalizations.mapNotNull { generalization -> createGeneralizationModel(generalization) } }
+            .flatten()
+        if (createGeneralizationOperations.isNotEmpty()) {
+            val createTransaction = Transaction(createGeneralizationOperations)
+            logger.debug("generalization: $createTransaction")
             encodeAndPublish(createTransaction)
         }
 
@@ -273,6 +283,22 @@ class ProjectSyncReceiver(
                 null
             }
         }
+    }
+
+    private fun createGeneralizationModel(entity: IGeneralization): ClassDiagramOperation? {
+        val superClass = entity.superType
+        val subClass = entity.subType
+        val superClassEntry = entityLUT.entries.find { it.mine == superClass.id } ?: run {
+            logger.debug("${superClass.id} not found on LUT.")
+            return null
+        }
+        val subClassEntry = entityLUT.entries.find { it.mine == subClass.id } ?: run {
+            logger.debug("${subClass.id} not found on LUT.")
+            return null
+        }
+        logger.debug("${superClass.name}(IClass) -> ${entity.name}(IGeneralization) - ${subClass.name}(IClass)")
+        entityLUT.entries.add(Entry(entity.id, entity.id))
+        return CreateGeneralizationModel(superClassEntry.common, subClassEntry.common, entity.name, entity.id)
     }
 
     private fun createFloatingTopic(entity: INodePresentation): CreateFloatingTopic {
