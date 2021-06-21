@@ -187,6 +187,7 @@ class ProjectSyncReceiver(
                 diagram.presentations.filterIsInstance<INodePresentation>().mapNotNull {
                     when (it.model) {
                         is IPseudostate -> createPseudostate(it)
+                        is IState -> createState(it)
                         is IFinalState -> createFinalState(it)
                         else -> {
                             logger.debug("Unknown")
@@ -487,6 +488,21 @@ class ProjectSyncReceiver(
         entityLUT.entries.add(entry)
         logger.debug("$entity(INodePresentation, IPseudostate)")
         return CreatePseudostate(entry.common, location, size, parentEntry.common)
+    }
+
+    private fun createState(entity: INodePresentation): CreateState? {
+        val parentEntry =
+            if (entity.parent == null) Entry("", "") else entityLUT.entries.find { it.mine == entity.parent.model.id }
+                ?: run {
+                    logger.debug("${entity.model.id}(Parent of INodePresentation, IState) not found on LUT.")
+                    return null
+                }
+        val location = Pair(entity.location.x, entity.location.y)
+        val size = Pair(entity.width, entity.height)
+        val entry = Entry(entity.model.id, entity.model.id)
+        entityLUT.entries.add(entry)
+        logger.debug("$entity(INodePresentation, IState)")
+        return CreateState(entry.common, entity.label, location, size, parentEntry.common)
     }
 
     private fun createFinalState(entity: INodePresentation): CreateFinalState? {
