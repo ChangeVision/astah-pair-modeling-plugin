@@ -182,6 +182,23 @@ class ProjectSyncReceiver(
                 encodeAndPublish(createTransaction)
             }
         }
+        project.diagrams.filterIsInstance<IStateMachineDiagram>().forEach { diagram ->
+            val createNodePresentationOperation =
+                diagram.presentations.filterIsInstance<INodePresentation>().mapNotNull {
+                    when (it.model) {
+                        is IPseudostate -> createPseudostate(it)
+                        else -> {
+                            logger.debug("Unknown")
+                            null
+                        }
+                    }
+                }
+            if (createNodePresentationOperation.isNotEmpty()) {
+                val createTransaction = Transaction(createNodePresentationOperation)
+                logger.debug("state machine node presentation: $createTransaction")
+                encodeAndPublish(createTransaction)
+            }
+        }
     }
 
     private fun getTopics(rootTopics: List<INodePresentation>): List<CreateTopic> {
@@ -333,6 +350,21 @@ class ProjectSyncReceiver(
         logger.debug("${supplierClass.name}(IClass) -> ${entity.name}(IRealization) -> ${clientClass.name}(IClass)")
         entityLUT.entries.add(Entry(entity.id, entity.id))
         return CreateRealizationModel(supplierClassEntry.common, clientClassEntry.common, entity.name, entity.id)
+    }
+
+    private fun createPseudostate(entity: INodePresentation): CreatePseudostate? {
+        val parentEntry =
+            if (entity.parent == null) Entry("", "") else entityLUT.entries.find { it.mine == entity.parent.model.id }
+                ?: run {
+                    logger.debug("${entity.parent.model.id}(Parent of INodePresentation, IPseudostate) not found on LUT.")
+                    return null
+                }
+        val location = Pair(entity.location.x, entity.location.y)
+        val size = Pair(entity.width, entity.height)
+        val entry = Entry(entity.model.id, entity.model.id)
+        entityLUT.entries.add(entry)
+        logger.debug("$entity(INodePresentation, IPseudostate)")
+        return CreatePseudostate(entry.common, location, size, parentEntry.common)
     }
 
     private fun createFloatingTopic(entity: INodePresentation): CreateFloatingTopic {
