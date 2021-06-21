@@ -56,6 +56,7 @@ class ProjectSyncReceiver(
             when (it) {
                 is IClassDiagram -> createClassDiagram(it)
                 is IMindMapDiagram -> createMindMapDiagram(it)
+                is IStateMachineDiagram -> createStateMachineDiagram(it)
                 else -> {
                     logger.debug("${it}(Unknown diagram)")
                     null
@@ -215,6 +216,15 @@ class ProjectSyncReceiver(
         logger.debug("${entity.name}(IMindMapDiagram)")
         entityLUT.entries.add(Entry(rootTopic.id, rootTopic.id))
         return CreateMindmapDiagram(entity.name, owner.name, rootTopic.id)
+    }
+
+    private fun createStateMachineDiagram(entity: IStateMachineDiagram): CreateStateMachineDiagram {
+        val owner = entity.owner as INamedElement
+        val entry = Entry(entity.id, entity.id)
+        entityLUT.entries.add(entry)
+        val createStateMachineDiagram = CreateStateMachineDiagram(entity.name, owner.name, entry.common)
+        logger.debug("$entity(IStateMachineDiagram)")
+        return createStateMachineDiagram
     }
 
     private fun createClassModel(entity: IClass): CreateClassModel {
