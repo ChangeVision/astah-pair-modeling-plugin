@@ -128,6 +128,14 @@ class ProjectSyncReceiver(
             logger.debug("generalization: $createTransaction")
             encodeAndPublish(createTransaction)
         }
+        val createRealizationOperations = project.ownedElements.filterIsInstance<IClass>()
+            .map { it.clientRealizations.mapNotNull { realization -> createRealizationModel(realization) } }
+            .flatten()
+        if (createRealizationOperations.isNotEmpty()) {
+            val createTransaction = Transaction(createRealizationOperations)
+            logger.debug("realization: $createTransaction")
+            encodeAndPublish(createTransaction)
+        }
 
         // presentation
         project.diagrams.filterIsInstance<IMindMapDiagram>().forEach {
@@ -299,6 +307,22 @@ class ProjectSyncReceiver(
         logger.debug("${superClass.name}(IClass) -> ${entity.name}(IGeneralization) - ${subClass.name}(IClass)")
         entityLUT.entries.add(Entry(entity.id, entity.id))
         return CreateGeneralizationModel(superClassEntry.common, subClassEntry.common, entity.name, entity.id)
+    }
+
+    private fun createRealizationModel(entity: IRealization): ClassDiagramOperation? {
+        val supplierClass = entity.supplier
+        val clientClass = entity.client
+        val supplierClassEntry = entityLUT.entries.find { it.mine == supplierClass.id } ?: run {
+            logger.debug("${supplierClass.id} not found on LUT.")
+            return null
+        }
+        val clientClassEntry = entityLUT.entries.find { it.mine == clientClass.id } ?: run {
+            logger.debug("${clientClass.id} not found on LUT.")
+            return null
+        }
+        logger.debug("${supplierClass.name}(IClass) -> ${entity.name}(IRealization) -> ${clientClass.name}(IClass)")
+        entityLUT.entries.add(Entry(entity.id, entity.id))
+        return CreateRealizationModel(supplierClassEntry.common, clientClassEntry.common, entity.name, entity.id)
     }
 
     private fun createFloatingTopic(entity: INodePresentation): CreateFloatingTopic {
