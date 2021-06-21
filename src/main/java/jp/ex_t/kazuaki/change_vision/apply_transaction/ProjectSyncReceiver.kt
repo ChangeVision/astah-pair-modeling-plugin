@@ -187,6 +187,7 @@ class ProjectSyncReceiver(
                 diagram.presentations.filterIsInstance<INodePresentation>().mapNotNull {
                     when (it.model) {
                         is IPseudostate -> createPseudostate(it)
+                        is IFinalState -> createFinalState(it)
                         else -> {
                             logger.debug("Unknown")
                             null
@@ -352,21 +353,6 @@ class ProjectSyncReceiver(
         return CreateRealizationModel(supplierClassEntry.common, clientClassEntry.common, entity.name, entity.id)
     }
 
-    private fun createPseudostate(entity: INodePresentation): CreatePseudostate? {
-        val parentEntry =
-            if (entity.parent == null) Entry("", "") else entityLUT.entries.find { it.mine == entity.parent.model.id }
-                ?: run {
-                    logger.debug("${entity.parent.model.id}(Parent of INodePresentation, IPseudostate) not found on LUT.")
-                    return null
-                }
-        val location = Pair(entity.location.x, entity.location.y)
-        val size = Pair(entity.width, entity.height)
-        val entry = Entry(entity.model.id, entity.model.id)
-        entityLUT.entries.add(entry)
-        logger.debug("$entity(INodePresentation, IPseudostate)")
-        return CreatePseudostate(entry.common, location, size, parentEntry.common)
-    }
-
     private fun createFloatingTopic(entity: INodePresentation): CreateFloatingTopic {
         val location = Pair(entity.location.x, entity.location.y)
         val size = Pair(entity.width, entity.height)
@@ -486,6 +472,36 @@ class ProjectSyncReceiver(
                 null
             }
         }
+    }
+
+    private fun createPseudostate(entity: INodePresentation): CreatePseudostate? {
+        val parentEntry =
+            if (entity.parent == null) Entry("", "") else entityLUT.entries.find { it.mine == entity.parent.model.id }
+                ?: run {
+                    logger.debug("${entity.parent.model.id}(Parent of INodePresentation, IPseudostate) not found on LUT.")
+                    return null
+                }
+        val location = Pair(entity.location.x, entity.location.y)
+        val size = Pair(entity.width, entity.height)
+        val entry = Entry(entity.model.id, entity.model.id)
+        entityLUT.entries.add(entry)
+        logger.debug("$entity(INodePresentation, IPseudostate)")
+        return CreatePseudostate(entry.common, location, size, parentEntry.common)
+    }
+
+    private fun createFinalState(entity: INodePresentation): CreateFinalState? {
+        val parentEntry =
+            if (entity.parent == null) Entry("", "") else entityLUT.entries.find { it.mine == entity.parent.id }
+                ?: run {
+                    logger.debug("${entity.parent.model.id}(Parent of INodePresentation, IFinalState) not found on LUT.")
+                    return null
+                }
+        val location = Pair(entity.location.x, entity.location.y)
+        val size = Pair(entity.width, entity.height)
+        val entry = Entry(entity.model.id, entity.model.id)
+        entityLUT.entries.add(entry)
+        logger.debug("$entity(INodePresentation, IFinalState)")
+        return CreateFinalState(entry.common, location, size, parentEntry.common)
     }
 
     @ExperimentalSerializationApi
