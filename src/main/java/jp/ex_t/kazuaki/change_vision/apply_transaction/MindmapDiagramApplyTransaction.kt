@@ -48,8 +48,8 @@ class MindmapDiagramApplyTransaction(private val entityLUT: EntityLUT) : IApplyT
     }
 
     private fun validateAndCreateMindmapDiagram(operation: CreateMindmapDiagram) {
-        if (operation.name.isNotEmpty() && operation.ownerName.isNotEmpty() && operation.rootTopicId.isNotEmpty()) {
-            createMindmapDiagram(operation.name, operation.ownerName, operation.rootTopicId)
+        if (operation.name.isNotEmpty() && operation.ownerName.isNotEmpty() && operation.rootTopicId.isNotEmpty() && operation.id.isNotEmpty()) {
+            createMindmapDiagram(operation.name, operation.ownerName, operation.rootTopicId, operation.id)
         }
     }
 
@@ -83,12 +83,13 @@ class MindmapDiagramApplyTransaction(private val entityLUT: EntityLUT) : IApplyT
         }
     }
 
-    private fun createMindmapDiagram(name: String, ownerName: String, rootTopicId: String) {
+    private fun createMindmapDiagram(name: String, ownerName: String, rootTopicId: String, id: String) {
         logger.debug("Create mindmap diagram.")
         val diagramViewManager = api.viewManager.diagramViewManager
         val owner = projectAccessor.findElements(INamedElement::class.java, ownerName).first() as INamedElement
         val diagram = mindmapEditor.createMindmapDiagram(owner, name)
         val rootTopic = diagram.root
+        entityLUT.entries.add(Entry(diagram.id, id))
         entityLUT.entries.add(Entry(rootTopic.id, rootTopicId))
         diagramViewManager.open(diagram)
     }

@@ -107,8 +107,9 @@ class MindmapDiagramEventListener(private val entityLUT: EntityLUT, private val 
         val owner = entity.owner as INamedElement
         val rootTopic = entity.root
         logger.debug("${entity.name}(IMindMapDiagram)")
+        entityLUT.entries.add(Entry(entity.id, entity.id))
         entityLUT.entries.add(Entry(rootTopic.id, rootTopic.id))
-        return CreateMindmapDiagram(entity.name, owner.name, rootTopic.id)
+        return CreateMindmapDiagram(entity.name, owner.name, rootTopic.id, entity.id)
     }
 
     private fun createFloatingTopic(entity: INodePresentation): CreateFloatingTopic {

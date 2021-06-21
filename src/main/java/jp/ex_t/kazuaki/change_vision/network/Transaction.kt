@@ -43,6 +43,7 @@ data class CreateMindmapDiagram(
     val name: String,
     val ownerName: String,
     val rootTopicId: String,
+    val id: String,
 ) : MindmapDiagramOperation()
 
 @Serializable
