@@ -328,6 +328,10 @@ class ProjectSyncReceiver(
             is IClass -> {
                 when (target) {
                     is IClass -> {
+                        val modelEntry = entityLUT.entries.find { it.mine == entity.model.id } ?: run {
+                            logger.debug("${entity.model.id} not found on LUT.")
+                            return null
+                        }
                         val sourceEntry = entityLUT.entries.find { it.mine == source.id } ?: run {
                             logger.debug("${source.id} not found on LUT.")
                             return null
@@ -341,6 +345,7 @@ class ProjectSyncReceiver(
                                 logger.debug("${source.name}(IClass) - ${entity.label}(ILinkPresentation::IAssociation) - ${target.name}(IClass)")
                                 entityLUT.entries.add(Entry(entity.id, entity.id))
                                 CreateLinkPresentation(
+                                    modelEntry.common,
                                     sourceEntry.common,
                                     targetEntry.common,
                                     LinkType.Association,
@@ -352,6 +357,7 @@ class ProjectSyncReceiver(
                                 logger.debug("${source.name}(IClass) - ${entity.label}(ILinkPresentation::IGeneralization) - ${target.name}(IClass)")
                                 entityLUT.entries.add(Entry(entity.id, entity.id))
                                 CreateLinkPresentation(
+                                    modelEntry.common,
                                     sourceEntry.common,
                                     targetEntry.common,
                                     LinkType.Generalization,
@@ -363,6 +369,7 @@ class ProjectSyncReceiver(
                                 logger.debug("${source.name}(IClass, interface) - ${entity.label}(ILinkPresentation::IRealization) - ${target.name}(IClass)")
                                 entityLUT.entries.add(Entry(entity.id, entity.id))
                                 CreateLinkPresentation(
+                                    modelEntry.common,
                                     sourceEntry.common,
                                     targetEntry.common,
                                     LinkType.Realization,

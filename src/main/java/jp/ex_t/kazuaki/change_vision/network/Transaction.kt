@@ -129,6 +129,7 @@ data class CreateClassPresentation(
 
 @Serializable
 data class CreateLinkPresentation(
+    val modelId: String,
     val sourceClassId: String,
     val targetClassId: String,
     val linkType: LinkType,
