@@ -99,22 +99,29 @@ class ProjectSyncReceiver(
                 encodeAndPublish(createTransaction)
             }
         }
-        val associations =
-            project.ownedElements.filterIsInstance<IClass>().map { it.attributes.mapNotNull { it.association } }
+        val associationsDuplicated =
+            project.ownedElements.filterIsInstance<IClass>()
+                .map { it.attributes.mapNotNull { attribute -> attribute.association } }
                 .flatten()
+        val associations = associationsDuplicated.sortedBy {
+            it.memberEnds.map { it.owner.id }.toSet().toString()
+        }
+        val sortedIdSet =
+            associations.joinToString { association -> "(${association.memberEnds.joinToString { it.owner.id }}) " }
+        logger.debug("sorted: $sortedIdSet")
         val createAssociationOperations =
-            associations.distinctBy { association -> association.memberEnds.toSet() }
-                .mapNotNull { association ->
-                    createAssociationModel(association)
-                }
+            associations.filterIndexed { index, _ -> index % 2 == 0 }.mapNotNull { association ->
+                createAssociationModel(association)
+            }
         if (createAssociationOperations.isNotEmpty()) {
             val createTransaction = Transaction(createAssociationOperations)
+            logger.debug("association: $createTransaction")
             encodeAndPublish(createTransaction)
         }
 
         // presentation
-        project.diagrams.filter { it is IMindMapDiagram }.forEach {
-            val diagram = it as IMindMapDiagram
+        project.diagrams.filterIsInstance<IMindMapDiagram>().forEach {
+            val diagram = it
             val createMindmapDiagramFloatingTopicOperation = diagram.floatingTopics.mapNotNull {
                 createFloatingTopic(it)
             }
@@ -130,7 +137,7 @@ class ProjectSyncReceiver(
                 encodeAndPublish(createTransaction)
             }
         }
-        project.diagrams.filter { it is IClassDiagram }.forEach { diagram ->
+        project.diagrams.filterIsInstance<IClassDiagram>().forEach { diagram ->
             val createNodePresentationOperation =
                 diagram.presentations.filterIsInstance<INodePresentation>().mapNotNull {
                     when (it.model) {
@@ -152,6 +159,7 @@ class ProjectSyncReceiver(
                 }
             if (createLinkPresentationOperation.isNotEmpty()) {
                 val createTransaction = Transaction(createLinkPresentationOperation)
+                logger.debug("link presentation: $createTransaction")
                 encodeAndPublish(createTransaction)
             }
         }
