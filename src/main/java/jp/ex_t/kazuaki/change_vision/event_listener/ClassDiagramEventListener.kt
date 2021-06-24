@@ -419,6 +419,10 @@ class ClassDiagramEventListener(private val entityLUT: EntityLUT, private val mq
                             logger.debug("${target.id} not found on LUT.")
                             return null
                         }
+                        val diagramEntry = entityLUT.entries.find { it.mine == entity.diagram.id } ?: run {
+                            logger.debug("${entity.diagram.id} not found on LUT.")
+                            return null
+                        }
                         when (entity.model) {
                             is IAssociation -> {
                                 logger.debug("${source.name}(IClass) - ${entity.label}(ILinkPresentation::IAssociation) - ${target.name}(IClass)")
@@ -428,7 +432,7 @@ class ClassDiagramEventListener(private val entityLUT: EntityLUT, private val mq
                                     sourceEntry.common,
                                     targetEntry.common,
                                     LinkType.Association,
-                                    entity.diagram.name,
+                                    diagramEntry.common,
                                     entity.id
                                 )
                             }
@@ -440,7 +444,7 @@ class ClassDiagramEventListener(private val entityLUT: EntityLUT, private val mq
                                     sourceEntry.common,
                                     targetEntry.common,
                                     LinkType.Generalization,
-                                    entity.diagram.name,
+                                    diagramEntry.common,
                                     entity.id
                                 )
                             }
@@ -452,7 +456,7 @@ class ClassDiagramEventListener(private val entityLUT: EntityLUT, private val mq
                                     sourceEntry.common,
                                     targetEntry.common,
                                     LinkType.Realization,
-                                    entity.diagram.name,
+                                    diagramEntry.common,
                                     entity.id
                                 )
                             }

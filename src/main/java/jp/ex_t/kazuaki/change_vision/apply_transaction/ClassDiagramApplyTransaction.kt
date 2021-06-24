@@ -152,7 +152,7 @@ class ClassDiagramApplyTransaction(private val entityLUT: EntityLUT) : IApplyTra
         if (operation.modelId.isNotEmpty()
             && operation.sourceClassId.isNotEmpty()
             && operation.targetClassId.isNotEmpty()
-            && operation.diagramName.isNotEmpty()
+            && operation.diagramId.isNotEmpty()
             && operation.id.isNotEmpty()
         ) {
             createLinkPresentation(
@@ -160,7 +160,7 @@ class ClassDiagramApplyTransaction(private val entityLUT: EntityLUT) : IApplyTra
                 operation.sourceClassId,
                 operation.targetClassId,
                 operation.linkType,
-                operation.diagramName,
+                operation.diagramId,
                 operation.id,
             )
         }
@@ -450,12 +450,20 @@ class ClassDiagramApplyTransaction(private val entityLUT: EntityLUT) : IApplyTra
         sourceClassId: String,
         targetClassId: String,
         linkType: LinkType,
-        diagramName: String,
+        diagramId: String,
         id: String
     ) {
         logger.debug("Create link presentation.")
 
-        val diagram = projectAccessor.findElements(IDiagram::class.java, diagramName).first() as IDiagram
+        val diagramEntry = entityLUT.entries.find { it.common == diagramId } ?: run {
+            logger.debug("$diagramId not found on LUT.")
+            return
+        }
+        val diagram =
+            projectAccessor.findElements(IDiagram::class.java).find { it.id == diagramEntry.mine } as IDiagram? ?: run {
+                logger.debug("IDiagram ${diagramEntry.mine} not found but $diagramId found on LUT.")
+                return
+            }
         classDiagramEditor.diagram = diagram
         val sourceClassEntry = entityLUT.entries.find { it.common == sourceClassId } ?: run {
             logger.debug("$sourceClassId not found on LUT.")
