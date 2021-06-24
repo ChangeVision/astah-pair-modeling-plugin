@@ -112,12 +112,16 @@ class MindmapDiagramEventListener(private val entityLUT: EntityLUT, private val 
         return CreateMindmapDiagram(entity.name, owner.name, rootTopic.id, entity.id)
     }
 
-    private fun createFloatingTopic(entity: INodePresentation): CreateFloatingTopic {
+    private fun createFloatingTopic(entity: INodePresentation): CreateFloatingTopic? {
         val location = Pair(entity.location.x, entity.location.y)
         val size = Pair(entity.width, entity.height)
         entityLUT.entries.add(Entry(entity.id, entity.id))
         logger.debug("${entity.label}(INodePresentation, FloatingTopic)")
-        return CreateFloatingTopic(entity.label, location, size, entity.diagram.name, entity.id)
+        val diagramEntry = entityLUT.entries.find { it.mine == entity.diagram.id } ?: run {
+            logger.debug("${entity.diagram.id} not found on LUT.")
+            return null
+        }
+        return CreateFloatingTopic(entity.label, location, size, diagramEntry.common, entity.id)
     }
 
     private fun createTopic(entity: INodePresentation): CreateTopic? {

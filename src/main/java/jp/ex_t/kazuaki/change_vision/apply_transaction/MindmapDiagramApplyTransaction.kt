@@ -65,8 +65,8 @@ class MindmapDiagramApplyTransaction(private val entityLUT: EntityLUT) : IApplyT
 
     private fun validateAndCreateFloatingTopic(operation: CreateFloatingTopic) {
         val location = Point2D.Double(operation.location.first, operation.location.second)
-        if (operation.name.isNotEmpty() && operation.diagramName.isNotEmpty() && operation.id.isNotEmpty()) {
-            createFloatingTopic(operation.name, location, operation.size, operation.diagramName, operation.id)
+        if (operation.name.isNotEmpty() && operation.diagramId.isNotEmpty() && operation.id.isNotEmpty()) {
+            createFloatingTopic(operation.name, location, operation.size, operation.diagramId, operation.id)
         }
     }
 
@@ -131,12 +131,21 @@ class MindmapDiagramApplyTransaction(private val entityLUT: EntityLUT) : IApplyT
         name: String,
         location: Point2D,
         size: Pair<Double, Double>,
-        diagramName: String,
+        diagramId: String,
         id: String
     ) {
         logger.debug("Create floating topic.")
         val (width, height) = size
-        val diagram = projectAccessor.findElements(IDiagram::class.java, diagramName).first() as IMindMapDiagram
+        val diagramEntry = entityLUT.entries.find { it.common == diagramId } ?: run {
+            logger.debug("$diagramId not found on LUT.")
+            return
+        }
+        val diagram =
+            projectAccessor.findElements(IDiagram::class.java).find { it.id == diagramEntry.mine } as IMindMapDiagram?
+                ?: run {
+                    logger.debug("IMindMapDiagram ${diagramEntry.mine} not found but $diagramId found on LUT.")
+                    return
+                }
         mindmapEditor.diagram = diagram
         val parentTopic = diagram.root
         val topic = mindmapEditor.createTopic(parentTopic, name)
