@@ -185,6 +185,13 @@ data class CreateFloatingTopic(
 ) : MindmapDiagramOperation()
 
 @Serializable
+data class ModifyDiagram(
+    val name: String,
+    val id: String,
+    val ownerId: String,
+) : CommonOperation()
+
+@Serializable
 data class ModifyClassPresentation(
     val id: String,
     val location: Pair<Double, Double>,
