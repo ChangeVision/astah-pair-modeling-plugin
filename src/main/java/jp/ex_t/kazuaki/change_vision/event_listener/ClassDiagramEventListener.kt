@@ -8,6 +8,7 @@
 
 package jp.ex_t.kazuaki.change_vision.event_listener
 
+import com.change_vision.jude.api.inf.AstahAPI
 import com.change_vision.jude.api.inf.model.*
 import com.change_vision.jude.api.inf.presentation.ILinkPresentation
 import com.change_vision.jude.api.inf.presentation.INodePresentation
@@ -197,8 +198,9 @@ class ClassDiagramEventListener(private val entityLUT: EntityLUT, private val mq
     }
 
     private fun deleteNodePresentation(entity: INodePresentation): ClassDiagramOperation? {
-        val diagramEntry = entityLUT.entries.find { it.mine == entity.diagram.id } ?: run {
-            logger.debug("${entity.diagram.id} not found on LUT.")
+        val diagram = AstahAPI.getAstahAPI().viewManager.diagramViewManager.currentDiagram
+        val diagramEntry = entityLUT.entries.find { it.mine == diagram.id } ?: run {
+            logger.debug("${diagram.id} not found on LUT.")
             return null
         }
         return when (val model = entity.model) {
@@ -218,7 +220,7 @@ class ClassDiagramEventListener(private val entityLUT: EntityLUT, private val mq
                 }
                 entityLUT.entries.remove(lutEntity)
                 logger.debug("${model.name}(INodePresentation, IComment)")
-                DeleteNote(lutEntity.common)
+                DeletePresentation(lutEntity.common, diagramEntry.common)
             }
             else -> {
                 logger.debug("${model}(INodePresentation, Unknown)")

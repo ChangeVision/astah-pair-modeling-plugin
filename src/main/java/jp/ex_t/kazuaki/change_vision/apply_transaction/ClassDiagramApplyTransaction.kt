@@ -76,9 +76,6 @@ class ClassDiagramApplyTransaction(private val entityLUT: EntityLUT) : IApplyTra
                 is DeletePresentation -> {
                     validateAndDeletePresentation(it)
                 }
-                is DeleteNote -> {
-                    validateAndDeleteNote(it)
-                }
             }
         }
     }
@@ -261,12 +258,6 @@ class ClassDiagramApplyTransaction(private val entityLUT: EntityLUT) : IApplyTra
     private fun validateAndDeletePresentation(operation: DeletePresentation) {
         if (operation.id.isNotEmpty() && operation.diagramId.isNotEmpty()) {
             deletePresentation(operation.id, operation.diagramId)
-        }
-    }
-
-    private fun validateAndDeleteNote(operation: DeleteNote) {
-        if (operation.id.isNotEmpty()) {
-            deleteNote(operation.id)
         }
     }
 
@@ -724,21 +715,6 @@ class ClassDiagramApplyTransaction(private val entityLUT: EntityLUT) : IApplyTra
         }
         entityLUT.entries.remove(lutEntry)
         classDiagramEditor.deletePresentation(classPresentation)
-    }
-
-    private fun deleteNote(id: String) {
-        logger.debug("Delete note.")
-        val lutEntry = entityLUT.entries.find { it.common == id } ?: run {
-            logger.debug("$id not found on LUT.")
-            return
-        }
-        val notePresentation = diagramViewManager.currentDiagram.presentations.find { it.id == lutEntry.mine } ?: run {
-            logger.debug("Note presentation ${lutEntry.mine} not found but $id found on LUT.")
-            entityLUT.entries.remove(lutEntry)
-            return
-        }
-        entityLUT.entries.remove(lutEntry)
-        basicModelEditor.delete(notePresentation.model)
     }
 
     companion object : Logging {

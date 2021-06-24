@@ -278,11 +278,6 @@ data class DeleteTopic(
 ) : MindmapDiagramOperation()
 
 @Serializable
-data class DeleteNote(
-    val id: String,
-) : ClassDiagramOperation()
-
-@Serializable
 data class DeleteModel(
     val id: String,
 ) : CommonOperation()
