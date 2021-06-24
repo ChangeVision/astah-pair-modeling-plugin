@@ -205,12 +205,12 @@ class ClassDiagramApplyTransaction(private val entityLUT: EntityLUT) : IApplyTra
         val location = Point2D.Double(operation.location.first, operation.location.second)
         if (!operations.any { it is ModifyClassModel }
             && operation.id.isNotEmpty()
-            && operation.diagramName.isNotEmpty()) {
+            && operation.diagramId.isNotEmpty()) {
             modifyClassPresentation(
                 operation.id,
                 location,
                 operation.size,
-                operation.diagramName
+                operation.diagramId
             )
         }
     }
@@ -562,11 +562,19 @@ class ClassDiagramApplyTransaction(private val entityLUT: EntityLUT) : IApplyTra
         id: String,
         location: Point2D,
         size: Pair<Double, Double>,
-        diagramName: String
+        diagramId: String
     ) {
         logger.debug("Modify class presentation.")
         val (width, height) = size
-        val diagram = projectAccessor.findElements(IDiagram::class.java, diagramName).first() as IDiagram
+        val diagramEntry = entityLUT.entries.find { it.common == diagramId } ?: run {
+            logger.debug("$diagramId not found on LUT.")
+            return
+        }
+        val diagram =
+            projectAccessor.findElements(IDiagram::class.java).find { it.id == diagramEntry.mine } as IDiagram? ?: run {
+                logger.debug("IDiagram ${diagramEntry.mine} not found but $diagramId found on LUT.")
+                return
+            }
         classDiagramEditor.diagram = diagram
         val entry = entityLUT.entries.find { it.common == id } ?: run {
             logger.debug("$id not found on LUT.")

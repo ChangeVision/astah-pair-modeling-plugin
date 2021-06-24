@@ -189,7 +189,7 @@ data class ModifyClassPresentation(
     val id: String,
     val location: Pair<Double, Double>,
     val size: Pair<Double, Double>,
-    val diagramName: String,
+    val diagramId: String,
 ) : ClassDiagramOperation()
 
 @Serializable
