@@ -128,7 +128,7 @@ data class CreateTransition(
 data class CreateClassPresentation(
     val classId: String,
     val location: Pair<Double, Double>,
-    val diagramName: String,
+    val diagramId: String,
     val id: String,
 ) : ClassDiagramOperation()
 

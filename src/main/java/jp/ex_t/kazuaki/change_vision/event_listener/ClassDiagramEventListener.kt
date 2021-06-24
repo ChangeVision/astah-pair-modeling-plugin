@@ -369,7 +369,7 @@ class ClassDiagramEventListener(private val entityLUT: EntityLUT, private val mq
                             } at ${entity.location})"
                         )
                         entityLUT.entries.add(Entry(entity.id, entity.id))
-                        CreateClassPresentation(classModelEntry.common, location, diagram.name, entity.id)
+                        CreateClassPresentation(classModelEntry.common, location, diagram.id, entity.id)
                     }
                     is IComment -> {
                         val location = Pair(entity.location.x, entity.location.y)

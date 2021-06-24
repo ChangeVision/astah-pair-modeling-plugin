@@ -143,8 +143,8 @@ class ClassDiagramApplyTransaction(private val entityLUT: EntityLUT) : IApplyTra
 
     private fun validateAndCreateClassPresentation(operation: CreateClassPresentation) {
         val location = Point2D.Double(operation.location.first, operation.location.second)
-        if (operation.diagramName.isNotEmpty() && operation.classId.isNotEmpty() && operation.id.isNotEmpty()) {
-            createClassPresentation(operation.classId, location, operation.diagramName, operation.id)
+        if (operation.diagramId.isNotEmpty() && operation.classId.isNotEmpty() && operation.id.isNotEmpty()) {
+            createClassPresentation(operation.classId, location, operation.diagramId, operation.id)
         }
     }
 
@@ -399,7 +399,7 @@ class ClassDiagramApplyTransaction(private val entityLUT: EntityLUT) : IApplyTra
         entityLUT.entries.add(Entry(realization.id, id))
     }
 
-    private fun createClassPresentation(classId: String, location: Point2D, diagramName: String, id: String) {
+    private fun createClassPresentation(classId: String, location: Point2D, diagramId: String, id: String) {
         logger.debug("Create class presentation.")
         val classEntry = entityLUT.entries.find { it.common == classId } ?: run {
             logger.debug("$classId not found on LUT.")
@@ -410,7 +410,15 @@ class ClassDiagramApplyTransaction(private val entityLUT: EntityLUT) : IApplyTra
                 logger.debug("IClass ${classEntry.mine} not found but $classId found on LUT.")
                 return
             }
-        val diagram = projectAccessor.findElements(IDiagram::class.java, diagramName).first() as IDiagram
+        val diagramEntry = entityLUT.entries.find { it.common == diagramId } ?: run {
+            logger.debug("$diagramId not found on LUT.")
+            return
+        }
+        val diagram =
+            projectAccessor.findElements(IDiagram::class.java).find { it.id == diagramEntry.mine } as IDiagram? ?: run {
+                logger.debug("IDiagram ${diagramEntry.mine} not found but $diagramId found on LUT.")
+                return
+            }
         classDiagramEditor.diagram = diagram
         val classPresentation = classDiagramEditor.createNodePresentation(classModel, location)
         entityLUT.entries.add(Entry(classPresentation.id, id))
