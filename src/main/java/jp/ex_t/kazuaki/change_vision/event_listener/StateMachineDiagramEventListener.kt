@@ -244,7 +244,11 @@ class StateMachineDiagramEventListener(private val entityLUT: EntityLUT, private
             return null
         }
         logger.debug("$entity(INodePresentation, IState)")
-        return ModifyState(entry.common, entity.label, location, size, parentEntry.common)
+        val diagramEntry = entityLUT.entries.find { it.mine == entity.diagram.id } ?: run {
+            logger.debug("${entity.diagram.id} not found on LUT.")
+            return null
+        }
+        return ModifyState(entry.common, entity.label, location, size, parentEntry.common, diagramEntry.common)
     }
 
     private fun modifyFinalState(entity: INodePresentation): ModifyFinalState? {
