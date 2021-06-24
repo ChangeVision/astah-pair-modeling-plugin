@@ -258,7 +258,8 @@ data class ModifyFinalState(
     val id: String,
     val location: Pair<Double, Double>,
     val size: Pair<Double, Double>,
-    val parentId: String
+    val parentId: String,
+    val diagramId: String
 ) : StateMachineDiagramOperation()
 
 @Serializable
