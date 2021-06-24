@@ -266,6 +266,7 @@ data class ModifyFinalState(
 data class ModifyTransition(
     val id: String,
     val label: String,
+    val diagramId: String,
 ) : StateMachineDiagramOperation()
 
 @Serializable

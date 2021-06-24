@@ -278,7 +278,11 @@ class StateMachineDiagramEventListener(private val entityLUT: EntityLUT, private
             return null
         }
         logger.debug("$entity(ILinkPresentation, ITransition)")
-        return ModifyTransition(entry.common, entity.label)
+        val diagramEntry = entityLUT.entries.find { it.mine == entity.diagram.id } ?: run {
+            logger.debug("${entity.diagram.id} not found on LUT.")
+            return null
+        }
+        return ModifyTransition(entry.common, entity.label, diagramEntry.common)
     }
 
     private fun deletePresentation(entity: INamedElement): DeleteModel? {
