@@ -147,7 +147,7 @@ data class CreateNote(
     val note: String,
     val location: Pair<Double, Double>,
     val size: Pair<Double, Double>,
-    val diagramName: String,
+    val diagramId: String,
     val id: String,
 ) : ClassDiagramOperation()
 

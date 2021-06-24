@@ -376,7 +376,11 @@ class ClassDiagramEventListener(private val entityLUT: EntityLUT, private val mq
                         val size = Pair(entity.width, entity.height)
                         logger.debug("${entity.label}(INodePresentation) - $model(IComment)")
                         entityLUT.entries.add(Entry(entity.id, entity.id))
-                        CreateNote(entity.label, location, size, entity.diagram.name, entity.id)
+                        val diagramEntry = entityLUT.entries.find { it.mine == diagram.id } ?: run {
+                            logger.debug("${diagram.id} not found on LUT.")
+                            return null
+                        }
+                        CreateNote(entity.label, location, size, diagramEntry.common, entity.id)
                     }
                     else -> {
                         logger.debug("${entity.label}(INodePresentation) - $model(Unknown)")
