@@ -80,13 +80,13 @@ class StateMachineDiagramApplyTransaction(private val entityLUT: EntityLUT) :
     }
 
     private fun validateAndCreateTransition(operation: CreateTransition) {
-        if (operation.id.isNotEmpty() && operation.sourceId.isNotEmpty() && operation.targetId.isNotEmpty() && operation.diagramName.isNotEmpty()) {
+        if (operation.id.isNotEmpty() && operation.sourceId.isNotEmpty() && operation.targetId.isNotEmpty() && operation.diagramId.isNotEmpty()) {
             createTransition(
                 operation.id,
                 operation.label,
                 operation.sourceId,
                 operation.targetId,
-                operation.diagramName
+                operation.diagramId
             )
         }
     }
@@ -244,9 +244,19 @@ class StateMachineDiagramApplyTransaction(private val entityLUT: EntityLUT) :
         pseudostate.height = height
     }
 
-    private fun createTransition(id: String, label: String, sourceId: String, targetId: String, diagramName: String) {
+    private fun createTransition(id: String, label: String, sourceId: String, targetId: String, diagramId: String) {
         logger.debug("Create transition.")
-        val diagram = projectAccessor.findElements(IDiagram::class.java, diagramName).first() as IDiagram
+        val diagramEntry = entityLUT.entries.find { it.common == diagramId } ?: run {
+            logger.debug("$diagramId not found on LUT.")
+            return
+        }
+        val diagram =
+            projectAccessor.findElements(IDiagram::class.java)
+                .find { it.id == diagramEntry.mine } as IStateMachineDiagram?
+                ?: run {
+                    logger.debug("IStateMachineDiagram ${diagramEntry.mine} not found but $diagramId found on LUT.")
+                    return
+                }
         stateMachineDiagramEditor.diagram = diagram
         val sourceEntry = entityLUT.entries.find { it.common == sourceId } ?: run {
             logger.debug("$sourceId not found on LUT.")

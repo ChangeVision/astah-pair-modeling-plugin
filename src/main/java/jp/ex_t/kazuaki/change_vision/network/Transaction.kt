@@ -121,7 +121,7 @@ data class CreateTransition(
     val label: String,
     val sourceId: String,
     val targetId: String,
-    val diagramName: String,
+    val diagramId: String,
 ) : StateMachineDiagramOperation()
 
 @Serializable
