@@ -112,7 +112,7 @@ data class CreateFinalState(
     val location: Pair<Double, Double>,
     val size: Pair<Double, Double>,
     val parentId: String,
-    val diagramName: String,
+    val diagramId: String,
 ) : StateMachineDiagramOperation()
 
 @Serializable

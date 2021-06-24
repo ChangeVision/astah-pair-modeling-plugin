@@ -73,9 +73,9 @@ class StateMachineDiagramApplyTransaction(private val entityLUT: EntityLUT) :
     }
 
     private fun validateAndCreateFinalState(operation: CreateFinalState) {
-        if (operation.id.isNotEmpty() && operation.diagramName.isNotEmpty()) {
+        if (operation.id.isNotEmpty() && operation.diagramId.isNotEmpty()) {
             val location = Point2D.Double(operation.location.first, operation.location.second)
-            createFinalState(operation.id, location, operation.size, operation.parentId, operation.diagramName)
+            createFinalState(operation.id, location, operation.size, operation.parentId, operation.diagramId)
         }
     }
 
@@ -210,11 +210,21 @@ class StateMachineDiagramApplyTransaction(private val entityLUT: EntityLUT) :
         location: Point2D,
         size: Pair<Double, Double>,
         parentId: String,
-        diagramName: String
+        diagramId: String
     ) {
         logger.debug("Create FinalState.")
         val (width, height) = size
-        val diagram = projectAccessor.findElements(IDiagram::class.java, diagramName).first() as IDiagram
+        val diagramEntry = entityLUT.entries.find { it.common == diagramId } ?: run {
+            logger.debug("$diagramId not found on LUT.")
+            return
+        }
+        val diagram =
+            projectAccessor.findElements(IDiagram::class.java)
+                .find { it.id == diagramEntry.mine } as IStateMachineDiagram?
+                ?: run {
+                    logger.debug("IStateMachineDiagram ${diagramEntry.mine} not found but $diagramId found on LUT.")
+                    return
+                }
         stateMachineDiagramEditor.diagram = diagram
         val parentEntity = if (parentId.isEmpty()) null else entityLUT.entries.find { it.common == parentId } ?: run {
             logger.debug("$parentId not found on LUT.")
