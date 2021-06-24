@@ -171,7 +171,7 @@ data class CreateAttribute(
 data class CreateTopic(
     val ownerId: String,
     val name: String,
-    val diagramName: String,
+    val diagramId: String,
     val id: String,
 ) : MindmapDiagramOperation()
 

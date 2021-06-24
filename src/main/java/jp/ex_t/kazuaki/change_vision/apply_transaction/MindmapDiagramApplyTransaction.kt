@@ -56,10 +56,10 @@ class MindmapDiagramApplyTransaction(private val entityLUT: EntityLUT) : IApplyT
     private fun validateAndCreateTopic(operation: CreateTopic) {
         if (operation.ownerId.isNotEmpty()
             && operation.name.isNotEmpty()
-            && operation.diagramName.isNotEmpty()
+            && operation.diagramId.isNotEmpty()
             && operation.id.isNotEmpty()
         ) {
-            createTopic(operation.ownerId, operation.name, operation.diagramName, operation.id)
+            createTopic(operation.ownerId, operation.name, operation.diagramId, operation.id)
         }
     }
 
@@ -108,9 +108,18 @@ class MindmapDiagramApplyTransaction(private val entityLUT: EntityLUT) : IApplyT
         return null
     }
 
-    private fun createTopic(ownerId: String, name: String, diagramName: String, id: String) {
+    private fun createTopic(ownerId: String, name: String, diagramId: String, id: String) {
         logger.debug("Create topic.")
-        val diagram = projectAccessor.findElements(IDiagram::class.java, diagramName).first() as IMindMapDiagram
+        val diagramEntry = entityLUT.entries.find { it.common == diagramId } ?: run {
+            logger.debug("$diagramId not found on LUT.")
+            return
+        }
+        val diagram =
+            projectAccessor.findElements(IDiagram::class.java).find { it.id == diagramEntry.mine } as IMindMapDiagram?
+                ?: run {
+                    logger.debug("IMindMapDiagram ${diagramEntry.mine} not found but $diagramId found on LUT.")
+                    return
+                }
         mindmapEditor.diagram = diagram
         val topics = diagram.floatingTopics + diagram.root
         val parentEntry = entityLUT.entries.find { it.common == ownerId }
