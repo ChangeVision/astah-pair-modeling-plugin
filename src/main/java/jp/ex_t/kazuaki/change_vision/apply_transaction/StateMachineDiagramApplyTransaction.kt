@@ -11,6 +11,7 @@ package jp.ex_t.kazuaki.change_vision.apply_transaction
 import com.change_vision.jude.api.inf.AstahAPI
 import com.change_vision.jude.api.inf.model.IDiagram
 import com.change_vision.jude.api.inf.model.INamedElement
+import com.change_vision.jude.api.inf.model.IStateMachineDiagram
 import com.change_vision.jude.api.inf.presentation.ILinkPresentation
 import com.change_vision.jude.api.inf.presentation.INodePresentation
 import jp.ex_t.kazuaki.change_vision.Logging
@@ -51,9 +52,9 @@ class StateMachineDiagramApplyTransaction(private val entityLUT: EntityLUT) :
     }
 
     private fun validateAndCreatePseudostate(operation: CreatePseudostate) {
-        if (operation.id.isNotEmpty() && operation.diagramName.isNotEmpty()) {
+        if (operation.id.isNotEmpty() && operation.diagramId.isNotEmpty()) {
             val location = Point2D.Double(operation.location.first, operation.location.second)
-            createPseudostate(operation.id, location, operation.size, operation.parentId, operation.diagramName)
+            createPseudostate(operation.id, location, operation.size, operation.parentId, operation.diagramId)
         }
     }
 
@@ -130,11 +131,21 @@ class StateMachineDiagramApplyTransaction(private val entityLUT: EntityLUT) :
         location: Point2D,
         size: Pair<Double, Double>,
         parentId: String,
-        diagramName: String
+        diagramId: String
     ) {
         logger.debug("Create pseudostate.")
         val (width, height) = size
-        val diagram = projectAccessor.findElements(IDiagram::class.java, diagramName).first() as IDiagram
+        val diagramEntry = entityLUT.entries.find { it.common == diagramId } ?: run {
+            logger.debug("$diagramId not found on LUT.")
+            return
+        }
+        val diagram =
+            projectAccessor.findElements(IDiagram::class.java)
+                .find { it.id == diagramEntry.mine } as IStateMachineDiagram?
+                ?: run {
+                    logger.debug("IStateMachineDiagram ${diagramEntry.mine} not found but $diagramId found on LUT.")
+                    return
+                }
         stateMachineDiagramEditor.diagram = diagram
         val parentEntity = if (parentId.isEmpty()) null else entityLUT.entries.find { it.common == parentId } ?: run {
             logger.debug("$parentId not found on LUT.")
