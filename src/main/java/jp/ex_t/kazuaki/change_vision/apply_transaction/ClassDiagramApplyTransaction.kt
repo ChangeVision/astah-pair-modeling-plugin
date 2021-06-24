@@ -259,8 +259,8 @@ class ClassDiagramApplyTransaction(private val entityLUT: EntityLUT) : IApplyTra
     }
 
     private fun validateAndDeletePresentation(operation: DeletePresentation) {
-        if (operation.id.isNotEmpty()) {
-            deletePresentation(operation.id)
+        if (operation.id.isNotEmpty() && operation.diagramId.isNotEmpty()) {
+            deletePresentation(operation.id, operation.diagramId)
         }
     }
 
@@ -701,9 +701,17 @@ class ClassDiagramApplyTransaction(private val entityLUT: EntityLUT) : IApplyTra
         attribute.typeExpression = typeExpression
     }
 
-    private fun deletePresentation(id: String) {
+    private fun deletePresentation(id: String, diagramId: String) {
         logger.debug("Delete presentation.")
-        val diagram = diagramViewManager.currentDiagram
+        val diagramEntry = entityLUT.entries.find { it.common == diagramId } ?: run {
+            logger.debug("$diagramId not found on LUT.")
+            return
+        }
+        val diagram =
+            projectAccessor.findElements(IDiagram::class.java).find { it.id == diagramEntry.mine } as IDiagram? ?: run {
+                logger.debug("IDiagram ${diagramEntry.mine} not found but $diagramId found on LUT.")
+                return
+            }
         classDiagramEditor.diagram = diagram
         val lutEntry = entityLUT.entries.find { it.common == id } ?: run {
             logger.debug("$id not found on LUT.")

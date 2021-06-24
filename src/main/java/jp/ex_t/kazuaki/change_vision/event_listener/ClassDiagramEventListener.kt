@@ -157,6 +157,10 @@ class ClassDiagramEventListener(private val entityLUT: EntityLUT, private val mq
         if (removeProjectEditUnit.any { it.entity is IClass }) {
             return null
         }
+        val diagramEntry = entityLUT.entries.find { it.mine == entity.diagram.id } ?: run {
+            logger.debug("${entity.diagram.id} not found on LUT.")
+            return null
+        }
         return when (val model = entity.model) {
             is IAssociation -> {
                 val lutEntity = entityLUT.entries.find { it.mine == entity.id } ?: run {
@@ -165,7 +169,7 @@ class ClassDiagramEventListener(private val entityLUT: EntityLUT, private val mq
                 }
                 entityLUT.entries.remove(lutEntity)
                 logger.debug("${entity.label}(ILinkPresentation, IAssociation)")
-                DeletePresentation(lutEntity.common)
+                DeletePresentation(lutEntity.common, diagramEntry.common)
             }
             is IGeneralization -> {
                 val lutEntity = entityLUT.entries.find { it.mine == entity.id } ?: run {
@@ -174,7 +178,7 @@ class ClassDiagramEventListener(private val entityLUT: EntityLUT, private val mq
                 }
                 entityLUT.entries.remove(lutEntity)
                 logger.debug("${model.name}(ILinkPresentation, IGeneralization)")
-                DeletePresentation(lutEntity.common)
+                DeletePresentation(lutEntity.common, diagramEntry.common)
             }
             is IRealization -> {
                 val lutEntity = entityLUT.entries.find { it.mine == entity.id } ?: run {
@@ -183,7 +187,7 @@ class ClassDiagramEventListener(private val entityLUT: EntityLUT, private val mq
                 }
                 entityLUT.entries.remove(lutEntity)
                 logger.debug("${model.name}(ILinkPresentation, IRealization)")
-                DeletePresentation(lutEntity.common)
+                DeletePresentation(lutEntity.common, diagramEntry.common)
             }
             else -> {
                 logger.debug("$entity(ILinkPresentation)")
@@ -193,6 +197,10 @@ class ClassDiagramEventListener(private val entityLUT: EntityLUT, private val mq
     }
 
     private fun deleteNodePresentation(entity: INodePresentation): ClassDiagramOperation? {
+        val diagramEntry = entityLUT.entries.find { it.mine == entity.diagram.id } ?: run {
+            logger.debug("${entity.diagram.id} not found on LUT.")
+            return null
+        }
         return when (val model = entity.model) {
             is IClass -> {
                 val lutEntity = entityLUT.entries.find { it.mine == entity.id } ?: run {
@@ -201,7 +209,7 @@ class ClassDiagramEventListener(private val entityLUT: EntityLUT, private val mq
                 }
                 entityLUT.entries.remove(lutEntity)
                 logger.debug("${model.name}(INodePresentation, IClass)")
-                DeletePresentation(lutEntity.common)
+                DeletePresentation(lutEntity.common, diagramEntry.common)
             }
             is IComment -> {
                 val lutEntity = entityLUT.entries.find { it.mine == entity.id } ?: run {

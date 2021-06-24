@@ -268,6 +268,7 @@ data class ModifyTransition(
 @Serializable
 data class DeletePresentation(
     val id: String,
+    val diagramId: String,
 ) : ClassDiagramOperation()
 
 @Serializable
