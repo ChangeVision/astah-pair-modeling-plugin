@@ -78,8 +78,8 @@ class MindmapDiagramApplyTransaction(private val entityLUT: EntityLUT) : IApplyT
     }
 
     private fun validateAndDeleteTopic(operation: DeleteTopic) {
-        if (operation.id.isNotEmpty()) {
-            deleteTopic(operation.id)
+        if (operation.id.isNotEmpty() && operation.diagramId.isNotEmpty()) {
+            deleteTopic(operation.id, operation.diagramId)
         }
     }
 
@@ -229,29 +229,32 @@ class MindmapDiagramApplyTransaction(private val entityLUT: EntityLUT) : IApplyT
         }
     }
 
-    private fun deleteTopic(id: String) {
+    private fun deleteTopic(id: String, diagramId: String) {
         logger.debug("Delete topic.")
-        when (val diagram = api.viewManager.diagramViewManager.currentDiagram) {
-            is IMindMapDiagram -> {
-                mindmapEditor.diagram = diagram
-                val topics = diagram.floatingTopics + diagram.root
-                val topicEntry = entityLUT.entries.find { it.common == id }
-                if (topicEntry == null) {
-                    logger.debug("$id not found on LUT.")
+        val diagramEntry = entityLUT.entries.find { it.common == diagramId } ?: run {
+            logger.debug("$diagramId not found on LUT.")
+            return
+        }
+        val diagram =
+            projectAccessor.findElements(IDiagram::class.java).find { it.id == diagramEntry.mine } as IMindMapDiagram?
+                ?: run {
+                    logger.debug("IMindMapDiagram ${diagramEntry.mine} not found but $diagramId found on LUT.")
                     return
                 }
-                val topic = searchTopic(topicEntry.mine, topics)
-                if (topic == null) {
-                    logger.debug("Topic ${topicEntry.mine} not found but $id found on LUT.")
-                    entityLUT.entries.remove(topicEntry)
-                } else {
-                    mindmapEditor.deletePresentation(topic)
-                    entityLUT.entries.remove(topicEntry)
-                }
-            }
-            else -> {
-                logger.error("$diagram is not Mindmap diagram.")
-            }
+        mindmapEditor.diagram = diagram
+        val topics = diagram.floatingTopics + diagram.root
+        val topicEntry = entityLUT.entries.find { it.common == id }
+        if (topicEntry == null) {
+            logger.debug("$id not found on LUT.")
+            return
+        }
+        val topic = searchTopic(topicEntry.mine, topics)
+        if (topic == null) {
+            logger.debug("Topic ${topicEntry.mine} not found but $id found on LUT.")
+            entityLUT.entries.remove(topicEntry)
+        } else {
+            mindmapEditor.deletePresentation(topic)
+            entityLUT.entries.remove(topicEntry)
         }
     }
 

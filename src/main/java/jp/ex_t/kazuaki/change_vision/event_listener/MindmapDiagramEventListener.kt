@@ -183,7 +183,11 @@ class MindmapDiagramEventListener(private val entityLUT: EntityLUT, private val 
             }
             entityLUT.entries.remove(lut)
             logger.debug("${entity}(INodePresentation) @MindmapDiagram")
-            DeleteTopic(lut.common)
+            val diagramEntry = entityLUT.entries.find { it.mine == entity.diagram.id } ?: run {
+                logger.debug("${entity.diagram.id} not found on LUT.")
+                return null
+            }
+            DeleteTopic(lut.common, diagramEntry.common)
         }
     }
 

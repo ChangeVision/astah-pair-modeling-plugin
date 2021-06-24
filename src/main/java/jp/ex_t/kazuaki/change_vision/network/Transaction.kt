@@ -273,6 +273,7 @@ data class DeletePresentation(
 @Serializable
 data class DeleteTopic(
     val id: String,
+    val diagramId: String,
 ) : MindmapDiagramOperation()
 
 @Serializable
