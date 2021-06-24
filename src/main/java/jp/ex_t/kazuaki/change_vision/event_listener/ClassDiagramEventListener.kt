@@ -548,7 +548,11 @@ class ClassDiagramEventListener(private val entityLUT: EntityLUT, private val mq
                 )
             } at ${entity.location}) @ClassDiagram${diagram.name}"
         )
-        return ModifyNote(entry.common, entity.label, location, size, diagram.name)
+        val diagramEntry = entityLUT.entries.find { it.mine == entity.diagram.id } ?: run {
+            logger.debug("${entity.diagram.id} not found on LUT.")
+            return null
+        }
+        return ModifyNote(entry.common, entity.label, location, size, diagramEntry.common)
     }
 
     private fun modifyOperation(entity: IOperation): ModifyOperation? {
