@@ -162,7 +162,11 @@ class StateMachineDiagramEventListener(private val entityLUT: EntityLUT, private
         val entry = Entry(entity.model.id, entity.model.id)
         entityLUT.entries.add(entry)
         logger.debug("$entity(INodePresentation, IState)")
-        return CreateState(entry.common, entity.label, location, size, parentEntry.common, entity.diagram.name)
+        val diagramEntry = entityLUT.entries.find { it.mine == entity.diagram.id } ?: run {
+            logger.debug("${entity.diagram.id} not found on LUT.")
+            return null
+        }
+        return CreateState(entry.common, entity.label, location, size, parentEntry.common, diagramEntry.common)
     }
 
     private fun createFinalState(entity: INodePresentation): CreateFinalState? {
