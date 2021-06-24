@@ -230,6 +230,7 @@ data class ModifyTopic(
     val location: Pair<Double, Double>,
     val size: Pair<Double, Double>,
     val parentId: String,
+    val diagramId: String,
     val id: String,
 ) : MindmapDiagramOperation()
 

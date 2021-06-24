@@ -162,7 +162,11 @@ class MindmapDiagramEventListener(private val entityLUT: EntityLUT, private val 
                             logger.debug("${entity.parent.id} not found on LUT.")
                             return null
                         }
-                ModifyTopic(entity.label, location, size, parentEntry.common, entry.common)
+                val diagramEntry = entityLUT.entries.find { it.mine == entity.diagram.id } ?: run {
+                    logger.debug("${entity.diagram.id} not found on LUT.")
+                    return null
+                }
+                ModifyTopic(entity.label, location, size, parentEntry.common, diagramEntry.common, entry.common)
             }
             else -> {
                 logger.debug("${entity.label}(INodePresentation) @UnknownDiagram")
