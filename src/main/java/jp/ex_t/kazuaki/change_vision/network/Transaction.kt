@@ -287,6 +287,11 @@ data class DeleteMindmapDiagram(
 ) : MindmapDiagramOperation()
 
 @Serializable
+data class DeleteStateMachineDiagram(
+    val id: String,
+) : StateMachineDiagramOperation()
+
+@Serializable
 data class DeletePresentation(
     val id: String,
     val diagramId: String,
