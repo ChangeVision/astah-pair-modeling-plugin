@@ -149,12 +149,14 @@ class ClassDiagramApplyTransaction(private val entityLUT: EntityLUT) : IApplyTra
     }
 
     private fun validateAndCreateLinkPresentation(operation: CreateLinkPresentation) {
-        if (operation.sourceClassId.isNotEmpty()
+        if (operation.modelId.isNotEmpty()
+            && operation.sourceClassId.isNotEmpty()
             && operation.targetClassId.isNotEmpty()
             && operation.diagramName.isNotEmpty()
             && operation.id.isNotEmpty()
         ) {
             createLinkPresentation(
+                operation.modelId,
                 operation.sourceClassId,
                 operation.targetClassId,
                 operation.linkType,
@@ -415,24 +417,19 @@ class ClassDiagramApplyTransaction(private val entityLUT: EntityLUT) : IApplyTra
     }
 
     @Throws(ClassNotFoundException::class)
-    private fun searchModel(linkType: LinkType, sourceClass: IClass, targetClass: IClass): IElement {
+    private fun searchModel(linkType: LinkType, modelId: String): IElement {
         when (linkType) {
             LinkType.Association -> {
-                return (sourceClass.attributes.filterNot { it.association == null }.find { sourceClassAttribute ->
-                    targetClass.attributes.filterNot { it.association == null }.any { targetClassAttribute ->
-                        sourceClassAttribute.association == targetClassAttribute.association
-                    }
-                } ?: throw ClassNotFoundException()).association
+                return projectAccessor.findElements(IAssociation::class.java)
+                    .find { it.id == modelId } as IAssociation? ?: throw ClassNotFoundException()
             }
             LinkType.Generalization -> {
-                return sourceClass.generalizations.find {
-                    it.superType == targetClass
-                } ?: throw ClassNotFoundException()
+                return projectAccessor.findElements(IGeneralization::class.java)
+                    .find { it.id == modelId } as IGeneralization? ?: throw ClassNotFoundException()
             }
             LinkType.Realization -> {
-                return sourceClass.supplierRealizations.find {
-                    it.client == targetClass
-                } ?: throw ClassNotFoundException()
+                return projectAccessor.findElements(IRealization::class.java)
+                    .find { it.id == modelId } as IRealization? ?: throw ClassNotFoundException()
             }
             else -> {
                 throw NotImplementedError()
@@ -441,6 +438,7 @@ class ClassDiagramApplyTransaction(private val entityLUT: EntityLUT) : IApplyTra
     }
 
     private fun createLinkPresentation(
+        modelId: String,
         sourceClassId: String,
         targetClassId: String,
         linkType: LinkType,
@@ -473,7 +471,11 @@ class ClassDiagramApplyTransaction(private val entityLUT: EntityLUT) : IApplyTra
         val targetClassPresentation = targetClass.presentations.first { it.diagram == diagram } as INodePresentation
         logger.debug("Source: ${sourceClass.attributes}, target: ${targetClass.attributes}")
         try {
-            val element = searchModel(linkType, sourceClass, targetClass)
+            val modelEntry = entityLUT.entries.find { it.common == modelId } ?: run {
+                logger.debug("$modelId not found on LUT.")
+                return
+            }
+            val element = searchModel(linkType, modelEntry.mine)
             logger.debug("Link: $element")
             val linkPresentation =
                 classDiagramEditor.createLinkPresentation(element, sourceClassPresentation, targetClassPresentation)

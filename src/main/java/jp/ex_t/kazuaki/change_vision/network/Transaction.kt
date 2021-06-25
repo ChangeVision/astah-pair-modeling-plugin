@@ -29,6 +29,9 @@ sealed class MindmapDiagramOperation : TransactionalOperation()
 sealed class StateMachineDiagramOperation : TransactionalOperation()
 
 @Serializable
+data class CreateProject(val name: String, val id: String) : CommonOperation()
+
+@Serializable
 data class CreateClassDiagram(
     val name: String,
     val ownerName: String,
@@ -126,6 +129,7 @@ data class CreateClassPresentation(
 
 @Serializable
 data class CreateLinkPresentation(
+    val modelId: String,
     val sourceClassId: String,
     val targetClassId: String,
     val linkType: LinkType,

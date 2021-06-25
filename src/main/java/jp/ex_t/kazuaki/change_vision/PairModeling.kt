@@ -80,7 +80,7 @@ class PairModeling {
         // プロジェクト同期用のsubscriberを用意
         val topicProjectSync = "$topic/projectsync"
         val topicProjectSyncSubscriber = "$topicProjectSync/#"
-        val projectSyncReceiver = ProjectSyncReceiver(mqttPublisher, clientId)
+        val projectSyncReceiver = ProjectSyncReceiver(entityLUT, mqttPublisher, clientId)
         mqttSubscriber.subscribe(
             topicProjectSyncSubscriber,
             projectSyncReceiver,

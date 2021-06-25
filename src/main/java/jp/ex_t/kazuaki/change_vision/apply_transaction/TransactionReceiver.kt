@@ -45,6 +45,7 @@ class TransactionReceiver(
     @Throws(UnExpectedException::class)
     private fun transact(transaction: Transaction) {
         SwingUtilities.invokeLater {
+            logger.debug("Received: $transaction")
             val transactionManager = projectAccessor.transactionManager
             try {
                 projectAccessor.removeProjectEventListener(projectChangedListener)
