@@ -230,55 +230,65 @@ class ProjectSyncReceiver(
         // get children topics by breadth first search
         while (true) {
             val topic = queue.poll() ?: break
-            operations.add(createTopic(topic) ?: continue)
+            operations.add(createTopic(topic))
             topic.children.filterNotNull().forEach { queue.add(it) }
         }
 
         return operations.toList()
     }
 
-    private fun createClassDiagram(entity: IClassDiagram): ClassDiagramOperation? {
+    private fun createClassDiagram(entity: IClassDiagram): ClassDiagramOperation {
         val owner = entity.owner as INamedElement
         // TODO: ownerのIDをどうにかして共有させる
         val lut = entityLUT.entries.find { it.mine == entity.id } ?: run {
             logger.debug("${entity.id} not found on LUT.")
-            return null
+            val entry = Entry(entity.id, entity.id)
+            entityLUT.entries.add(entry)
+            entry
         }
         val createClassDiagram = CreateClassDiagram(entity.name, owner.name, lut.common)
         logger.debug("${entity.name}(IClassDiagram)")
         return createClassDiagram
     }
 
-    private fun createMindMapDiagram(entity: IMindMapDiagram): CreateMindmapDiagram? {
+    private fun createMindMapDiagram(entity: IMindMapDiagram): CreateMindmapDiagram {
         val owner = entity.owner as INamedElement
         val lut = entityLUT.entries.find { it.mine == entity.id } ?: run {
             logger.debug("${entity.id} not found on LUT.")
-            return null
+            val entry = Entry(entity.id, entity.id)
+            entityLUT.entries.add(entry)
+            entry
         }
         val rootTopic = entity.root
         val rootTopicLut = entityLUT.entries.find { it.mine == rootTopic.id } ?: run {
             logger.debug("${rootTopic.id} not found on LUT.")
-            return null
+            val entry = Entry(entity.id, entity.id)
+            entityLUT.entries.add(entry)
+            entry
         }
         logger.debug("${entity.name}(IMindMapDiagram)")
         return CreateMindmapDiagram(entity.name, owner.name, rootTopicLut.common, lut.common)
     }
 
-    private fun createStateMachineDiagram(entity: IStateMachineDiagram): CreateStateMachineDiagram? {
+    private fun createStateMachineDiagram(entity: IStateMachineDiagram): CreateStateMachineDiagram {
         val owner = entity.owner as INamedElement
         val lut = entityLUT.entries.find { it.mine == entity.id } ?: run {
             logger.debug("${entity.id} not found on LUT.")
-            return null
+            val entry = Entry(entity.id, entity.id)
+            entityLUT.entries.add(entry)
+            entry
         }
         val createStateMachineDiagram = CreateStateMachineDiagram(entity.name, owner.name, lut.common)
         logger.debug("$entity(IStateMachineDiagram)")
         return createStateMachineDiagram
     }
 
-    private fun createClassModel(entity: IClass): CreateClassModel? {
+    private fun createClassModel(entity: IClass): CreateClassModel {
         val lut = entityLUT.entries.find { it.mine == entity.id } ?: run {
             logger.debug("${entity.id} not found on LUT.")
-            return null
+            val entry = Entry(entity.id, entity.id)
+            entityLUT.entries.add(entry)
+            entry
         }
 //        val parentEntry = entityLUT.entries.find { it.mine == entity.owner.id } ?: run {
 //            logger.debug("${entity.owner.id} not found on LUT.")
@@ -291,30 +301,38 @@ class ProjectSyncReceiver(
         return createClassModel
     }
 
-    private fun createOperation(entity: IOperation): CreateOperation? {
+    private fun createOperation(entity: IOperation): CreateOperation {
         val owner = entity.owner
         val ownerEntry = entityLUT.entries.find { it.mine == owner.id } ?: run {
             logger.debug("${owner.id} not found on LUT.")
-            return null
+            val entry = Entry(owner.id, owner.id)
+            entityLUT.entries.add(entry)
+            entry
         }
         logger.debug("${entity.name}(IOperation) - $owner(IClass)")
         val lut = entityLUT.entries.find { it.mine == entity.id } ?: run {
             logger.debug("${entity.id} not found on LUT.")
-            return null
+            val entry = Entry(entity.id, entity.id)
+            entityLUT.entries.add(entry)
+            entry
         }
         return CreateOperation(ownerEntry.common, entity.name, entity.returnTypeExpression, lut.common)
     }
 
-    private fun createAttribute(entity: IAttribute): CreateAttribute? {
+    private fun createAttribute(entity: IAttribute): CreateAttribute {
         val owner = entity.owner
         val ownerEntry = entityLUT.entries.find { it.mine == owner.id } ?: run {
             logger.debug("${owner.id} not found on LUT.")
-            return null
+            val entry = Entry(owner.id, owner.id)
+            entityLUT.entries.add(entry)
+            entry
         }
         logger.debug("${entity.name}(IAttribute) - ${owner}(IClass)")
         val lut = entityLUT.entries.find { it.mine == entity.id } ?: run {
             logger.debug("${entity.id} not found on LUT.")
-            return null
+            val entry = Entry(entity.id, entity.id)
+            entityLUT.entries.add(entry)
+            entry
         }
         return CreateAttribute(ownerEntry.common, entity.name, entity.typeExpression, lut.common)
     }
@@ -328,18 +346,24 @@ class ProjectSyncReceiver(
                     is IClass -> {
                         val sourceClassEntry = entityLUT.entries.find { it.mine == sourceClass.id } ?: run {
                             logger.debug("${sourceClass.id} not found on LUT.")
-                            return null
+                            val entry = Entry(sourceClass.id, sourceClass.id)
+                            entityLUT.entries.add(entry)
+                            entry
                         }
                         val destinationClassEntry = entityLUT.entries.find { it.mine == destinationClass.id } ?: run {
                             logger.debug("${destinationClass.id} not found on LUT.")
-                            return null
+                            val entry = Entry(destinationClass.id, destinationClass.id)
+                            entityLUT.entries.add(entry)
+                            entry
                         }
                         val sourceClassNavigability = entity.memberEnds.first().navigability
                         val destinationClassNavigability = entity.memberEnds.last().navigability
                         logger.debug("${sourceClass.name}(IClass, $sourceClassNavigability) - ${entity.name}(IAssociation) - ${destinationClass.name}(IClass, $destinationClassNavigability)")
                         val lut = entityLUT.entries.find { it.mine == entity.id } ?: run {
                             logger.debug("${entity.id} not found on LUT.")
-                            return null
+                            val entry = Entry(entity.id, entity.id)
+                            entityLUT.entries.add(entry)
+                            entry
                         }
                         CreateAssociationModel(
                             sourceClassEntry.common,
@@ -363,73 +387,93 @@ class ProjectSyncReceiver(
         }
     }
 
-    private fun createGeneralizationModel(entity: IGeneralization): ClassDiagramOperation? {
+    private fun createGeneralizationModel(entity: IGeneralization): ClassDiagramOperation {
         val superClass = entity.superType
         val subClass = entity.subType
         val superClassEntry = entityLUT.entries.find { it.mine == superClass.id } ?: run {
             logger.debug("${superClass.id} not found on LUT.")
-            return null
+            val entry = Entry(superClass.id, superClass.id)
+            entityLUT.entries.add(entry)
+            entry
         }
         val subClassEntry = entityLUT.entries.find { it.mine == subClass.id } ?: run {
             logger.debug("${subClass.id} not found on LUT.")
-            return null
+            val entry = Entry(subClass.id, subClass.id)
+            entityLUT.entries.add(entry)
+            entry
         }
         logger.debug("${superClass.name}(IClass) -> ${entity.name}(IGeneralization) - ${subClass.name}(IClass)")
         val lut = entityLUT.entries.find { it.mine == entity.id } ?: run {
             logger.debug("${entity.id} not found on LUT.")
-            return null
+            val entry = Entry(entity.id, entity.id)
+            entityLUT.entries.add(entry)
+            entry
         }
         return CreateGeneralizationModel(superClassEntry.common, subClassEntry.common, entity.name, lut.common)
     }
 
-    private fun createRealizationModel(entity: IRealization): ClassDiagramOperation? {
+    private fun createRealizationModel(entity: IRealization): ClassDiagramOperation {
         val supplierClass = entity.supplier
         val clientClass = entity.client
         val supplierClassEntry = entityLUT.entries.find { it.mine == supplierClass.id } ?: run {
             logger.debug("${supplierClass.id} not found on LUT.")
-            return null
+            val entry = Entry(supplierClass.id, supplierClass.id)
+            entityLUT.entries.add(entry)
+            entry
         }
         val clientClassEntry = entityLUT.entries.find { it.mine == clientClass.id } ?: run {
             logger.debug("${clientClass.id} not found on LUT.")
-            return null
+            val entry = Entry(clientClass.id, clientClass.id)
+            entityLUT.entries.add(entry)
+            entry
         }
         logger.debug("${supplierClass.name}(IClass) -> ${entity.name}(IRealization) -> ${clientClass.name}(IClass)")
         val lut = entityLUT.entries.find { it.mine == entity.id } ?: run {
             logger.debug("${entity.id} not found on LUT.")
-            return null
+            val entry = Entry(entity.id, entity.id)
+            entityLUT.entries.add(entry)
+            entry
         }
         return CreateRealizationModel(supplierClassEntry.common, clientClassEntry.common, entity.name, lut.common)
     }
 
-    private fun createFloatingTopic(entity: INodePresentation): CreateFloatingTopic? {
+    private fun createFloatingTopic(entity: INodePresentation): CreateFloatingTopic {
         val location = Pair(entity.location.x, entity.location.y)
         val size = Pair(entity.width, entity.height)
         val lut = entityLUT.entries.find { it.mine == entity.id } ?: run {
             logger.debug("${entity.id} not found on LUT.")
-            return null
+            val entry = Entry(entity.id, entity.id)
+            entityLUT.entries.add(entry)
+            entry
         }
         logger.debug("${entity.label}(INodePresentation, FloatingTopic)")
         return CreateFloatingTopic(entity.label, location, size, entity.diagram.name, lut.common)
     }
 
-    private fun createTopic(entity: INodePresentation): CreateTopic? {
+    private fun createTopic(entity: INodePresentation): CreateTopic {
         val lut = entityLUT.entries.find { it.mine == entity.id } ?: run {
             logger.debug("${entity.id} not found on LUT.")
-            return null
+            val entry = Entry(entity.id, entity.id)
+            entityLUT.entries.add(entry)
+            entry
         }
         val parentEntry = entityLUT.entries.find { it.mine == entity.parent.id } ?: run {
             logger.debug("${entity.parent.id} not found on LUT.")
-            return null
+            val entry = Entry(entity.parent.id, entity.parent.id)
+            entityLUT.entries.add(entry)
+            entry
         }
         logger.debug("${entity.parent.label}(INodePresentation) - ${entity.label}(INodePresentation)")
         return CreateTopic(parentEntry.common, entity.label, entity.diagram.name, lut.common)
     }
 
-    private fun createClassPresentation(entity: INodePresentation): CreateClassPresentation? {
+    private fun createClassPresentation(entity: INodePresentation): CreateClassPresentation {
         val model = entity.model as IClass
         val classModelEntry = entityLUT.entries.find { it.mine == model.id } ?: run {
             logger.debug("${model.id} not found on LUT.")
-            return null
+            val entry = Entry(model.id, model.id)
+            entityLUT.entries.add(entry)
+            entry
         }
         val location = Pair(entity.location.x, entity.location.y)
         logger.debug(
@@ -442,27 +486,35 @@ class ProjectSyncReceiver(
         )
         val lut = entityLUT.entries.find { it.mine == entity.id } ?: run {
             logger.debug("${entity.id} not found on LUT.")
-            return null
+            val entry = Entry(entity.id, entity.id)
+            entityLUT.entries.add(entry)
+            entry
         }
         val diagramEntry = entityLUT.entries.find { it.mine == entity.diagram.id } ?: run {
             logger.debug("${entity.diagram.id} not found on LUT.")
-            return null
+            val entry = Entry(entity.diagram.id, entity.diagram.id)
+            entityLUT.entries.add(entry)
+            entry
         }
         return CreateClassPresentation(classModelEntry.common, location, diagramEntry.common, lut.common)
     }
 
-    fun createNotePresentation(entity: INodePresentation): CreateNote? {
+    fun createNotePresentation(entity: INodePresentation): CreateNote {
         val location = Pair(entity.location.x, entity.location.y)
         val size = Pair(entity.width, entity.height)
         logger.debug("${entity.label}(INodePresentation) - ${entity.model}(IComment)")
 
         val lut = entityLUT.entries.find { it.mine == entity.id } ?: run {
             logger.debug("${entity.id} not found on LUT.")
-            return null
+            val entry = Entry(entity.id, entity.id)
+            entityLUT.entries.add(entry)
+            entry
         }
         val diagramEntry = entityLUT.entries.find { it.mine == entity.diagram.id } ?: run {
             logger.debug("${entity.diagram.id} not found on LUT.")
-            return null
+            val entry = Entry(entity.diagram.id, entity.diagram.id)
+            entityLUT.entries.add(entry)
+            entry
         }
         return CreateNote(entity.label, location, size, diagramEntry.common, lut.common)
     }
@@ -473,11 +525,15 @@ class ProjectSyncReceiver(
         logger.debug("Model: ${entity.model::class.java}")
         val lut = entityLUT.entries.find { it.mine == entity.id } ?: run {
             logger.debug("${entity.id} not found on LUT.")
-            return null
+            val entry = Entry(entity.id, entity.id)
+            entityLUT.entries.add(entry)
+            entry
         }
         val diagramEntry = entityLUT.entries.find { it.mine == entity.diagram.id } ?: run {
             logger.debug("${entity.diagram.id} not found on LUT.")
-            return null
+            val entry = Entry(entity.diagram.id, entity.diagram.id)
+            entityLUT.entries.add(entry)
+            entry
         }
         return when (source) {
             is IClass -> {
@@ -485,15 +541,21 @@ class ProjectSyncReceiver(
                     is IClass -> {
                         val modelEntry = entityLUT.entries.find { it.mine == entity.model.id } ?: run {
                             logger.debug("${entity.model.id} not found on LUT.")
-                            return null
+                            val entry = Entry(entity.model.id, entity.model.id)
+                            entityLUT.entries.add(entry)
+                            entry
                         }
                         val sourceEntry = entityLUT.entries.find { it.mine == source.id } ?: run {
                             logger.debug("${source.id} not found on LUT.")
-                            return null
+                            val entry = Entry(source.id, source.id)
+                            entityLUT.entries.add(entry)
+                            entry
                         }
                         val targetEntry = entityLUT.entries.find { it.mine == target.id } ?: run {
                             logger.debug("${target.id} not found on LUT.")
-                            return null
+                            val entry = Entry(target.id, target.id)
+                            entityLUT.entries.add(entry)
+                            entry
                         }
                         when (entity.model) {
                             is IAssociation -> {
@@ -550,87 +612,113 @@ class ProjectSyncReceiver(
         }
     }
 
-    private fun createPseudostate(entity: INodePresentation): CreatePseudostate? {
+    private fun createPseudostate(entity: INodePresentation): CreatePseudostate {
         val parentEntry =
             if (entity.parent == null) Entry("", "") else entityLUT.entries.find { it.mine == entity.parent.model.id }
                 ?: run {
                     logger.debug("${entity.parent.model.id}(Parent of INodePresentation, IPseudostate) not found on LUT.")
-                    return null
+                    val entry = Entry(entity.parent.model.id, entity.parent.model.id)
+                    entityLUT.entries.add(entry)
+                    entry
                 }
         val location = Pair(entity.location.x, entity.location.y)
         val size = Pair(entity.width, entity.height)
         val lut = entityLUT.entries.find { it.mine == entity.id } ?: run {
             logger.debug("${entity.id} not found on LUT.")
-            return null
+            val entry = Entry(entity.id, entity.id)
+            entityLUT.entries.add(entry)
+            entry
         }
         val diagramEntry = entityLUT.entries.find { it.mine == entity.diagram.id } ?: run {
             logger.debug("${entity.diagram.id} not found on LUT.")
-            return null
+            val entry = Entry(entity.diagram.id, entity.diagram.id)
+            entityLUT.entries.add(entry)
+            entry
         }
         logger.debug("$entity(INodePresentation, IPseudostate)")
         return CreatePseudostate(lut.common, location, size, parentEntry.common, diagramEntry.common)
     }
 
-    private fun createFinalState(entity: INodePresentation): CreateFinalState? {
+    private fun createFinalState(entity: INodePresentation): CreateFinalState {
         val parentEntry =
             if (entity.parent == null) Entry("", "") else entityLUT.entries.find { it.mine == entity.parent.id }
                 ?: run {
                     logger.debug("${entity.parent.model.id}(Parent of INodePresentation, IFinalState) not found on LUT.")
-                    return null
+                    val entry = Entry(entity.parent.model.id, entity.parent.model.id)
+                    entityLUT.entries.add(entry)
+                    entry
                 }
         val location = Pair(entity.location.x, entity.location.y)
         val size = Pair(entity.width, entity.height)
         val lut = entityLUT.entries.find { it.mine == entity.id } ?: run {
             logger.debug("${entity.id} not found on LUT.")
-            return null
+            val entry = Entry(entity.id, entity.id)
+            entityLUT.entries.add(entry)
+            entry
         }
         val diagramEntry = entityLUT.entries.find { it.mine == entity.diagram.id } ?: run {
             logger.debug("${entity.diagram.id} not found on LUT.")
-            return null
+            val entry = Entry(entity.diagram.id, entity.diagram.id)
+            entityLUT.entries.add(entry)
+            entry
         }
         logger.debug("$entity(INodePresentation, IFinalState)")
         return CreateFinalState(lut.common, location, size, parentEntry.common, diagramEntry.common)
     }
 
-    private fun createState(entity: INodePresentation): CreateState? {
+    private fun createState(entity: INodePresentation): CreateState {
         val parentEntry =
             if (entity.parent == null) Entry("", "") else entityLUT.entries.find { it.mine == entity.parent.model.id }
                 ?: run {
                     logger.debug("${entity.model.id}(Parent of INodePresentation, IState) not found on LUT.")
-                    return null
+                    val entry = Entry(entity.parent.model.id, entity.parent.model.id)
+                    entityLUT.entries.add(entry)
+                    entry
                 }
         val location = Pair(entity.location.x, entity.location.y)
         val size = Pair(entity.width, entity.height)
         val lut = entityLUT.entries.find { it.mine == entity.id } ?: run {
             logger.debug("${entity.id} not found on LUT.")
-            return null
+            val entry = Entry(entity.id, entity.id)
+            entityLUT.entries.add(entry)
+            entry
         }
         val diagramEntry = entityLUT.entries.find { it.mine == entity.diagram.id } ?: run {
             logger.debug("${entity.diagram.id} not found on LUT.")
-            return null
+            val entry = Entry(entity.diagram.id, entity.diagram.id)
+            entityLUT.entries.add(entry)
+            entry
         }
         logger.debug("$entity(INodePresentation, IState)")
         return CreateState(lut.common, entity.label, location, size, parentEntry.common, diagramEntry.common)
     }
 
-    private fun createTransition(entity: ILinkPresentation): CreateTransition? {
+    private fun createTransition(entity: ILinkPresentation): CreateTransition {
         val sourceEntry = entityLUT.entries.find { it.mine == entity.source.model.id } ?: run {
             logger.debug("${entity.source.model.id}(Source of INodePresentation, IState) not found on LUT.")
-            return null
+            val entry = Entry(entity.source.model.id, entity.source.model.id)
+            entityLUT.entries.add(entry)
+            entry
         }
 
         val targetEntry = entityLUT.entries.find { it.mine == entity.target.model.id } ?: run {
             logger.debug("${entity.model.id}(INodePresentation, IState) not found on LUT.")
-            return null
+            val entry = Entry(entity.model.id, entity.model.id)
+            entityLUT.entries.add(entry)
+            entry
         }
 
         val lut = entityLUT.entries.find { it.mine == entity.id } ?: run {
             logger.debug("${entity.id} not found on LUT.")
-            return null
+            val entry = Entry(entity.id, entity.id)
+            entityLUT.entries.add(entry)
+            entry
         }
         val diagramEntry = entityLUT.entries.find { it.mine == entity.diagram.id } ?: run {
             logger.debug("${entity.diagram.id} not found on LUT.")
-            return null
+            val entry = Entry(entity.diagram.id, entity.diagram.id)
+            entityLUT.entries.add(entry)
+            entry
         }
         logger.debug("$entity(ILinkPresentation, ITransition)")
         return CreateTransition(lut.common, entity.label, sourceEntry.common, targetEntry.common, diagramEntry.common)
