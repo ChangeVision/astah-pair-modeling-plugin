@@ -40,6 +40,9 @@ class MindmapDiagramApplyTransaction(private val entityLUT: EntityLUT) : IApplyT
                 is ModifyTopic -> {
                     validateAndModifyTopic(it)
                 }
+                is DeleteMindmapDiagram -> {
+                    validateAndDeleteMindMap(it)
+                }
                 is DeleteTopic -> {
                     validateAndDeleteTopic(it)
                 }
@@ -74,6 +77,12 @@ class MindmapDiagramApplyTransaction(private val entityLUT: EntityLUT) : IApplyT
         val location = Point2D.Double(operation.location.first, operation.location.second)
         if (operation.name.isNotEmpty() && operation.diagramId.isNotEmpty() && operation.id.isNotEmpty()) {
             modifyTopic(operation.name, location, operation.size, operation.parentId, operation.diagramId, operation.id)
+        }
+    }
+
+    private fun validateAndDeleteMindMap(operation: DeleteMindmapDiagram) {
+        if (operation.id.isNotEmpty()) {
+            deleteMindmapDiagram(operation.id)
         }
     }
 
@@ -227,6 +236,31 @@ class MindmapDiagramApplyTransaction(private val entityLUT: EntityLUT) : IApplyT
             }
             topic.label = name
         }
+    }
+
+    private fun deleteMindmapDiagram(id: String) {
+        logger.debug("Delete mindmap diagram.")
+        val lutEntry = entityLUT.entries.find { it.common == id } ?: run {
+            logger.debug("$id not found on LUT.")
+            return
+        }
+        val diagram = projectAccessor.project.diagrams.find { it.id == lutEntry.mine } ?: run {
+            logger.debug("IDiagram ${lutEntry.mine} not found but $id found on LUT.")
+            entityLUT.entries.remove(lutEntry)
+            return
+        }
+        val rootTopic = (diagram as IMindMapDiagram).root
+        val rootEntry = entityLUT.entries.find { it.mine == rootTopic.id } ?: run {
+            logger.debug("Root topic ${rootTopic.id} not found on LUT.")
+            entityLUT.entries.remove(lutEntry)
+            mindmapEditor.diagram = diagram
+            mindmapEditor.deleteDiagram()
+        }
+        // TODO: 削除されるとプレゼンテーションのエントリが残り続ける
+        entityLUT.entries.remove(rootEntry)
+        entityLUT.entries.remove(lutEntry)
+        mindmapEditor.diagram = diagram
+        mindmapEditor.deleteDiagram()
     }
 
     private fun deleteTopic(id: String, diagramId: String) {
