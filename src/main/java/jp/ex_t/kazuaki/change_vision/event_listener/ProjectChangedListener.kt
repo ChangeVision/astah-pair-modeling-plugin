@@ -33,9 +33,9 @@ class ProjectChangedListener(entityLUT: EntityLUT, mqttPublisher: MqttPublisher)
     override fun projectChanged(e: ProjectEvent) {
         logger.debug("===== Transaction detected =====")
         val projectEditUnit = e.projectEditUnit.filter { it.entity != null }
-        if (projectEditUnit.any { it.entity.let { entity -> entity is INodePresentation && entity.diagram is IMindMapDiagram } }) {
+        if (projectEditUnit.any { it.entity.let { entity -> entity is INodePresentation && entity.diagram is IMindMapDiagram || entity is IMindMapDiagram } }) {
             mindmapDiagramEventListener.process(projectEditUnit)
-        } else if (projectEditUnit.any { it.entity.let { entity -> entity is INodePresentation && entity.diagram is IStateMachineDiagram } }) {
+        } else if (projectEditUnit.any { it.entity.let { entity -> entity is INodePresentation && entity.diagram is IStateMachineDiagram || entity is IStateMachineDiagram } }) {
             stateMachineDiagramEventListener.process(projectEditUnit)
         } else {
             classDiagramEventListener.process(projectEditUnit)
