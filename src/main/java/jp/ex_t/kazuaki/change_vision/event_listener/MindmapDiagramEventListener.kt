@@ -24,7 +24,15 @@ class MindmapDiagramEventListener(private val entityLUT: EntityLUT, private val 
     override fun process(projectEditUnit: List<ProjectEditUnit>) {
         logger.debug("Start process")
         val removeProjectEditUnit = projectEditUnit.filter { it.operation == Operation.REMOVE.ordinal }
-        val removeOperations = removeProjectEditUnit.mapNotNull { editUnit ->
+        val removeDiagramUnit = removeProjectEditUnit.filter { it.entity is IMindMapDiagram }
+        val removeDiagramOperation = removeDiagramUnit.mapNotNull { deleteMindMapDiagram(it.entity as IMindMapDiagram) }
+        if (removeDiagramOperation.isNotEmpty()) {
+            ProjectChangedListener.encodeAndPublish(Transaction(removeDiagramOperation), mqttPublisher)
+            return
+        }
+
+        val otherRemoveUnit = removeProjectEditUnit - removeDiagramUnit
+        val removeOperations = otherRemoveUnit.mapNotNull { editUnit ->
             Operation.values()[editUnit.operation].let { op -> logger.debug("Op: $op -> ") }
             when (val entity = editUnit.entity) {
                 is INodePresentation -> deleteTopic(entity)
@@ -186,6 +194,18 @@ class MindmapDiagramEventListener(private val entityLUT: EntityLUT, private val 
                 logger.debug("${entity.label}(INodePresentation) @UnknownDiagram")
                 null
             }
+        }
+    }
+
+    private fun deleteMindMapDiagram(entity: IMindMapDiagram): DeleteMindmapDiagram? {
+        return run {
+            val lut = entityLUT.entries.find { it.mine == entity.id } ?: run {
+                logger.debug("${entity.id} not found on LUT.")
+                return null
+            }
+            entityLUT.entries.remove(lut)
+            logger.debug("${entity}(IMindMapDiagram)")
+            DeleteMindmapDiagram(lut.common)
         }
     }
 

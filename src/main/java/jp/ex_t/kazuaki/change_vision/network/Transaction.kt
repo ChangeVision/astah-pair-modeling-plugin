@@ -277,6 +277,21 @@ data class ModifyTransition(
 ) : StateMachineDiagramOperation()
 
 @Serializable
+data class DeleteClassDiagram(
+    val id: String,
+) : ClassDiagramOperation()
+
+@Serializable
+data class DeleteMindmapDiagram(
+    val id: String,
+) : MindmapDiagramOperation()
+
+@Serializable
+data class DeleteStateMachineDiagram(
+    val id: String,
+) : StateMachineDiagramOperation()
+
+@Serializable
 data class DeletePresentation(
     val id: String,
     val diagramId: String,

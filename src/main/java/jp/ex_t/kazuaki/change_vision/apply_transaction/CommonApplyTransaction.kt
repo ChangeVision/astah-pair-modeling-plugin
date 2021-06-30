@@ -80,7 +80,8 @@ class CommonApplyTransaction(private val entityLUT: EntityLUT) : IApplyTransacti
             return
         }
         diagram.name = name
-        basicModelEditor.changeParent(owner, diagram)
+        // TODO: ステートマシン図で動作しない原因を調査する
+//        basicModelEditor.changeParent(owner, diagram)
     }
 
     private fun deleteModel(id: String) {

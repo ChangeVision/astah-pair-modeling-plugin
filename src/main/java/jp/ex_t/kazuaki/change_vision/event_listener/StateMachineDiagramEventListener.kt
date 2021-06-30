@@ -22,7 +22,16 @@ class StateMachineDiagramEventListener(private val entityLUT: EntityLUT, private
     override fun process(projectEditUnit: List<ProjectEditUnit>) {
         logger.debug("Start process")
         val removeProjectEditUnit = projectEditUnit.filter { it.operation == Operation.REMOVE.ordinal }
-        val removeOperations = removeProjectEditUnit.mapNotNull { editUnit ->
+        val removeDiagramUnit = removeProjectEditUnit.filter { it.entity is IStateMachineDiagram }
+        val removeDiagramOperation =
+            removeDiagramUnit.mapNotNull { deleteStateMachineDiagram(it.entity as IStateMachineDiagram) }
+        if (removeDiagramOperation.isNotEmpty()) {
+            ProjectChangedListener.encodeAndPublish(Transaction(removeDiagramOperation), mqttPublisher)
+            return
+        }
+
+        val otherRemoveUnit = removeProjectEditUnit - removeDiagramUnit
+        val removeOperations = otherRemoveUnit.mapNotNull { editUnit ->
             Operation.values()[editUnit.operation].let { op -> logger.debug("Op: $op -> ") }
             when (val entity = editUnit.entity) {
                 is INamedElement -> {
@@ -297,6 +306,18 @@ class StateMachineDiagramEventListener(private val entityLUT: EntityLUT, private
             return null
         }
         return ModifyTransition(entry.common, entity.label, diagramEntry.common)
+    }
+
+    private fun deleteStateMachineDiagram(entity: IStateMachineDiagram): DeleteStateMachineDiagram? {
+        return run {
+            val lut = entityLUT.entries.find { it.mine == entity.id } ?: run {
+                logger.debug("${entity.id} not found on LUT.")
+                return null
+            }
+            entityLUT.entries.remove(lut)
+            logger.debug("${entity}(IStateMachineDiagram)")
+            DeleteStateMachineDiagram(lut.common)
+        }
     }
 
     private fun deletePresentation(entity: INamedElement): DeleteModel? {

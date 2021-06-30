@@ -41,6 +41,7 @@ class StateMachineDiagramApplyTransaction(private val entityLUT: EntityLUT) :
                 is ModifyState -> validateAndModifyState(it)
                 is ModifyFinalState -> validateAndModifyFinalState(it)
                 is ModifyTransition -> validateAndModifyTransition(it)
+                is DeleteStateMachineDiagram -> validateAndDeleteStateMachineDiagram(it)
             }
         }
     }
@@ -115,6 +116,12 @@ class StateMachineDiagramApplyTransaction(private val entityLUT: EntityLUT) :
     private fun validateAndModifyTransition(operation: ModifyTransition) {
         if (operation.id.isNotEmpty() && operation.diagramId.isNotEmpty()) {
             modifyTransition(operation.id, operation.label, operation.diagramId)
+        }
+    }
+
+    private fun validateAndDeleteStateMachineDiagram(operation: DeleteStateMachineDiagram) {
+        if (operation.id.isNotEmpty()) {
+            deleteStateMachineDiagram(operation.id)
         }
     }
 
@@ -465,6 +472,23 @@ class StateMachineDiagramApplyTransaction(private val entityLUT: EntityLUT) :
                 return
             }
         (transition.model as INamedElement).name = label
+    }
+
+    private fun deleteStateMachineDiagram(id: String) {
+        logger.debug("Delete state machine diagram.")
+        val lutEntry = entityLUT.entries.find { it.common == id } ?: run {
+            logger.debug("$id not found on LUT.")
+            return
+        }
+        val diagram = projectAccessor.project.diagrams.find { it.id == lutEntry.mine } ?: run {
+            logger.debug("IDiagram ${lutEntry.mine} not found but $id found on LUT.")
+            entityLUT.entries.remove(lutEntry)
+            return
+        }
+        // TODO: 削除されるとプレゼンテーションのエントリが残り続ける
+        entityLUT.entries.remove(lutEntry)
+        stateMachineDiagramEditor.diagram = diagram
+        stateMachineDiagramEditor.deleteDiagram()
     }
 
     companion object : Logging {

@@ -73,6 +73,9 @@ class ClassDiagramApplyTransaction(private val entityLUT: EntityLUT) : IApplyTra
                 is ModifyAttribute -> {
                     validateAndModifyAttribute(it)
                 }
+                is DeleteClassDiagram -> {
+                    validateAndDeleteClassDiagram(it)
+                }
                 is DeletePresentation -> {
                     validateAndDeletePresentation(it)
                 }
@@ -252,6 +255,12 @@ class ClassDiagramApplyTransaction(private val entityLUT: EntityLUT) : IApplyTra
                 operation.name,
                 operation.typeExpression
             )
+        }
+    }
+
+    private fun validateAndDeleteClassDiagram(operation: DeleteClassDiagram) {
+        if (operation.id.isNotEmpty()) {
+            deleteClassDiagram(operation.id)
         }
     }
 
@@ -690,6 +699,23 @@ class ClassDiagramApplyTransaction(private val entityLUT: EntityLUT) : IApplyTra
             }
         attribute.name = name
         attribute.typeExpression = typeExpression
+    }
+
+    private fun deleteClassDiagram(id: String) {
+        logger.debug("Delete class diagram.")
+        val lutEntry = entityLUT.entries.find { it.common == id } ?: run {
+            logger.debug("$id not found on LUT.")
+            return
+        }
+        val diagram = projectAccessor.project.diagrams.find { it.id == lutEntry.mine } ?: run {
+            logger.debug("IDiagram ${lutEntry.mine} not found but $id found on LUT.")
+            entityLUT.entries.remove(lutEntry)
+            return
+        }
+        // TODO: 削除されるとプレゼンテーションのエントリが残り続ける
+        entityLUT.entries.remove(lutEntry)
+        classDiagramEditor.diagram = diagram
+        classDiagramEditor.deleteDiagram()
     }
 
     private fun deletePresentation(id: String, diagramId: String) {
