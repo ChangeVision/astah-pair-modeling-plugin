@@ -56,6 +56,7 @@ class ProjectSyncReceiver(
             when (it) {
                 is IClassDiagram -> createClassDiagram(it)
                 is IMindMapDiagram -> createMindMapDiagram(it)
+                is IStateMachineDiagram -> createStateMachineDiagram(it)
                 else -> {
                     logger.debug("${it}(Unknown diagram)")
                     null
@@ -100,7 +101,7 @@ class ProjectSyncReceiver(
             }
         }
 
-        // associations, generalizations
+        // associations, generalizations, realizations
         val associationsDuplicated =
             project.ownedElements.filterIsInstance<IClass>()
                 .map { it.attributes.mapNotNull { attribute -> attribute.association } }
@@ -181,6 +182,42 @@ class ProjectSyncReceiver(
                 encodeAndPublish(createTransaction)
             }
         }
+        project.diagrams.filterIsInstance<IStateMachineDiagram>().forEach { diagram ->
+            val createNodePresentationOperation =
+                diagram.presentations.filterIsInstance<INodePresentation>().mapNotNull {
+                    when (it.model) {
+                        is IPseudostate -> createPseudostate(it)
+                        is IFinalState -> createFinalState(it)
+                        is IState -> createState(it)
+                        else -> {
+                            logger.debug("Unknown")
+                            null
+                        }
+                    }
+                }
+            if (createNodePresentationOperation.isNotEmpty()) {
+                val createTransaction = Transaction(createNodePresentationOperation)
+                logger.debug("state machine node presentation: $createTransaction")
+                encodeAndPublish(createTransaction)
+            }
+        }
+        project.diagrams.filterIsInstance<IStateMachineDiagram>().forEach { diagram ->
+            val createLinkPresentationOperation =
+                diagram.presentations.filterIsInstance<ILinkPresentation>().mapNotNull {
+                    when (it.model) {
+                        is ITransition -> createTransition(it)
+                        else -> {
+                            logger.debug("Unknown")
+                            null
+                        }
+                    }
+                }
+            if (createLinkPresentationOperation.isNotEmpty()) {
+                val createTransaction = Transaction(createLinkPresentationOperation)
+                logger.debug("state machine link presentation: $createTransaction")
+                encodeAndPublish(createTransaction)
+            }
+        }
     }
 
     private fun getTopics(rootTopics: List<INodePresentation>): List<CreateTopic> {
@@ -213,8 +250,18 @@ class ProjectSyncReceiver(
         val owner = entity.owner as INamedElement
         val rootTopic = entity.root
         logger.debug("${entity.name}(IMindMapDiagram)")
+        entityLUT.entries.add(Entry(entity.id, entity.id))
         entityLUT.entries.add(Entry(rootTopic.id, rootTopic.id))
-        return CreateMindmapDiagram(entity.name, owner.name, rootTopic.id)
+        return CreateMindmapDiagram(entity.name, owner.name, rootTopic.id, entity.id)
+    }
+
+    private fun createStateMachineDiagram(entity: IStateMachineDiagram): CreateStateMachineDiagram {
+        val owner = entity.owner as INamedElement
+        val entry = Entry(entity.id, entity.id)
+        entityLUT.entries.add(entry)
+        val createStateMachineDiagram = CreateStateMachineDiagram(entity.name, owner.name, entry.common)
+        logger.debug("$entity(IStateMachineDiagram)")
+        return createStateMachineDiagram
     }
 
     private fun createClassModel(entity: IClass): CreateClassModel {
@@ -444,6 +491,68 @@ class ProjectSyncReceiver(
                 null
             }
         }
+    }
+
+    private fun createPseudostate(entity: INodePresentation): CreatePseudostate? {
+        val parentEntry =
+            if (entity.parent == null) Entry("", "") else entityLUT.entries.find { it.mine == entity.parent.model.id }
+                ?: run {
+                    logger.debug("${entity.parent.model.id}(Parent of INodePresentation, IPseudostate) not found on LUT.")
+                    return null
+                }
+        val location = Pair(entity.location.x, entity.location.y)
+        val size = Pair(entity.width, entity.height)
+        val entry = Entry(entity.model.id, entity.model.id)
+        entityLUT.entries.add(entry)
+        logger.debug("$entity(INodePresentation, IPseudostate)")
+        return CreatePseudostate(entry.common, location, size, parentEntry.common, entity.diagram.name)
+    }
+
+    private fun createFinalState(entity: INodePresentation): CreateFinalState? {
+        val parentEntry =
+            if (entity.parent == null) Entry("", "") else entityLUT.entries.find { it.mine == entity.parent.id }
+                ?: run {
+                    logger.debug("${entity.parent.model.id}(Parent of INodePresentation, IFinalState) not found on LUT.")
+                    return null
+                }
+        val location = Pair(entity.location.x, entity.location.y)
+        val size = Pair(entity.width, entity.height)
+        val entry = Entry(entity.model.id, entity.model.id)
+        entityLUT.entries.add(entry)
+        logger.debug("$entity(INodePresentation, IFinalState)")
+        return CreateFinalState(entry.common, location, size, parentEntry.common, entity.diagram.name)
+    }
+
+    private fun createState(entity: INodePresentation): CreateState? {
+        val parentEntry =
+            if (entity.parent == null) Entry("", "") else entityLUT.entries.find { it.mine == entity.parent.model.id }
+                ?: run {
+                    logger.debug("${entity.model.id}(Parent of INodePresentation, IState) not found on LUT.")
+                    return null
+                }
+        val location = Pair(entity.location.x, entity.location.y)
+        val size = Pair(entity.width, entity.height)
+        val entry = Entry(entity.model.id, entity.model.id)
+        entityLUT.entries.add(entry)
+        logger.debug("$entity(INodePresentation, IState)")
+        return CreateState(entry.common, entity.label, location, size, parentEntry.common, entity.diagram.name)
+    }
+
+    private fun createTransition(entity: ILinkPresentation): CreateTransition? {
+        val sourceEntry = entityLUT.entries.find { it.mine == entity.source.model.id } ?: run {
+            logger.debug("${entity.source.model.id}(Source of INodePresentation, IState) not found on LUT.")
+            return null
+        }
+
+        val targetEntry = entityLUT.entries.find { it.mine == entity.target.model.id } ?: run {
+            logger.debug("${entity.model.id}(INodePresentation, IState) not found on LUT.")
+            return null
+        }
+
+        val entry = Entry(entity.model.id, entity.model.id)
+        entityLUT.entries.add(entry)
+        logger.debug("$entity(ILinkPresentation, ITransition)")
+        return CreateTransition(entry.common, entity.label, sourceEntry.common, targetEntry.common, entity.diagram.name)
     }
 
     @ExperimentalSerializationApi

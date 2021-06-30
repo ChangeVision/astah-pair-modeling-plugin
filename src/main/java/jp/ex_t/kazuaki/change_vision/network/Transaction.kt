@@ -43,6 +43,7 @@ data class CreateMindmapDiagram(
     val name: String,
     val ownerName: String,
     val rootTopicId: String,
+    val id: String,
 ) : MindmapDiagramOperation()
 
 @Serializable
@@ -92,6 +93,7 @@ data class CreatePseudostate(
     val location: Pair<Double, Double>,
     val size: Pair<Double, Double>,
     val parentId: String,
+    val diagramName: String,
 ) : StateMachineDiagramOperation()
 
 @Serializable
@@ -101,6 +103,7 @@ data class CreateState(
     val location: Pair<Double, Double>,
     val size: Pair<Double, Double>,
     val parentId: String,
+    val diagramName: String,
 ) : StateMachineDiagramOperation()
 
 @Serializable
@@ -109,6 +112,7 @@ data class CreateFinalState(
     val location: Pair<Double, Double>,
     val size: Pair<Double, Double>,
     val parentId: String,
+    val diagramName: String,
 ) : StateMachineDiagramOperation()
 
 @Serializable
@@ -117,6 +121,7 @@ data class CreateTransition(
     val label: String,
     val sourceId: String,
     val targetId: String,
+    val diagramName: String,
 ) : StateMachineDiagramOperation()
 
 @Serializable
