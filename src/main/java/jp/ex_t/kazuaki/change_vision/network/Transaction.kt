@@ -93,7 +93,7 @@ data class CreatePseudostate(
     val location: Pair<Double, Double>,
     val size: Pair<Double, Double>,
     val parentId: String,
-    val diagramName: String,
+    val diagramId: String,
 ) : StateMachineDiagramOperation()
 
 @Serializable
@@ -103,7 +103,7 @@ data class CreateState(
     val location: Pair<Double, Double>,
     val size: Pair<Double, Double>,
     val parentId: String,
-    val diagramName: String,
+    val diagramId: String,
 ) : StateMachineDiagramOperation()
 
 @Serializable
@@ -112,7 +112,7 @@ data class CreateFinalState(
     val location: Pair<Double, Double>,
     val size: Pair<Double, Double>,
     val parentId: String,
-    val diagramName: String,
+    val diagramId: String,
 ) : StateMachineDiagramOperation()
 
 @Serializable
@@ -121,14 +121,14 @@ data class CreateTransition(
     val label: String,
     val sourceId: String,
     val targetId: String,
-    val diagramName: String,
+    val diagramId: String,
 ) : StateMachineDiagramOperation()
 
 @Serializable
 data class CreateClassPresentation(
     val classId: String,
     val location: Pair<Double, Double>,
-    val diagramName: String,
+    val diagramId: String,
     val id: String,
 ) : ClassDiagramOperation()
 
@@ -138,7 +138,7 @@ data class CreateLinkPresentation(
     val sourceClassId: String,
     val targetClassId: String,
     val linkType: LinkType,
-    val diagramName: String,
+    val diagramId: String,
     val id: String,
 ) : ClassDiagramOperation()
 
@@ -147,7 +147,7 @@ data class CreateNote(
     val note: String,
     val location: Pair<Double, Double>,
     val size: Pair<Double, Double>,
-    val diagramName: String,
+    val diagramId: String,
     val id: String,
 ) : ClassDiagramOperation()
 
@@ -171,7 +171,7 @@ data class CreateAttribute(
 data class CreateTopic(
     val ownerId: String,
     val name: String,
-    val diagramName: String,
+    val diagramId: String,
     val id: String,
 ) : MindmapDiagramOperation()
 
@@ -180,7 +180,7 @@ data class CreateFloatingTopic(
     val name: String,
     val location: Pair<Double, Double>,
     val size: Pair<Double, Double>,
-    val diagramName: String,
+    val diagramId: String,
     val id: String,
 ) : MindmapDiagramOperation()
 
@@ -189,7 +189,7 @@ data class ModifyClassPresentation(
     val id: String,
     val location: Pair<Double, Double>,
     val size: Pair<Double, Double>,
-    val diagramName: String,
+    val diagramId: String,
 ) : ClassDiagramOperation()
 
 @Serializable
@@ -198,7 +198,7 @@ data class ModifyNote(
     val note: String,
     val location: Pair<Double, Double>,
     val size: Pair<Double, Double>,
-    val diagramName: String
+    val diagramId: String
 ) : ClassDiagramOperation()
 
 @Serializable
@@ -230,6 +230,7 @@ data class ModifyTopic(
     val location: Pair<Double, Double>,
     val size: Pair<Double, Double>,
     val parentId: String,
+    val diagramId: String,
     val id: String,
 ) : MindmapDiagramOperation()
 
@@ -239,6 +240,7 @@ data class ModifyPseudostate(
     val location: Pair<Double, Double>,
     val size: Pair<Double, Double>,
     val parentId: String,
+    val diagramId: String,
 ) : StateMachineDiagramOperation()
 
 @Serializable
@@ -248,6 +250,7 @@ data class ModifyState(
     val location: Pair<Double, Double>,
     val size: Pair<Double, Double>,
     val parentId: String,
+    val diagramId: String,
 ) : StateMachineDiagramOperation()
 
 @Serializable
@@ -255,29 +258,28 @@ data class ModifyFinalState(
     val id: String,
     val location: Pair<Double, Double>,
     val size: Pair<Double, Double>,
-    val parentId: String
+    val parentId: String,
+    val diagramId: String
 ) : StateMachineDiagramOperation()
 
 @Serializable
 data class ModifyTransition(
     val id: String,
     val label: String,
+    val diagramId: String,
 ) : StateMachineDiagramOperation()
 
 @Serializable
 data class DeletePresentation(
     val id: String,
+    val diagramId: String,
 ) : ClassDiagramOperation()
 
 @Serializable
 data class DeleteTopic(
     val id: String,
+    val diagramId: String,
 ) : MindmapDiagramOperation()
-
-@Serializable
-data class DeleteNote(
-    val id: String,
-) : ClassDiagramOperation()
 
 @Serializable
 data class DeleteModel(

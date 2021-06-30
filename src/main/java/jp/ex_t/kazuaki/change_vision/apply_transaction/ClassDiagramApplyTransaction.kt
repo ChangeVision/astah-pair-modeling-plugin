@@ -76,9 +76,6 @@ class ClassDiagramApplyTransaction(private val entityLUT: EntityLUT) : IApplyTra
                 is DeletePresentation -> {
                     validateAndDeletePresentation(it)
                 }
-                is DeleteNote -> {
-                    validateAndDeleteNote(it)
-                }
             }
         }
     }
@@ -143,8 +140,8 @@ class ClassDiagramApplyTransaction(private val entityLUT: EntityLUT) : IApplyTra
 
     private fun validateAndCreateClassPresentation(operation: CreateClassPresentation) {
         val location = Point2D.Double(operation.location.first, operation.location.second)
-        if (operation.diagramName.isNotEmpty() && operation.classId.isNotEmpty() && operation.id.isNotEmpty()) {
-            createClassPresentation(operation.classId, location, operation.diagramName, operation.id)
+        if (operation.diagramId.isNotEmpty() && operation.classId.isNotEmpty() && operation.id.isNotEmpty()) {
+            createClassPresentation(operation.classId, location, operation.diagramId, operation.id)
         }
     }
 
@@ -152,7 +149,7 @@ class ClassDiagramApplyTransaction(private val entityLUT: EntityLUT) : IApplyTra
         if (operation.modelId.isNotEmpty()
             && operation.sourceClassId.isNotEmpty()
             && operation.targetClassId.isNotEmpty()
-            && operation.diagramName.isNotEmpty()
+            && operation.diagramId.isNotEmpty()
             && operation.id.isNotEmpty()
         ) {
             createLinkPresentation(
@@ -160,16 +157,16 @@ class ClassDiagramApplyTransaction(private val entityLUT: EntityLUT) : IApplyTra
                 operation.sourceClassId,
                 operation.targetClassId,
                 operation.linkType,
-                operation.diagramName,
+                operation.diagramId,
                 operation.id,
             )
         }
     }
 
     private fun validateAndCreateNotePresentation(operation: CreateNote) {
-        if (operation.id.isNotEmpty() && operation.diagramName.isNotEmpty()) {
+        if (operation.id.isNotEmpty() && operation.diagramId.isNotEmpty()) {
             val location = Point2D.Double(operation.location.first, operation.location.second)
-            createNotePresentation(operation.note, location, operation.size, operation.id, operation.diagramName)
+            createNotePresentation(operation.note, location, operation.size, operation.id, operation.diagramId)
         }
     }
 
@@ -205,20 +202,20 @@ class ClassDiagramApplyTransaction(private val entityLUT: EntityLUT) : IApplyTra
         val location = Point2D.Double(operation.location.first, operation.location.second)
         if (!operations.any { it is ModifyClassModel }
             && operation.id.isNotEmpty()
-            && operation.diagramName.isNotEmpty()) {
+            && operation.diagramId.isNotEmpty()) {
             modifyClassPresentation(
                 operation.id,
                 location,
                 operation.size,
-                operation.diagramName
+                operation.diagramId
             )
         }
     }
 
     private fun validateAndModifyNote(operation: ModifyNote) {
         val location = Point2D.Double(operation.location.first, operation.location.second)
-        if (operation.id.isNotEmpty() && operation.diagramName.isNotEmpty()) {
-            modifyNote(operation.id, operation.note, location, operation.size, operation.diagramName)
+        if (operation.id.isNotEmpty() && operation.diagramId.isNotEmpty()) {
+            modifyNote(operation.id, operation.note, location, operation.size, operation.diagramId)
         }
     }
 
@@ -259,14 +256,8 @@ class ClassDiagramApplyTransaction(private val entityLUT: EntityLUT) : IApplyTra
     }
 
     private fun validateAndDeletePresentation(operation: DeletePresentation) {
-        if (operation.id.isNotEmpty()) {
-            deletePresentation(operation.id)
-        }
-    }
-
-    private fun validateAndDeleteNote(operation: DeleteNote) {
-        if (operation.id.isNotEmpty()) {
-            deleteNote(operation.id)
+        if (operation.id.isNotEmpty() && operation.diagramId.isNotEmpty()) {
+            deletePresentation(operation.id, operation.diagramId)
         }
     }
 
@@ -399,7 +390,7 @@ class ClassDiagramApplyTransaction(private val entityLUT: EntityLUT) : IApplyTra
         entityLUT.entries.add(Entry(realization.id, id))
     }
 
-    private fun createClassPresentation(classId: String, location: Point2D, diagramName: String, id: String) {
+    private fun createClassPresentation(classId: String, location: Point2D, diagramId: String, id: String) {
         logger.debug("Create class presentation.")
         val classEntry = entityLUT.entries.find { it.common == classId } ?: run {
             logger.debug("$classId not found on LUT.")
@@ -410,7 +401,15 @@ class ClassDiagramApplyTransaction(private val entityLUT: EntityLUT) : IApplyTra
                 logger.debug("IClass ${classEntry.mine} not found but $classId found on LUT.")
                 return
             }
-        val diagram = projectAccessor.findElements(IDiagram::class.java, diagramName).first() as IDiagram
+        val diagramEntry = entityLUT.entries.find { it.common == diagramId } ?: run {
+            logger.debug("$diagramId not found on LUT.")
+            return
+        }
+        val diagram =
+            projectAccessor.findElements(IDiagram::class.java).find { it.id == diagramEntry.mine } as IDiagram? ?: run {
+                logger.debug("IDiagram ${diagramEntry.mine} not found but $diagramId found on LUT.")
+                return
+            }
         classDiagramEditor.diagram = diagram
         val classPresentation = classDiagramEditor.createNodePresentation(classModel, location)
         entityLUT.entries.add(Entry(classPresentation.id, id))
@@ -442,12 +441,20 @@ class ClassDiagramApplyTransaction(private val entityLUT: EntityLUT) : IApplyTra
         sourceClassId: String,
         targetClassId: String,
         linkType: LinkType,
-        diagramName: String,
+        diagramId: String,
         id: String
     ) {
         logger.debug("Create link presentation.")
 
-        val diagram = projectAccessor.findElements(IDiagram::class.java, diagramName).first() as IDiagram
+        val diagramEntry = entityLUT.entries.find { it.common == diagramId } ?: run {
+            logger.debug("$diagramId not found on LUT.")
+            return
+        }
+        val diagram =
+            projectAccessor.findElements(IDiagram::class.java).find { it.id == diagramEntry.mine } as IDiagram? ?: run {
+                logger.debug("IDiagram ${diagramEntry.mine} not found but $diagramId found on LUT.")
+                return
+            }
         classDiagramEditor.diagram = diagram
         val sourceClassEntry = entityLUT.entries.find { it.common == sourceClassId } ?: run {
             logger.debug("$sourceClassId not found on LUT.")
@@ -493,10 +500,18 @@ class ClassDiagramApplyTransaction(private val entityLUT: EntityLUT) : IApplyTra
         location: Point2D,
         size: Pair<Double, Double>,
         id: String,
-        diagramName: String
+        diagramId: String
     ) {
         logger.debug("Create note.")
-        val diagram = projectAccessor.findElements(IDiagram::class.java, diagramName).first() as IDiagram
+        val diagramEntry = entityLUT.entries.find { it.common == diagramId } ?: run {
+            logger.debug("$diagramId not found on LUT.")
+            return
+        }
+        val diagram =
+            projectAccessor.findElements(IDiagram::class.java).find { it.id == diagramEntry.mine } as IDiagram? ?: run {
+                logger.debug("IDiagram ${diagramEntry.mine} not found but $diagramId found on LUT.")
+                return
+            }
         classDiagramEditor.diagram = diagram
         val entity = classDiagramEditor.createNote(note, location)
         entity.width = size.first
@@ -538,11 +553,19 @@ class ClassDiagramApplyTransaction(private val entityLUT: EntityLUT) : IApplyTra
         id: String,
         location: Point2D,
         size: Pair<Double, Double>,
-        diagramName: String
+        diagramId: String
     ) {
         logger.debug("Modify class presentation.")
         val (width, height) = size
-        val diagram = projectAccessor.findElements(IDiagram::class.java, diagramName).first() as IDiagram
+        val diagramEntry = entityLUT.entries.find { it.common == diagramId } ?: run {
+            logger.debug("$diagramId not found on LUT.")
+            return
+        }
+        val diagram =
+            projectAccessor.findElements(IDiagram::class.java).find { it.id == diagramEntry.mine } as IDiagram? ?: run {
+                logger.debug("IDiagram ${diagramEntry.mine} not found but $diagramId found on LUT.")
+                return
+            }
         classDiagramEditor.diagram = diagram
         val entry = entityLUT.entries.find { it.common == id } ?: run {
             logger.debug("$id not found on LUT.")
@@ -562,11 +585,19 @@ class ClassDiagramApplyTransaction(private val entityLUT: EntityLUT) : IApplyTra
         note: String,
         location: Point2D,
         size: Pair<Double, Double>,
-        diagramName: String
+        diagramId: String
     ) {
         logger.debug("Resize class presentation.")
         val (width, height) = size
-        val diagram = projectAccessor.findElements(IDiagram::class.java, diagramName).first() as IDiagram
+        val diagramEntry = entityLUT.entries.find { it.common == diagramId } ?: run {
+            logger.debug("$diagramId not found on LUT.")
+            return
+        }
+        val diagram =
+            projectAccessor.findElements(IDiagram::class.java).find { it.id == diagramEntry.mine } as IDiagram? ?: run {
+                logger.debug("IDiagram ${diagramEntry.mine} not found but $diagramId found on LUT.")
+                return
+            }
         classDiagramEditor.diagram = diagram
         val entry = entityLUT.entries.find { it.common == id } ?: run {
             logger.debug("$id not found on LUT.")
@@ -661,9 +692,17 @@ class ClassDiagramApplyTransaction(private val entityLUT: EntityLUT) : IApplyTra
         attribute.typeExpression = typeExpression
     }
 
-    private fun deletePresentation(id: String) {
+    private fun deletePresentation(id: String, diagramId: String) {
         logger.debug("Delete presentation.")
-        val diagram = diagramViewManager.currentDiagram
+        val diagramEntry = entityLUT.entries.find { it.common == diagramId } ?: run {
+            logger.debug("$diagramId not found on LUT.")
+            return
+        }
+        val diagram =
+            projectAccessor.findElements(IDiagram::class.java).find { it.id == diagramEntry.mine } as IDiagram? ?: run {
+                logger.debug("IDiagram ${diagramEntry.mine} not found but $diagramId found on LUT.")
+                return
+            }
         classDiagramEditor.diagram = diagram
         val lutEntry = entityLUT.entries.find { it.common == id } ?: run {
             logger.debug("$id not found on LUT.")
@@ -676,21 +715,6 @@ class ClassDiagramApplyTransaction(private val entityLUT: EntityLUT) : IApplyTra
         }
         entityLUT.entries.remove(lutEntry)
         classDiagramEditor.deletePresentation(classPresentation)
-    }
-
-    private fun deleteNote(id: String) {
-        logger.debug("Delete note.")
-        val lutEntry = entityLUT.entries.find { it.common == id } ?: run {
-            logger.debug("$id not found on LUT.")
-            return
-        }
-        val notePresentation = diagramViewManager.currentDiagram.presentations.find { it.id == lutEntry.mine } ?: run {
-            logger.debug("Note presentation ${lutEntry.mine} not found but $id found on LUT.")
-            entityLUT.entries.remove(lutEntry)
-            return
-        }
-        entityLUT.entries.remove(lutEntry)
-        basicModelEditor.delete(notePresentation.model)
     }
 
     companion object : Logging {

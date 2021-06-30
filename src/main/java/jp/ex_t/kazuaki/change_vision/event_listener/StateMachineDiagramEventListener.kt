@@ -143,7 +143,11 @@ class StateMachineDiagramEventListener(private val entityLUT: EntityLUT, private
         val entry = Entry(entity.model.id, entity.model.id)
         entityLUT.entries.add(entry)
         logger.debug("$entity(INodePresentation, IPseudostate)")
-        return CreatePseudostate(entry.common, location, size, parentEntry.common, entity.diagram.name)
+        val diagramEntry = entityLUT.entries.find { it.mine == entity.diagram.id } ?: run {
+            logger.debug("${entity.diagram.id} not found on LUT.")
+            return null
+        }
+        return CreatePseudostate(entry.common, location, size, parentEntry.common, diagramEntry.common)
     }
 
     private fun createState(entity: INodePresentation): CreateState? {
@@ -158,7 +162,11 @@ class StateMachineDiagramEventListener(private val entityLUT: EntityLUT, private
         val entry = Entry(entity.model.id, entity.model.id)
         entityLUT.entries.add(entry)
         logger.debug("$entity(INodePresentation, IState)")
-        return CreateState(entry.common, entity.label, location, size, parentEntry.common, entity.diagram.name)
+        val diagramEntry = entityLUT.entries.find { it.mine == entity.diagram.id } ?: run {
+            logger.debug("${entity.diagram.id} not found on LUT.")
+            return null
+        }
+        return CreateState(entry.common, entity.label, location, size, parentEntry.common, diagramEntry.common)
     }
 
     private fun createFinalState(entity: INodePresentation): CreateFinalState? {
@@ -173,7 +181,11 @@ class StateMachineDiagramEventListener(private val entityLUT: EntityLUT, private
         val entry = Entry(entity.model.id, entity.model.id)
         entityLUT.entries.add(entry)
         logger.debug("$entity(INodePresentation, IFinalState)")
-        return CreateFinalState(entry.common, location, size, parentEntry.common, entity.diagram.name)
+        val diagramEntry = entityLUT.entries.find { it.mine == entity.diagram.id } ?: run {
+            logger.debug("${entity.diagram.id} not found on LUT.")
+            return null
+        }
+        return CreateFinalState(entry.common, location, size, parentEntry.common, diagramEntry.common)
     }
 
     private fun createTransition(entity: ILinkPresentation): CreateTransition? {
@@ -190,7 +202,11 @@ class StateMachineDiagramEventListener(private val entityLUT: EntityLUT, private
         val entry = Entry(entity.model.id, entity.model.id)
         entityLUT.entries.add(entry)
         logger.debug("$entity(ILinkPresentation, ITransition)")
-        return CreateTransition(entry.common, entity.label, sourceEntry.common, targetEntry.common, entity.diagram.name)
+        val diagramEntry = entityLUT.entries.find { it.mine == entity.diagram.id } ?: run {
+            logger.debug("${entity.diagram.id} not found on LUT.")
+            return null
+        }
+        return CreateTransition(entry.common, entity.label, sourceEntry.common, targetEntry.common, diagramEntry.common)
     }
 
     private fun modifyPseudostate(entity: INodePresentation): ModifyPseudostate? {
@@ -207,7 +223,11 @@ class StateMachineDiagramEventListener(private val entityLUT: EntityLUT, private
             return null
         }
         logger.debug("$entity(INodePresentation, IPseudostate)")
-        return ModifyPseudostate(entry.common, location, size, parentEntry.common)
+        val diagramEntry = entityLUT.entries.find { it.mine == entity.diagram.id } ?: run {
+            logger.debug("${entity.diagram.id} not found on LUT.")
+            return null
+        }
+        return ModifyPseudostate(entry.common, location, size, parentEntry.common, diagramEntry.common)
     }
 
     private fun modifyState(entity: INodePresentation): ModifyState? {
@@ -224,7 +244,11 @@ class StateMachineDiagramEventListener(private val entityLUT: EntityLUT, private
             return null
         }
         logger.debug("$entity(INodePresentation, IState)")
-        return ModifyState(entry.common, entity.label, location, size, parentEntry.common)
+        val diagramEntry = entityLUT.entries.find { it.mine == entity.diagram.id } ?: run {
+            logger.debug("${entity.diagram.id} not found on LUT.")
+            return null
+        }
+        return ModifyState(entry.common, entity.label, location, size, parentEntry.common, diagramEntry.common)
     }
 
     private fun modifyFinalState(entity: INodePresentation): ModifyFinalState? {
@@ -241,7 +265,11 @@ class StateMachineDiagramEventListener(private val entityLUT: EntityLUT, private
             return null
         }
         logger.debug("$entity(INodePresentation, IFinalState)")
-        return ModifyFinalState(entry.common, location, size, parentEntry.common)
+        val diagramEntry = entityLUT.entries.find { it.mine == entity.diagram.id } ?: run {
+            logger.debug("${entity.diagram.id} not found on LUT.")
+            return null
+        }
+        return ModifyFinalState(entry.common, location, size, parentEntry.common, diagramEntry.common)
     }
 
     private fun modifyTransition(entity: ILinkPresentation): ModifyTransition? {
@@ -250,7 +278,11 @@ class StateMachineDiagramEventListener(private val entityLUT: EntityLUT, private
             return null
         }
         logger.debug("$entity(ILinkPresentation, ITransition)")
-        return ModifyTransition(entry.common, entity.label)
+        val diagramEntry = entityLUT.entries.find { it.mine == entity.diagram.id } ?: run {
+            logger.debug("${entity.diagram.id} not found on LUT.")
+            return null
+        }
+        return ModifyTransition(entry.common, entity.label, diagramEntry.common)
     }
 
     private fun deletePresentation(entity: INamedElement): DeleteModel? {
