@@ -10,6 +10,8 @@ package jp.ex_t.kazuaki.change_vision.apply_transaction
 
 import com.change_vision.jude.api.inf.AstahAPI
 import com.change_vision.jude.api.inf.exception.BadTransactionException
+import com.change_vision.jude.api.inf.model.IDiagram
+import com.change_vision.jude.api.inf.model.IElement
 import com.change_vision.jude.api.inf.model.IEntity
 import jp.ex_t.kazuaki.change_vision.Logging
 import jp.ex_t.kazuaki.change_vision.logger
@@ -25,6 +27,7 @@ class CommonApplyTransaction(private val entityLUT: EntityLUT) : IApplyTransacti
         operations.forEach {
             when (it) {
                 is DeleteModel -> validateAndDeleteModel(it)
+                is ModifyDiagram -> validateAndModifyClassDiagram(it)
                 is CreateProject -> validateAndCreateProject(it)
             }
         }
@@ -33,6 +36,12 @@ class CommonApplyTransaction(private val entityLUT: EntityLUT) : IApplyTransacti
     private fun validateAndCreateProject(operation: CreateProject) {
         if (operation.name.isNotEmpty() && operation.id.isNotEmpty()) {
             createProject(operation.name, operation.id)
+        }
+    }
+
+    private fun validateAndModifyClassDiagram(operation: ModifyDiagram) {
+        if (operation.id.isNotEmpty() && operation.name.isNotEmpty() && operation.ownerId.isNotEmpty()) {
+            modifyClassDiagram(operation.id, operation.name, operation.ownerId)
         }
     }
 
@@ -48,6 +57,30 @@ class CommonApplyTransaction(private val entityLUT: EntityLUT) : IApplyTransacti
         projectAccessor.project.name = name
 
         entityLUT.entries.add(Entry(projectAccessor.project.id, id))
+    }
+
+    private fun modifyClassDiagram(id: String, name: String, ownerId: String) {
+        logger.debug("Modify diagram.")
+        val diagramEntry = entityLUT.entries.find { it.common == id } ?: run {
+            logger.debug("$id not found on LUT.")
+            return
+        }
+        val diagram =
+            projectAccessor.findElements(IDiagram::class.java)
+                .find { it.id == diagramEntry.mine } as IDiagram? ?: run {
+                logger.debug("IDiagram ${diagramEntry.mine} not found but $id found on LUT.")
+                return
+            }
+        val ownerEntry = entityLUT.entries.find { it.common == ownerId } ?: run {
+            logger.debug("$ownerId not found on LUT.")
+            return
+        }
+        val owner = projectAccessor.findElements(IElement::class.java).find { it.id == ownerEntry.mine } ?: run {
+            logger.debug("IElement ${ownerEntry.mine} not found but $ownerId found on LUT.")
+            return
+        }
+        diagram.name = name
+        basicModelEditor.changeParent(owner, diagram)
     }
 
     private fun deleteModel(id: String) {

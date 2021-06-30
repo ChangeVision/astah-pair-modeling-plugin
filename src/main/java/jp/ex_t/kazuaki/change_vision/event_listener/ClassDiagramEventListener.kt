@@ -84,6 +84,7 @@ class ClassDiagramEventListener(private val entityLUT: EntityLUT, private val mq
             val operation = Operation.values()[it.operation]
             logger.debug("Op: $operation -> ")
             when (val entity = it.entity) {
+                is IClassDiagram -> modifyClassDiagram(entity)
                 is IClass -> modifyClassModel(entity)
                 is INodePresentation -> modifyNodePresentation(entity)
                 is IOperation -> modifyOperation(entity) // break
@@ -487,6 +488,19 @@ class ClassDiagramEventListener(private val entityLUT: EntityLUT, private val mq
                 null
             }
         }
+    }
+
+    private fun modifyClassDiagram(entity: IClassDiagram): ModifyDiagram? {
+        val entry = entityLUT.entries.find { it.mine == entity.id } ?: run {
+            logger.debug("${entity.id} not found on LUT.")
+            return null
+        }
+        val ownerEntry = entityLUT.entries.find { it.mine == entity.owner.id } ?: run {
+            logger.debug("${entity.owner.id} not found on LUT.")
+            return null
+        }
+        logger.debug("${entity.name}(IClassDiagram), owner ${entity.owner}")
+        return ModifyDiagram(entity.name, entry.common, ownerEntry.common)
     }
 
     private fun modifyClassModel(entity: IClass): ModifyClassModel? {
