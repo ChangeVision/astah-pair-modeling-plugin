@@ -21,6 +21,7 @@ import kotlinx.serialization.cbor.Cbor
 import kotlinx.serialization.encodeToByteArray
 import org.eclipse.paho.client.mqttv3.MqttException
 import java.net.SocketTimeoutException
+import java.util.*
 
 class PairModeling {
     private val api = AstahAPI.getAstahAPI()
@@ -35,11 +36,13 @@ class PairModeling {
 
     @Throws(UnExpectedException::class)
     fun create(
-        topic: String,
+        topicBase: String,
         clientId: String,
         brokerAddress: String,
         brokerPortNumber: Int
     ) {
+        val commitId = getCommitId()
+        val topic = "$topicBase-$commitId"
         check(isLaunched.not()) { "Pair modeling has already launched." }
         val topicTransaction = "$topic/transaction"
 
@@ -94,11 +97,13 @@ class PairModeling {
     @ExperimentalSerializationApi
     @Throws(UnExpectedException::class)
     fun join(
-        topic: String,
+        topicBase: String,
         clientId: String,
         brokerAddress: String,
         brokerPortNumber: Int
     ) {
+        val commitId = getCommitId()
+        val topic = "$topicBase-$commitId"
         check(isLaunched.not()) { "Pair modeling has already launched." }
         // TODO: プロジェクトを開いているならば閉じる
 
@@ -158,6 +163,18 @@ class PairModeling {
         projectAccessor.removeProjectEventListener(projectChangedListener)
         logger.info("Stopped publisher.")
         isLaunched = isLaunched.not()
+    }
+
+    private fun getCommitId(): String? {
+        logger.debug("Get commit id.")
+        val props = Properties()
+        val classLoader: ClassLoader = this.javaClass.classLoader
+        logger.debug("Git properties:")
+        classLoader.getResourceAsStream("git.properties").use {
+            props.load(it)
+            props.map { logger.debug("${it.key}: ${it.value}") }
+            return props.getProperty("git.commit.id.abbrev")
+        }
     }
 
     companion object : Logging {
