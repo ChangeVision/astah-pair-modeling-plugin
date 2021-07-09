@@ -69,7 +69,6 @@ class SystemMessageReceiver(
         val createProjectTransaction = Transaction(listOf(CreateProject(project.name, project.id)))
         encodeAndPublish(createProjectTransaction)
 
-        // TODO: 2. プロジェクトの起点から一つずつ(対応している)エンティティを送る
         // diagram
         val createDiagramOperations = project.diagrams.mapNotNull {
             when (it) {
