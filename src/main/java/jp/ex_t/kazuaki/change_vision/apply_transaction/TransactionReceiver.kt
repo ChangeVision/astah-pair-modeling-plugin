@@ -23,7 +23,7 @@ import org.eclipse.paho.client.mqttv3.MqttMessage
 import javax.swing.SwingUtilities
 
 class TransactionReceiver(
-    entityLUT: EntityLUT, private val projectChangedListener: ProjectChangedListener,
+    private val entityLUT: EntityLUT, private val projectChangedListener: ProjectChangedListener,
     clientId: String
 ) :
     Receiver(clientId) {
@@ -50,6 +50,10 @@ class TransactionReceiver(
             try {
                 projectAccessor.removeProjectEventListener(projectChangedListener)
                 val selectedElements = api.viewManager.diagramViewManager.selectedPresentations
+                // Project creation
+                transaction.operations.filterIsInstance<CreateProject>().forEach {
+                    validateAndCreateProject(it)
+                }
                 logger.debug("Start transaction.")
                 transactionManager.beginTransaction()
                 commonApplyTransaction.apply(
@@ -75,6 +79,20 @@ class TransactionReceiver(
                 projectAccessor.addProjectEventListener(projectChangedListener)
             }
         }
+    }
+
+    private fun validateAndCreateProject(operation: CreateProject) {
+        if (operation.name.isNotEmpty() && operation.id.isNotEmpty()) {
+            createProject(operation.name, operation.id)
+        }
+    }
+
+    private fun createProject(name: String, id: String) {
+        logger.debug("Create project.")
+        projectAccessor.create()
+        projectAccessor.project.name = name
+
+        entityLUT.entries.add(Entry(projectAccessor.project.id, id))
     }
 
     companion object : Logging {

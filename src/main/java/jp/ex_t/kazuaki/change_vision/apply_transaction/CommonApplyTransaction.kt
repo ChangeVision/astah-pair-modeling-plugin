@@ -15,7 +15,10 @@ import com.change_vision.jude.api.inf.model.IElement
 import com.change_vision.jude.api.inf.model.IEntity
 import jp.ex_t.kazuaki.change_vision.Logging
 import jp.ex_t.kazuaki.change_vision.logger
-import jp.ex_t.kazuaki.change_vision.network.*
+import jp.ex_t.kazuaki.change_vision.network.CommonOperation
+import jp.ex_t.kazuaki.change_vision.network.DeleteModel
+import jp.ex_t.kazuaki.change_vision.network.EntityLUT
+import jp.ex_t.kazuaki.change_vision.network.ModifyDiagram
 
 class CommonApplyTransaction(private val entityLUT: EntityLUT) : IApplyTransaction<CommonOperation> {
     private val api = AstahAPI.getAstahAPI()
@@ -28,14 +31,7 @@ class CommonApplyTransaction(private val entityLUT: EntityLUT) : IApplyTransacti
             when (it) {
                 is DeleteModel -> validateAndDeleteModel(it)
                 is ModifyDiagram -> validateAndModifyClassDiagram(it)
-                is CreateProject -> validateAndCreateProject(it)
             }
-        }
-    }
-
-    private fun validateAndCreateProject(operation: CreateProject) {
-        if (operation.name.isNotEmpty() && operation.id.isNotEmpty()) {
-            createProject(operation.name, operation.id)
         }
     }
 
@@ -49,14 +45,6 @@ class CommonApplyTransaction(private val entityLUT: EntityLUT) : IApplyTransacti
         if (operation.id.isNotEmpty()) {
             deleteModel(operation.id)
         }
-    }
-
-    private fun createProject(name: String, id: String) {
-        logger.debug("Create project.")
-        projectAccessor.create()
-        projectAccessor.project.name = name
-
-        entityLUT.entries.add(Entry(projectAccessor.project.id, id))
     }
 
     private fun modifyClassDiagram(id: String, name: String, ownerId: String) {
