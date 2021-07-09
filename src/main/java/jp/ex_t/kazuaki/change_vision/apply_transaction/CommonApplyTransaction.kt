@@ -10,9 +10,7 @@ package jp.ex_t.kazuaki.change_vision.apply_transaction
 
 import com.change_vision.jude.api.inf.AstahAPI
 import com.change_vision.jude.api.inf.exception.BadTransactionException
-import com.change_vision.jude.api.inf.model.IDiagram
-import com.change_vision.jude.api.inf.model.IElement
-import com.change_vision.jude.api.inf.model.IEntity
+import com.change_vision.jude.api.inf.model.*
 import jp.ex_t.kazuaki.change_vision.Logging
 import jp.ex_t.kazuaki.change_vision.logger
 import jp.ex_t.kazuaki.change_vision.network.CommonOperation
@@ -68,8 +66,11 @@ class CommonApplyTransaction(private val entityLUT: EntityLUT) : IApplyTransacti
             return
         }
         diagram.name = name
-        // TODO: ステートマシン図で動作しない原因を調査する
-//        basicModelEditor.changeParent(owner, diagram)
+        // TODO: アクティビティ図、データフロー図、ステートマシン図が不具合で変更できないため除外する
+        if (diagram is IActivityDiagram || diagram is IDataFlowDiagram || diagram is IStateMachineDiagram) {
+            logger.debug("IActivityDiagram, IDataFlowDiagram and IStateMachineDiagram cannot change parent.")
+        }
+        basicModelEditor.changeParent(owner, diagram)
     }
 
     private fun deleteModel(id: String) {
