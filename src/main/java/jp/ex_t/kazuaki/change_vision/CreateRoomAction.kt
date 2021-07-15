@@ -11,9 +11,9 @@ package jp.ex_t.kazuaki.change_vision
 import com.change_vision.jude.api.inf.ui.IPluginActionDelegate
 import com.change_vision.jude.api.inf.ui.IPluginActionDelegate.UnExpectedException
 import com.change_vision.jude.api.inf.ui.IWindow
+import java.awt.FlowLayout
 import java.util.*
-import javax.swing.JOptionPane
-import javax.swing.JTextArea
+import javax.swing.*
 import kotlin.io.path.ExperimentalPathApi
 
 class CreateRoomAction : IPluginActionDelegate {
@@ -29,14 +29,30 @@ class CreateRoomAction : IPluginActionDelegate {
                 val config = Config()
                 config.load()
                 val topic = generatePassword()
-                val jTextArea = JTextArea(
-                    "Your AIKOTOBA is\n" +
-                            topic + "\n" +
-                            "Tell collaborator this AIKOTOBA and enjoy pair modeling!"
-                )
+
+                val dialog = JDialog(window.parent, "AIKOTOBA")
+                val panel = JPanel()
+                panel.layout = BoxLayout(panel, BoxLayout.Y_AXIS)
+                val confirmButton = JButton("OK")
+                confirmButton.addActionListener { dialog.dispose() }
+                val confirmButtonPanel = JPanel(FlowLayout(FlowLayout.RIGHT))
+                confirmButtonPanel.add(confirmButton)
+                val upperText = JLabel("Your AIKOTOBA is")
+                val centerText = JTextField(topic)
+                centerText.isEditable = false
+                val lowerText = JLabel("Tell collaborator this AIKOTOBA and enjoy pair modeling!")
+                panel.add(upperText)
+                panel.add(centerText)
+                panel.add(lowerText)
+                panel.add(confirmButtonPanel)
+                dialog.isModal = true
+                dialog.contentPane.add(panel)
+                dialog.isResizable = false
+                dialog.pack()
+                dialog.setLocationRelativeTo(window.parent)
                 val clientId = UUID.randomUUID().toString()
                 pairModeling.create(topic, clientId, config.conf.brokerAddress, config.conf.brokerPortNumber)
-                JOptionPane.showMessageDialog(window.parent, jTextArea, "AIKOTOBA", JOptionPane.INFORMATION_MESSAGE)
+                dialog.isVisible = true
                 menuTextChanger.setAfterText(menuId)
                 menuTextChanger.disable(menuId)
             } else {
