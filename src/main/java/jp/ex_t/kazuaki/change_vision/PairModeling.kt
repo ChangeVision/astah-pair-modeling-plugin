@@ -100,7 +100,7 @@ class PairModeling {
     }
 
     @ExperimentalSerializationApi
-    @Throws(UnExpectedException::class)
+    @Throws(TimeoutCancellationException::class, CancellationException::class)
     suspend fun join(
         topicBase: String,
         clientId: String,
@@ -179,7 +179,7 @@ class PairModeling {
         } catch (e: TimeoutCancellationException) {
             logger.error("Timeout!!!")
             endProcess()
-            throw UnExpectedException()
+            throw e
         } catch (e: CancellationException) {
             logger.debug("Canceled by coroutine.")
             endProcess()

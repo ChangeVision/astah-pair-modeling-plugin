@@ -17,6 +17,7 @@ import java.util.*
 import javax.swing.JOptionPane
 import javax.swing.ProgressMonitor
 import kotlin.io.path.ExperimentalPathApi
+import kotlin.math.min
 
 class JoinRoomAction : IPluginActionDelegate {
     private val pairModeling: PairModeling = PairModeling.getInstance()
@@ -40,34 +41,42 @@ class JoinRoomAction : IPluginActionDelegate {
                 progressMonitor.setProgress(0)
                 val scope = CoroutineScope(Dispatchers.Default)
                 val job = scope.async {
-                    pairModeling.join(
-                        topic,
-                        clientId,
-                        config.conf.brokerAddress,
-                        config.conf.brokerPortNumber
-                    )
+                    try {
+                        pairModeling.join(
+                            topic,
+                            clientId,
+                            config.conf.brokerAddress,
+                            config.conf.brokerPortNumber
+                        )
+                    } catch (e: TimeoutCancellationException) {
+                        progressMonitor.close()
+                        logger.debug("Canceled by system.")
+                        JOptionPane.showMessageDialog(
+                            window.parent,
+                            "No response to the connection request.\nConfirm the room is exist.",
+                            "Room not found",
+                            JOptionPane.ERROR_MESSAGE
+                        )
+                    }
                 }
                 scope.launch(Dispatchers.Swing) {
-                    for (i in 0..100) {
-                        if (job.isCancelled) {
-                            logger.debug("Canceled by system.")
-                            break
-                        }
+                    for (i in 0..Int.MAX_VALUE) {
                         if (job.isCompleted) {
+                            progressMonitor.close()
                             menuTextChanger.setAfterText(menuId)
                             menuTextChanger.disable(menuId)
                             break
                         }
                         if (progressMonitor.isCanceled) {
+                            progressMonitor.close()
                             logger.debug("Canceled by progress bar button.")
                             job.cancel()
                             break
                         }
                         delay(200L)
-                        progressMonitor.setProgress(i)
+                        progressMonitor.setProgress(min(100, i))
                     }
                 }
-                progressMonitor.close()
             } else {
                 pairModeling.end()
                 menuTextChanger.setBeforeText(menuId)
