@@ -11,7 +11,8 @@ package jp.ex_t.kazuaki.change_vision
 import com.change_vision.jude.api.inf.ui.IPluginActionDelegate
 import com.change_vision.jude.api.inf.ui.IPluginActionDelegate.UnExpectedException
 import com.change_vision.jude.api.inf.ui.IWindow
-import java.awt.FlowLayout
+import java.awt.Dialog
+import java.awt.Window
 import java.util.*
 import javax.swing.*
 import kotlin.io.path.ExperimentalPathApi
@@ -30,29 +31,11 @@ class CreateRoomAction : IPluginActionDelegate {
                 config.load()
                 val topic = generatePassword()
 
-                val dialog = JDialog(window.parent, "AIKOTOBA")
-                val panel = JPanel()
-                panel.layout = BoxLayout(panel, BoxLayout.Y_AXIS)
-                val confirmButton = JButton("OK")
-                confirmButton.addActionListener { dialog.dispose() }
-                val confirmButtonPanel = JPanel(FlowLayout(FlowLayout.RIGHT))
-                confirmButtonPanel.add(confirmButton)
-                val upperText = JLabel("Your AIKOTOBA is")
-                val centerText = JTextField(topic)
-                centerText.isEditable = false
-                val lowerText = JLabel("Tell collaborator this AIKOTOBA and enjoy pair modeling!")
-                panel.add(upperText)
-                panel.add(centerText)
-                panel.add(lowerText)
-                panel.add(confirmButtonPanel)
-                dialog.isModal = true
-                dialog.contentPane.add(panel)
-                dialog.isResizable = false
-                dialog.pack()
-                dialog.setLocationRelativeTo(window.parent)
+                val confirmDialog = ConfirmDialog(window.parent, "AIKOTOBA", Dialog.ModalityType.DOCUMENT_MODAL, topic)
+
                 val clientId = UUID.randomUUID().toString()
                 pairModeling.create(topic, clientId, config.conf.brokerAddress, config.conf.brokerPortNumber)
-                dialog.isVisible = true
+                confirmDialog.isVisible = true
                 menuTextChanger.setAfterText(menuId)
                 menuTextChanger.disable(menuId)
             } else {
@@ -74,5 +57,39 @@ class CreateRoomAction : IPluginActionDelegate {
 
     companion object : Logging {
         private val logger = logger()
+    }
+}
+
+private class ConfirmDialog(owner: Window, title: String, modal: ModalityType, topic: String) :
+    JDialog(owner, title, modal) {
+    init {
+        val dialogPanel = getDialogPanel(topic)
+        contentPane.add(dialogPanel)
+        isResizable = false
+        pack()
+        setLocationRelativeTo(parent)
+    }
+
+    private fun getConfirmButtonPanel(): JPanel {
+        val confirmButtonPanel = getConfirmButtonPanel()
+        val confirmButton = JButton("OK")
+        confirmButton.addActionListener { dispose() }
+        confirmButtonPanel.add(confirmButton)
+        return confirmButtonPanel
+    }
+
+    private fun getDialogPanel(topic: String): JPanel {
+        val panel = JPanel()
+        panel.layout = BoxLayout(panel, BoxLayout.Y_AXIS)
+        val confirmButtonPanel = getConfirmButtonPanel()
+        val upperText = JLabel("Your AIKOTOBA is")
+        val centerText = JTextField(topic)
+        centerText.isEditable = false
+        val lowerText = JLabel("Tell collaborator this AIKOTOBA and enjoy pair modeling!")
+        panel.add(upperText)
+        panel.add(centerText)
+        panel.add(lowerText)
+        panel.add(confirmButtonPanel)
+        return panel
     }
 }
