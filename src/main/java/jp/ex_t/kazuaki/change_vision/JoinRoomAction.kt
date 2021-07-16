@@ -13,7 +13,10 @@ import com.change_vision.jude.api.inf.ui.IWindow
 import kotlinx.coroutines.*
 import kotlinx.coroutines.swing.Swing
 import kotlinx.serialization.ExperimentalSerializationApi
-import java.awt.BorderLayout
+import java.awt.Dialog
+import java.awt.FlowLayout
+import java.awt.Window
+import java.awt.event.ActionListener
 import java.util.*
 import javax.swing.*
 import kotlin.io.path.ExperimentalPathApi
@@ -35,13 +38,8 @@ class JoinRoomAction : IPluginActionDelegate {
                 val topic = JOptionPane.showInputDialog(window.parent, "Input AIKOTOBA which host tell you.") ?: return
                 val clientId = UUID.randomUUID().toString()
 
-                val dialog = JDialog(window.parent, "Connecting...")
-                dialog.isModal = true
-                val progressBar = JProgressBar(0, 100)
-                progressBar.value = 0
-                progressBar.isIndeterminate = true
-                val panel = JPanel(BorderLayout())
-                panel.add(progressBar, BorderLayout.NORTH)
+                val dialog =
+                    ProgressBarDialog(window.parent, "Connecting...", Dialog.ModalityType.DOCUMENT_MODAL, 0, 100, true)
 
                 val scope = CoroutineScope(Dispatchers.Default)
                 val job = scope.async {
@@ -64,22 +62,19 @@ class JoinRoomAction : IPluginActionDelegate {
                     }
                 }
 
-                val cancelButton = JButton("Cancel")
-                cancelButton.addActionListener {
+                dialog.addCancelAction {
                     dialog.dispose()
                     logger.debug("Canceled by cancel button.")
                     job.cancel()
                 }
-                panel.add(cancelButton, BorderLayout.EAST)
-                dialog.contentPane.add(panel)
-                dialog.pack()
-                dialog.setLocationRelativeTo(window.parent)
+
                 scope.launch(Dispatchers.Swing) {
                     async {
                         dialog.isVisible = true
                     }
                     for (i in 0..Int.MAX_VALUE) {
-                        if (job.isCompleted) {
+                        if (job.isCompleted && job.isCancelled.not()) {
+                            logger.debug("Job completed.")
                             menuTextChanger.setAfterText(menuId)
                             menuTextChanger.disable(menuId)
                             dialog.dispose()
@@ -98,6 +93,52 @@ class JoinRoomAction : IPluginActionDelegate {
             JOptionPane.showMessageDialog(window.parent, message, "Alert", JOptionPane.ERROR_MESSAGE)
             logger.error(message, e)
         }
+    }
+
+    companion object : Logging {
+        private val logger = logger()
+    }
+}
+
+private class ProgressBarDialog(
+    owner: Window,
+    title: String,
+    modalityType: ModalityType,
+    progressMin: Int,
+    progressMax: Int,
+    isIndeterminate: Boolean
+) : JDialog(owner, title, modalityType) {
+    private lateinit var cancelButton: JButton
+
+    init {
+        isResizable = false
+        val panel = JPanel()
+        panel.layout = BoxLayout(panel, BoxLayout.Y_AXIS)
+        val progressBar = getProgressBar(progressMin, progressMax, isIndeterminate)
+        val cancelButtonPanel = getCancelButtonPanel()
+        panel.add(progressBar)
+        panel.add(cancelButtonPanel)
+        contentPane.add(panel)
+        pack()
+        setLocationRelativeTo(owner)
+    }
+
+    private fun getProgressBar(min: Int, max: Int, isIndeterminate: Boolean): JProgressBar {
+        val progressBar = JProgressBar(min, max)
+        progressBar.value = min
+        progressBar.isIndeterminate = isIndeterminate
+        return progressBar
+    }
+
+    private fun getCancelButtonPanel(): JPanel {
+        val cancelButtonPanel = JPanel(FlowLayout(FlowLayout.RIGHT))
+        cancelButton = JButton("Cancel")
+        cancelButtonPanel.add(cancelButton)
+        return cancelButtonPanel
+    }
+
+    fun addCancelAction(l: ActionListener) {
+        cancelButton.addActionListener(l)
     }
 
     companion object : Logging {
