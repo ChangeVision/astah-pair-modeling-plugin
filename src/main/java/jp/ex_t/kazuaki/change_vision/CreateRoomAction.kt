@@ -12,6 +12,7 @@ import com.change_vision.jude.api.inf.ui.IPluginActionDelegate
 import com.change_vision.jude.api.inf.ui.IPluginActionDelegate.UnExpectedException
 import com.change_vision.jude.api.inf.ui.IWindow
 import java.awt.Dialog
+import java.awt.FlowLayout
 import java.awt.Window
 import java.util.*
 import javax.swing.*
@@ -71,7 +72,7 @@ private class ConfirmDialog(owner: Window, title: String, modal: ModalityType, t
     }
 
     private fun getConfirmButtonPanel(): JPanel {
-        val confirmButtonPanel = getConfirmButtonPanel()
+        val confirmButtonPanel = JPanel(FlowLayout(FlowLayout.RIGHT))
         val confirmButton = JButton("OK")
         confirmButton.addActionListener { dispose() }
         confirmButtonPanel.add(confirmButton)
