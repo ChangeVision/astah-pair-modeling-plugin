@@ -65,6 +65,7 @@ class ConfigurationDialog(owner: Window, title: String, modalityType: ModalityTy
     private lateinit var portField: JTextField
 
     init {
+        isResizable = false
         val titledBorder = BorderFactory.createTitledBorder("MQTT broker")
         val mqttBrokerPanel = JPanel()
         mqttBrokerPanel.border = titledBorder
