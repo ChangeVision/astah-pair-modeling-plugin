@@ -36,14 +36,14 @@ class ConfigurationAction : IPluginActionDelegate {
             val port = dialog.getPort()
             if (!config.setBrokerAddress(address)) {
                 JOptionPane.showMessageDialog(
-                    window.parent,
+                    dialog,
                     "Broker server address invalid.\nInput correctly broker server address.",
                     "Broker server address invalid.",
                     JOptionPane.WARNING_MESSAGE
                 )
             } else if (!config.setBrokerPortNumber(port)) {
                 JOptionPane.showMessageDialog(
-                    window.parent,
+                    dialog,
                     "Broker server port number invalid.\nInput correctly broker server port number.",
                     "Broker server port number invalid.",
                     JOptionPane.WARNING_MESSAGE
