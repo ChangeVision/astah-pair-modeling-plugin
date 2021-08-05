@@ -16,9 +16,9 @@ import jp.ex_t.kazuaki.change_vision.event_listener.ProjectChangedListener
 import jp.ex_t.kazuaki.change_vision.network.EntityLUT
 import jp.ex_t.kazuaki.change_vision.network.MqttPublisher
 import jp.ex_t.kazuaki.change_vision.network.MqttSubscriber
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.cbor.Cbor
@@ -100,8 +100,8 @@ class PairModeling {
     }
 
     @ExperimentalSerializationApi
-    @Throws(UnExpectedException::class)
-    fun join(
+    @Throws(TimeoutCancellationException::class, CancellationException::class)
+    suspend fun join(
         topicBase: String,
         clientId: String,
         brokerAddress: String,
@@ -166,22 +166,24 @@ class PairModeling {
             MqttPublisher(brokerAddress, brokerPortNumber, topicSystemMessagePublisher, clientId)
         systemMessageMqttPublisher.publish(Cbor.encodeToByteArray("projectsync"))
         try {
-            runBlocking {
-                withTimeout(20000L) {
-                    for (i in 1..21) {
-                        if (isStartSync) {
-                            break
-                        }
-                        logger.debug("Wait ${i + 1}")
-                        logger.info("Waiting...")
-                        delay(1000L)
+            withTimeout(20000L) {
+                for (i in 0..20) {
+                    if (isStartSync) {
+                        break
                     }
+                    logger.debug("Wait @${20 - i}")
+                    logger.info("Waiting...")
+                    delay(1000L)
                 }
             }
         } catch (e: TimeoutCancellationException) {
             logger.error("Timeout!!!")
             endProcess()
-            throw UnExpectedException()
+            throw e
+        } catch (e: CancellationException) {
+            logger.debug("Canceled by coroutine.")
+            endProcess()
+            throw e
         }
         logger.debug("Published: $brokerAddress:$topicSystemMessagePublisher ($clientId)")
         logger.info("Launched project sync publisher.")
