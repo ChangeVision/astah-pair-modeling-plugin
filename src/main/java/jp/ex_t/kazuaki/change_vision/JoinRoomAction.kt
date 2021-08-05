@@ -42,23 +42,39 @@ class JoinRoomAction : IPluginActionDelegate {
                     ProgressBarDialog(window.parent, "Connecting...", Dialog.ModalityType.DOCUMENT_MODAL, 0, 100, true)
 
                 val scope = CoroutineScope(Dispatchers.Default)
-                val job = scope.async {
-                    try {
-                        pairModeling.join(
-                            topic,
-                            clientId,
-                            config.conf.brokerAddress,
-                            config.conf.brokerPortNumber
-                        )
-                    } catch (e: TimeoutCancellationException) {
-                        dialog.dispose()
-                        logger.debug("Canceled by system.")
+                val exceptionHandler = CoroutineExceptionHandler { _, e ->
+                    logger.error("Join exception", e)
+                    dialog.dispose()
+                    logger.debug("Canceled by system.")
+                    if (e is IllegalStateException) {
                         JOptionPane.showMessageDialog(
                             window.parent,
-                            "No response to the connection request.\nConfirm the room is exist.",
-                            "Room not found",
+                            "Project is modified.\nSave or close this project and then retry.",
+                            "Project is modified.",
                             JOptionPane.ERROR_MESSAGE
                         )
+                    }
+                }
+                val job = scope.launch(exceptionHandler) {
+                    async {
+                        try {
+                            pairModeling.join(
+                                topic,
+                                clientId,
+                                config.conf.brokerAddress,
+                                config.conf.brokerPortNumber
+                            )
+                        } catch (e: TimeoutCancellationException) {
+                            dialog.dispose()
+                            logger.debug("Canceled by system.")
+                            logger.error(e.toString())
+                            JOptionPane.showMessageDialog(
+                                window.parent,
+                                "No response to the connection request.\nConfirm the room is exist.",
+                                "Room not found",
+                                JOptionPane.ERROR_MESSAGE
+                            )
+                        }
                     }
                 }
 
@@ -73,11 +89,14 @@ class JoinRoomAction : IPluginActionDelegate {
                         dialog.isVisible = true
                     }
                     for (i in 0..Int.MAX_VALUE) {
-                        if (job.isCompleted && job.isCancelled.not()) {
+                        if (job.isCompleted && job.isCancelled.not() && dialog.isCanceled.not()) {
                             logger.debug("Job completed.")
                             menuTextChanger.setAfterText(menuId)
                             menuTextChanger.disable(menuId)
                             dialog.dispose()
+                            break
+                        }
+                        if (job.isCancelled || dialog.isCanceled) {
                             break
                         }
                         delay(200L)
@@ -109,6 +128,8 @@ private class ProgressBarDialog(
     isIndeterminate: Boolean
 ) : JDialog(owner, title, modalityType) {
     private lateinit var cancelButton: JButton
+    var isCanceled = false
+        private set
 
     init {
         isResizable = false
@@ -133,6 +154,9 @@ private class ProgressBarDialog(
     private fun getCancelButtonPanel(): JPanel {
         val cancelButtonPanel = JPanel(FlowLayout(FlowLayout.RIGHT))
         cancelButton = JButton("Cancel")
+        cancelButton.addActionListener {
+            isCanceled = true
+        }
         cancelButtonPanel.add(cancelButton)
         return cancelButtonPanel
     }

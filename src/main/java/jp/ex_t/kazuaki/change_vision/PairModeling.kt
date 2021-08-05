@@ -110,7 +110,12 @@ class PairModeling {
         val commitId = getCommitId()
         val topic = "$topicBase-$commitId"
         check(isLaunched.not()) { "Pair modeling has already launched." }
-        // TODO: プロジェクトを開いているならば閉じる
+
+        if (projectAccessor.hasProject()) {
+            logger.debug("Already project is opened.")
+            check(projectAccessor.isProjectModified.not()) { "Project is already modified." }
+            projectAccessor.close()
+        }
 
         val topicTransaction = "$topic/transaction"
         val entityLUT = EntityLUT()
