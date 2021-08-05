@@ -10,6 +10,7 @@ package jp.ex_t.kazuaki.change_vision
 
 import com.change_vision.jude.api.inf.ui.IPluginActionDelegate
 import com.change_vision.jude.api.inf.ui.IWindow
+import kotlinx.serialization.ExperimentalSerializationApi
 import java.util.*
 import javax.swing.JOptionPane
 import kotlin.io.path.ExperimentalPathApi
@@ -19,6 +20,7 @@ class JoinRoomAction : IPluginActionDelegate {
     private val menuTextChanger = MenuTextChanger.getInstance()
     private val menuId = "jp.ex_t.kazuaki.change_vision.JoinRoomAction"
 
+    @ExperimentalSerializationApi
     @ExperimentalPathApi
     @Throws(IPluginActionDelegate.UnExpectedException::class)
     override fun run(window: IWindow) {

@@ -1,5 +1,5 @@
 /*
- * ProjectSyncReceiver.kt - pair-modeling
+ * SystemMessageReceiver.kt - pair-modeling
  * Copyright © 2021 HyodaKazuaki.
  *
  * Released under the MIT License.
@@ -13,6 +13,7 @@ import com.change_vision.jude.api.inf.model.*
 import com.change_vision.jude.api.inf.presentation.ILinkPresentation
 import com.change_vision.jude.api.inf.presentation.INodePresentation
 import jp.ex_t.kazuaki.change_vision.Logging
+import jp.ex_t.kazuaki.change_vision.PairModeling
 import jp.ex_t.kazuaki.change_vision.logger
 import jp.ex_t.kazuaki.change_vision.network.*
 import kotlinx.serialization.ExperimentalSerializationApi
@@ -22,10 +23,13 @@ import kotlinx.serialization.encodeToByteArray
 import org.eclipse.paho.client.mqttv3.MqttMessage
 import java.util.*
 
-class ProjectSyncReceiver(
+class SystemMessageReceiver(
     private val entityLUT: EntityLUT,
     private val mqttPublisher: MqttPublisher,
-    clientId: String
+    private val clientId: String,
+    private val topic: String,
+    private val brokerAddress: String,
+    private val brokerPortNumber: Int,
 ) :
     Receiver(clientId) {
     private val api = AstahAPI.getAstahAPI()
@@ -39,18 +43,32 @@ class ProjectSyncReceiver(
         if (receivedMessage == "projectsync") {
             sync()
         }
+        if (receivedMessage == "startsync") {
+            logger.debug("Start sync")
+            val pairModeling = PairModeling.getInstance()
+            // TODO: もっと安全なフラグの立て方を考える
+            pairModeling.isStartSync = true
+        }
     }
 
     @ExperimentalSerializationApi
     private fun sync() {
         logger.debug("Project Sync")
+        logger.debug("Launching project sync publisher...")
+        val topicSystemMessage = "$topic/system"
+        val topicSystemMessagePublisher = "$topicSystemMessage/$clientId"
+        val systemMessageMqttPublisher =
+            MqttPublisher(brokerAddress, brokerPortNumber, topicSystemMessagePublisher, clientId)
+        systemMessageMqttPublisher.publish(Cbor.encodeToByteArray("startsync"))
+        logger.debug("Published: $brokerAddress:$topicSystemMessagePublisher ($clientId)")
+        logger.debug("Sent publish")
+
         val project = projectAccessor.project
 
         entityLUT.entries.add(Entry(project.id, project.id))
         val createProjectTransaction = Transaction(listOf(CreateProject(project.name, project.id)))
         encodeAndPublish(createProjectTransaction)
 
-        // TODO: 2. プロジェクトの起点から一つずつ(対応している)エンティティを送る
         // diagram
         val createDiagramOperations = project.diagrams.mapNotNull {
             when (it) {
