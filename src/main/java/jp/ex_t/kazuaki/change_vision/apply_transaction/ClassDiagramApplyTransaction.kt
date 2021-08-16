@@ -424,7 +424,6 @@ class ClassDiagramApplyTransaction(private val entityTable: EntityTable) : IAppl
         entityTable.entries.add(Entry(classPresentation.id, id))
     }
 
-    @Throws(ClassNotFoundException::class)
     private fun searchModel(linkType: LinkType, modelId: String): IElement {
         when (linkType) {
             LinkType.Association -> {

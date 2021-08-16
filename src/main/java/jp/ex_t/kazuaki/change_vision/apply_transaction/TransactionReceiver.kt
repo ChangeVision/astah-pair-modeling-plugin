@@ -42,7 +42,6 @@ class TransactionReceiver(
         transact(receivedMessage)
     }
 
-    @Throws(UnExpectedException::class)
     private fun transact(transaction: Transaction) {
         SwingUtilities.invokeLater {
             logger.debug("Received: $transaction")
