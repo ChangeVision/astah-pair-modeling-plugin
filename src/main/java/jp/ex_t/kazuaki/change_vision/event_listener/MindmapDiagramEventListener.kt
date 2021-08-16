@@ -18,7 +18,7 @@ import jp.ex_t.kazuaki.change_vision.logger
 import jp.ex_t.kazuaki.change_vision.network.*
 import kotlinx.serialization.ExperimentalSerializationApi
 
-class MindmapDiagramEventListener(private val entityLUT: EntityLUT, private val mqttPublisher: MqttPublisher) :
+class MindmapDiagramEventListener(private val entityTable: EntityTable, private val mqttPublisher: MqttPublisher) :
     IEventListener {
     @ExperimentalSerializationApi
     override fun process(projectEditUnit: List<ProjectEditUnit>) {
@@ -116,17 +116,17 @@ class MindmapDiagramEventListener(private val entityLUT: EntityLUT, private val 
         val owner = entity.owner as INamedElement
         val rootTopic = entity.root
         logger.debug("${entity.name}(IMindMapDiagram)")
-        entityLUT.entries.add(Entry(entity.id, entity.id))
-        entityLUT.entries.add(Entry(rootTopic.id, rootTopic.id))
+        entityTable.entries.add(Entry(entity.id, entity.id))
+        entityTable.entries.add(Entry(rootTopic.id, rootTopic.id))
         return CreateMindmapDiagram(entity.name, owner.name, rootTopic.id, entity.id)
     }
 
     private fun createFloatingTopic(entity: INodePresentation): CreateFloatingTopic? {
         val location = Pair(entity.location.x, entity.location.y)
         val size = Pair(entity.width, entity.height)
-        entityLUT.entries.add(Entry(entity.id, entity.id))
+        entityTable.entries.add(Entry(entity.id, entity.id))
         logger.debug("${entity.label}(INodePresentation, FloatingTopic)")
-        val diagramEntry = entityLUT.entries.find { it.mine == entity.diagram.id } ?: run {
+        val diagramEntry = entityTable.entries.find { it.mine == entity.diagram.id } ?: run {
             logger.debug("${entity.diagram.id} not found on LUT.")
             return null
         }
@@ -134,13 +134,13 @@ class MindmapDiagramEventListener(private val entityLUT: EntityLUT, private val 
     }
 
     private fun createTopic(entity: INodePresentation): CreateTopic? {
-        entityLUT.entries.add(Entry(entity.id, entity.id))
-        val parentEntry = entityLUT.entries.find { it.mine == entity.parent.id } ?: run {
+        entityTable.entries.add(Entry(entity.id, entity.id))
+        val parentEntry = entityTable.entries.find { it.mine == entity.parent.id } ?: run {
             logger.debug("${entity.parent.id} not found on LUT.")
             return null
         }
         logger.debug("${entity.parent.label}(INodePresentation) - ${entity.label}(INodePresentation)")
-        val diagramEntry = entityLUT.entries.find { it.mine == entity.diagram.id } ?: run {
+        val diagramEntry = entityTable.entries.find { it.mine == entity.diagram.id } ?: run {
             logger.debug("${entity.diagram.id} not found on LUT.")
             return null
         }
@@ -148,11 +148,11 @@ class MindmapDiagramEventListener(private val entityLUT: EntityLUT, private val 
     }
 
     private fun modifyMindMapDiagram(entity: IMindMapDiagram): ModifyDiagram? {
-        val entry = entityLUT.entries.find { it.mine == entity.id } ?: run {
+        val entry = entityTable.entries.find { it.mine == entity.id } ?: run {
             logger.debug("${entity.id} not found on LUT.")
             return null
         }
-        val ownerEntry = entityLUT.entries.find { it.mine == entity.owner.id } ?: run {
+        val ownerEntry = entityTable.entries.find { it.mine == entity.owner.id } ?: run {
             logger.debug("${entity.owner.id} not found on LUT.")
             return null
         }
@@ -173,18 +173,21 @@ class MindmapDiagramEventListener(private val entityLUT: EntityLUT, private val 
                         )
                     } at ${entity.location}) @MindmapDiagram${diagram.name}"
                 )
-                val entry = entityLUT.entries.find { it.mine == entity.id } ?: run {
+                val entry = entityTable.entries.find { it.mine == entity.id } ?: run {
                     logger.debug("${entity.id} not found on LUT.")
                     return null
                 }
                 // Root topic and floating topic have no parent, so parent entry is empty. (It means parent id is also empty.)
                 val parentEntry =
-                    if (entity.parent == null) Entry("", "") else entityLUT.entries.find { it.mine == entity.parent.id }
+                    if (entity.parent == null) Entry(
+                        "",
+                        ""
+                    ) else entityTable.entries.find { it.mine == entity.parent.id }
                         ?: run {
                             logger.debug("${entity.parent.id} not found on LUT.")
                             return null
                         }
-                val diagramEntry = entityLUT.entries.find { it.mine == entity.diagram.id } ?: run {
+                val diagramEntry = entityTable.entries.find { it.mine == entity.diagram.id } ?: run {
                     logger.debug("${entity.diagram.id} not found on LUT.")
                     return null
                 }
@@ -199,11 +202,11 @@ class MindmapDiagramEventListener(private val entityLUT: EntityLUT, private val 
 
     private fun deleteMindMapDiagram(entity: IMindMapDiagram): DeleteMindmapDiagram? {
         return run {
-            val lut = entityLUT.entries.find { it.mine == entity.id } ?: run {
+            val lut = entityTable.entries.find { it.mine == entity.id } ?: run {
                 logger.debug("${entity.id} not found on LUT.")
                 return null
             }
-            entityLUT.entries.remove(lut)
+            entityTable.entries.remove(lut)
             logger.debug("${entity}(IMindMapDiagram)")
             DeleteMindmapDiagram(lut.common)
         }
@@ -211,13 +214,13 @@ class MindmapDiagramEventListener(private val entityLUT: EntityLUT, private val 
 
     private fun deleteTopic(entity: INodePresentation): DeleteTopic? {
         return run {
-            val lut = entityLUT.entries.find { it.mine == entity.id } ?: run {
+            val lut = entityTable.entries.find { it.mine == entity.id } ?: run {
                 logger.debug("${entity.id} not found on LUT.")
                 return null
             }
-            entityLUT.entries.remove(lut)
+            entityTable.entries.remove(lut)
             logger.debug("${entity}(INodePresentation) @MindmapDiagram")
-            val diagramEntry = entityLUT.entries.find { it.mine == entity.diagram.id } ?: run {
+            val diagramEntry = entityTable.entries.find { it.mine == entity.diagram.id } ?: run {
                 logger.debug("${entity.diagram.id} not found on LUT.")
                 return null
             }

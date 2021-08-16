@@ -16,7 +16,7 @@ import jp.ex_t.kazuaki.change_vision.logger
 import jp.ex_t.kazuaki.change_vision.network.*
 import kotlinx.serialization.ExperimentalSerializationApi
 
-class StateMachineDiagramEventListener(private val entityLUT: EntityLUT, private val mqttPublisher: MqttPublisher) :
+class StateMachineDiagramEventListener(private val entityTable: EntityTable, private val mqttPublisher: MqttPublisher) :
     IEventListener {
     @ExperimentalSerializationApi
     override fun process(projectEditUnit: List<ProjectEditUnit>) {
@@ -135,7 +135,7 @@ class StateMachineDiagramEventListener(private val entityLUT: EntityLUT, private
     private fun createStateMachineDiagram(entity: IStateMachineDiagram): CreateStateMachineDiagram {
         val owner = entity.owner as INamedElement
         val entry = Entry(entity.id, entity.id)
-        entityLUT.entries.add(entry)
+        entityTable.entries.add(entry)
         val createStateMachineDiagram = CreateStateMachineDiagram(entity.name, owner.name, entry.common)
         logger.debug("$entity(IStateMachineDiagram)")
         return createStateMachineDiagram
@@ -143,7 +143,7 @@ class StateMachineDiagramEventListener(private val entityLUT: EntityLUT, private
 
     private fun createPseudostate(entity: INodePresentation): CreatePseudostate? {
         val parentEntry =
-            if (entity.parent == null) Entry("", "") else entityLUT.entries.find { it.mine == entity.parent.model.id }
+            if (entity.parent == null) Entry("", "") else entityTable.entries.find { it.mine == entity.parent.model.id }
                 ?: run {
                     logger.debug("${entity.parent.model.id}(Parent of INodePresentation, IPseudostate) not found on LUT.")
                     return null
@@ -151,9 +151,9 @@ class StateMachineDiagramEventListener(private val entityLUT: EntityLUT, private
         val location = Pair(entity.location.x, entity.location.y)
         val size = Pair(entity.width, entity.height)
         val entry = Entry(entity.model.id, entity.model.id)
-        entityLUT.entries.add(entry)
+        entityTable.entries.add(entry)
         logger.debug("$entity(INodePresentation, IPseudostate)")
-        val diagramEntry = entityLUT.entries.find { it.mine == entity.diagram.id } ?: run {
+        val diagramEntry = entityTable.entries.find { it.mine == entity.diagram.id } ?: run {
             logger.debug("${entity.diagram.id} not found on LUT.")
             return null
         }
@@ -162,7 +162,7 @@ class StateMachineDiagramEventListener(private val entityLUT: EntityLUT, private
 
     private fun createState(entity: INodePresentation): CreateState? {
         val parentEntry =
-            if (entity.parent == null) Entry("", "") else entityLUT.entries.find { it.mine == entity.parent.model.id }
+            if (entity.parent == null) Entry("", "") else entityTable.entries.find { it.mine == entity.parent.model.id }
                 ?: run {
                     logger.debug("${entity.model.id}(Parent of INodePresentation, IState) not found on LUT.")
                     return null
@@ -170,9 +170,9 @@ class StateMachineDiagramEventListener(private val entityLUT: EntityLUT, private
         val location = Pair(entity.location.x, entity.location.y)
         val size = Pair(entity.width, entity.height)
         val entry = Entry(entity.model.id, entity.model.id)
-        entityLUT.entries.add(entry)
+        entityTable.entries.add(entry)
         logger.debug("$entity(INodePresentation, IState)")
-        val diagramEntry = entityLUT.entries.find { it.mine == entity.diagram.id } ?: run {
+        val diagramEntry = entityTable.entries.find { it.mine == entity.diagram.id } ?: run {
             logger.debug("${entity.diagram.id} not found on LUT.")
             return null
         }
@@ -181,7 +181,7 @@ class StateMachineDiagramEventListener(private val entityLUT: EntityLUT, private
 
     private fun createFinalState(entity: INodePresentation): CreateFinalState? {
         val parentEntry =
-            if (entity.parent == null) Entry("", "") else entityLUT.entries.find { it.mine == entity.parent.id }
+            if (entity.parent == null) Entry("", "") else entityTable.entries.find { it.mine == entity.parent.id }
                 ?: run {
                     logger.debug("${entity.parent.model.id}(Parent of INodePresentation, IFinalState) not found on LUT.")
                     return null
@@ -189,9 +189,9 @@ class StateMachineDiagramEventListener(private val entityLUT: EntityLUT, private
         val location = Pair(entity.location.x, entity.location.y)
         val size = Pair(entity.width, entity.height)
         val entry = Entry(entity.model.id, entity.model.id)
-        entityLUT.entries.add(entry)
+        entityTable.entries.add(entry)
         logger.debug("$entity(INodePresentation, IFinalState)")
-        val diagramEntry = entityLUT.entries.find { it.mine == entity.diagram.id } ?: run {
+        val diagramEntry = entityTable.entries.find { it.mine == entity.diagram.id } ?: run {
             logger.debug("${entity.diagram.id} not found on LUT.")
             return null
         }
@@ -199,20 +199,20 @@ class StateMachineDiagramEventListener(private val entityLUT: EntityLUT, private
     }
 
     private fun createTransition(entity: ILinkPresentation): CreateTransition? {
-        val sourceEntry = entityLUT.entries.find { it.mine == entity.source.model.id } ?: run {
+        val sourceEntry = entityTable.entries.find { it.mine == entity.source.model.id } ?: run {
             logger.debug("${entity.source.model.id}(Source of INodePresentation, IState) not found on LUT.")
             return null
         }
 
-        val targetEntry = entityLUT.entries.find { it.mine == entity.target.model.id } ?: run {
+        val targetEntry = entityTable.entries.find { it.mine == entity.target.model.id } ?: run {
             logger.debug("${entity.model.id}(INodePresentation, IState) not found on LUT.")
             return null
         }
 
         val entry = Entry(entity.model.id, entity.model.id)
-        entityLUT.entries.add(entry)
+        entityTable.entries.add(entry)
         logger.debug("$entity(ILinkPresentation, ITransition)")
-        val diagramEntry = entityLUT.entries.find { it.mine == entity.diagram.id } ?: run {
+        val diagramEntry = entityTable.entries.find { it.mine == entity.diagram.id } ?: run {
             logger.debug("${entity.diagram.id} not found on LUT.")
             return null
         }
@@ -220,11 +220,11 @@ class StateMachineDiagramEventListener(private val entityLUT: EntityLUT, private
     }
 
     private fun modifyStateMachineDiagram(entity: IStateMachineDiagram): ModifyDiagram? {
-        val entry = entityLUT.entries.find { it.mine == entity.id } ?: run {
+        val entry = entityTable.entries.find { it.mine == entity.id } ?: run {
             logger.debug("${entity.id} not found on LUT.")
             return null
         }
-        val ownerEntry = entityLUT.entries.find { it.mine == entity.owner.id } ?: run {
+        val ownerEntry = entityTable.entries.find { it.mine == entity.owner.id } ?: run {
             logger.debug("${entity.owner.id} not found on LUT.")
             return null
         }
@@ -234,19 +234,19 @@ class StateMachineDiagramEventListener(private val entityLUT: EntityLUT, private
 
     private fun modifyPseudostate(entity: INodePresentation): ModifyPseudostate? {
         val parentEntry =
-            if (entity.parent == null) Entry("", "") else entityLUT.entries.find { it.mine == entity.parent.model.id }
+            if (entity.parent == null) Entry("", "") else entityTable.entries.find { it.mine == entity.parent.model.id }
                 ?: run {
                     logger.debug("${entity.parent.model.id}(Parent of INodePresentation, IPseudostate) not found on LUT.")
                     return null
                 }
         val location = Pair(entity.location.x, entity.location.y)
         val size = Pair(entity.width, entity.height)
-        val entry = entityLUT.entries.find { it.mine == entity.model.id } ?: run {
+        val entry = entityTable.entries.find { it.mine == entity.model.id } ?: run {
             logger.debug("${entity.model.id}(INodePresentation, IPseudostate) not found on LUT.")
             return null
         }
         logger.debug("$entity(INodePresentation, IPseudostate)")
-        val diagramEntry = entityLUT.entries.find { it.mine == entity.diagram.id } ?: run {
+        val diagramEntry = entityTable.entries.find { it.mine == entity.diagram.id } ?: run {
             logger.debug("${entity.diagram.id} not found on LUT.")
             return null
         }
@@ -255,19 +255,19 @@ class StateMachineDiagramEventListener(private val entityLUT: EntityLUT, private
 
     private fun modifyState(entity: INodePresentation): ModifyState? {
         val parentEntry =
-            if (entity.parent == null) Entry("", "") else entityLUT.entries.find { it.mine == entity.parent.model.id }
+            if (entity.parent == null) Entry("", "") else entityTable.entries.find { it.mine == entity.parent.model.id }
                 ?: run {
                     logger.debug("${entity.parent.model.id}(Parent of INodePresentation, IState) not found on LUT.")
                     return null
                 }
         val location = Pair(entity.location.x, entity.location.y)
         val size = Pair(entity.width, entity.height)
-        val entry = entityLUT.entries.find { it.mine == entity.model.id } ?: run {
+        val entry = entityTable.entries.find { it.mine == entity.model.id } ?: run {
             logger.debug("${entity.model.id}(INodePresentation, IState) not found on LUT.")
             return null
         }
         logger.debug("$entity(INodePresentation, IState)")
-        val diagramEntry = entityLUT.entries.find { it.mine == entity.diagram.id } ?: run {
+        val diagramEntry = entityTable.entries.find { it.mine == entity.diagram.id } ?: run {
             logger.debug("${entity.diagram.id} not found on LUT.")
             return null
         }
@@ -276,19 +276,19 @@ class StateMachineDiagramEventListener(private val entityLUT: EntityLUT, private
 
     private fun modifyFinalState(entity: INodePresentation): ModifyFinalState? {
         val parentEntry =
-            if (entity.parent == null) Entry("", "") else entityLUT.entries.find { it.mine == entity.parent.model.id }
+            if (entity.parent == null) Entry("", "") else entityTable.entries.find { it.mine == entity.parent.model.id }
                 ?: run {
                     logger.debug("${entity.parent.model.id}(Parent of INodePresentation, IFinalState) not found on LUT.")
                     return null
                 }
         val location = Pair(entity.location.x, entity.location.y)
         val size = Pair(entity.width, entity.height)
-        val entry = entityLUT.entries.find { it.mine == entity.model.id } ?: run {
+        val entry = entityTable.entries.find { it.mine == entity.model.id } ?: run {
             logger.debug("${entity.model.id}(INodePresentation, IFinalState) not found on LUT.")
             return null
         }
         logger.debug("$entity(INodePresentation, IFinalState)")
-        val diagramEntry = entityLUT.entries.find { it.mine == entity.diagram.id } ?: run {
+        val diagramEntry = entityTable.entries.find { it.mine == entity.diagram.id } ?: run {
             logger.debug("${entity.diagram.id} not found on LUT.")
             return null
         }
@@ -296,12 +296,12 @@ class StateMachineDiagramEventListener(private val entityLUT: EntityLUT, private
     }
 
     private fun modifyTransition(entity: ILinkPresentation): ModifyTransition? {
-        val entry = entityLUT.entries.find { it.mine == entity.model.id } ?: run {
+        val entry = entityTable.entries.find { it.mine == entity.model.id } ?: run {
             logger.debug("${entity.model.id}(Parent of ILinkPresentation, ITransition) not found on LUT.")
             return null
         }
         logger.debug("$entity(ILinkPresentation, ITransition)")
-        val diagramEntry = entityLUT.entries.find { it.mine == entity.diagram.id } ?: run {
+        val diagramEntry = entityTable.entries.find { it.mine == entity.diagram.id } ?: run {
             logger.debug("${entity.diagram.id} not found on LUT.")
             return null
         }
@@ -310,23 +310,23 @@ class StateMachineDiagramEventListener(private val entityLUT: EntityLUT, private
 
     private fun deleteStateMachineDiagram(entity: IStateMachineDiagram): DeleteStateMachineDiagram? {
         return run {
-            val lut = entityLUT.entries.find { it.mine == entity.id } ?: run {
+            val lut = entityTable.entries.find { it.mine == entity.id } ?: run {
                 logger.debug("${entity.id} not found on LUT.")
                 return null
             }
-            entityLUT.entries.remove(lut)
+            entityTable.entries.remove(lut)
             logger.debug("${entity}(IStateMachineDiagram)")
             DeleteStateMachineDiagram(lut.common)
         }
     }
 
     private fun deletePresentation(entity: INamedElement): DeleteModel? {
-        val entry = entityLUT.entries.find { it.mine == entity.id } ?: run {
+        val entry = entityTable.entries.find { it.mine == entity.id } ?: run {
             logger.debug("${entity.id}(INamedElement) not found on LUT.")
             return null
         }
         logger.debug("$entity(INamedElement)")
-        entityLUT.entries.remove(entry)
+        entityTable.entries.remove(entry)
         return DeleteModel(entry.common)
     }
 

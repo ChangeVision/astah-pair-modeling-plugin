@@ -18,7 +18,7 @@ import jp.ex_t.kazuaki.change_vision.logger
 import jp.ex_t.kazuaki.change_vision.network.*
 import kotlinx.serialization.ExperimentalSerializationApi
 
-class ClassDiagramEventListener(private val entityLUT: EntityLUT, private val mqttPublisher: MqttPublisher) :
+class ClassDiagramEventListener(private val entityTable: EntityTable, private val mqttPublisher: MqttPublisher) :
     IEventListener {
     @ExperimentalSerializationApi
     override fun process(projectEditUnit: List<ProjectEditUnit>) {
@@ -111,11 +111,11 @@ class ClassDiagramEventListener(private val entityLUT: EntityLUT, private val mq
 
     private fun deleteClassDiagram(entity: IClassDiagram): DeleteClassDiagram? {
         return run {
-            val lut = entityLUT.entries.find { it.mine == entity.id } ?: run {
+            val lut = entityTable.entries.find { it.mine == entity.id } ?: run {
                 logger.debug("${entity.id} not found on LUT.")
                 return null
             }
-            entityLUT.entries.remove(lut)
+            entityTable.entries.remove(lut)
             logger.debug("${entity}(IClassDiagram)")
             DeleteClassDiagram(lut.common)
         }
@@ -127,11 +127,11 @@ class ClassDiagramEventListener(private val entityLUT: EntityLUT, private val mq
     }
 
     private fun deleteClassModel(entity: IClass): DeleteModel? {
-        val lutEntity = entityLUT.entries.find { it.mine == entity.id } ?: run {
+        val lutEntity = entityTable.entries.find { it.mine == entity.id } ?: run {
             logger.debug("${entity.id}(IClass) not found on LUT.")
             return null
         }
-        entityLUT.entries.remove(lutEntity)
+        entityTable.entries.remove(lutEntity)
         logger.debug("${entity.name}(IClass)")
         return DeleteModel(lutEntity.common)
     }
@@ -139,11 +139,11 @@ class ClassDiagramEventListener(private val entityLUT: EntityLUT, private val mq
     private fun deleteAssociationModel(
         entity: IAssociation,
     ): DeleteModel? {
-        val lutEntity = entityLUT.entries.find { it.mine == entity.id } ?: run {
+        val lutEntity = entityTable.entries.find { it.mine == entity.id } ?: run {
             logger.debug("${entity.id}(IAssociation) not found on LUT.")
             return null
         }
-        entityLUT.entries.remove(lutEntity)
+        entityTable.entries.remove(lutEntity)
         logger.debug("${entity.name}(IAssociation)")
         return DeleteModel(lutEntity.common)
     }
@@ -151,11 +151,11 @@ class ClassDiagramEventListener(private val entityLUT: EntityLUT, private val mq
     private fun deleteGeneralizationModel(
         entity: IGeneralization,
     ): DeleteModel? {
-        val lutEntity = entityLUT.entries.find { it.mine == entity.id } ?: run {
+        val lutEntity = entityTable.entries.find { it.mine == entity.id } ?: run {
             logger.debug("${entity.id}(IGeneralization) not found on LUT.")
             return null
         }
-        entityLUT.entries.remove(lutEntity)
+        entityTable.entries.remove(lutEntity)
         logger.debug("${entity.name}(IGeneralization)")
         return DeleteModel(lutEntity.common)
     }
@@ -163,11 +163,11 @@ class ClassDiagramEventListener(private val entityLUT: EntityLUT, private val mq
     private fun deleteRealizationModel(
         entity: IRealization,
     ): DeleteModel? {
-        val lutEntity = entityLUT.entries.find { it.mine == entity.id } ?: run {
+        val lutEntity = entityTable.entries.find { it.mine == entity.id } ?: run {
             logger.debug("${entity.id}(IRealization) not found on LUT.")
             return null
         }
-        entityLUT.entries.remove(lutEntity)
+        entityTable.entries.remove(lutEntity)
         logger.debug("${entity.name}(IRealization)")
         return DeleteModel(lutEntity.common)
     }
@@ -179,35 +179,35 @@ class ClassDiagramEventListener(private val entityLUT: EntityLUT, private val mq
         if (removeProjectEditUnit.any { it.entity is IClass }) {
             return null
         }
-        val diagramEntry = entityLUT.entries.find { it.mine == entity.diagram.id } ?: run {
+        val diagramEntry = entityTable.entries.find { it.mine == entity.diagram.id } ?: run {
             logger.debug("${entity.diagram.id} not found on LUT.")
             return null
         }
         return when (val model = entity.model) {
             is IAssociation -> {
-                val lutEntity = entityLUT.entries.find { it.mine == entity.id } ?: run {
+                val lutEntity = entityTable.entries.find { it.mine == entity.id } ?: run {
                     logger.debug("${entity.id}(ILinkPresentation, IAssociation) not found on LUT.")
                     return null
                 }
-                entityLUT.entries.remove(lutEntity)
+                entityTable.entries.remove(lutEntity)
                 logger.debug("${entity.label}(ILinkPresentation, IAssociation)")
                 DeletePresentation(lutEntity.common, diagramEntry.common)
             }
             is IGeneralization -> {
-                val lutEntity = entityLUT.entries.find { it.mine == entity.id } ?: run {
+                val lutEntity = entityTable.entries.find { it.mine == entity.id } ?: run {
                     logger.debug("${entity.id}(ILinkPresentation, IGeneralization) not found on LUT.")
                     return null
                 }
-                entityLUT.entries.remove(lutEntity)
+                entityTable.entries.remove(lutEntity)
                 logger.debug("${model.name}(ILinkPresentation, IGeneralization)")
                 DeletePresentation(lutEntity.common, diagramEntry.common)
             }
             is IRealization -> {
-                val lutEntity = entityLUT.entries.find { it.mine == entity.id } ?: run {
+                val lutEntity = entityTable.entries.find { it.mine == entity.id } ?: run {
                     logger.debug("${entity.id}(ILinkPresentation, IRealization) not found on LUT.")
                     return null
                 }
-                entityLUT.entries.remove(lutEntity)
+                entityTable.entries.remove(lutEntity)
                 logger.debug("${model.name}(ILinkPresentation, IRealization)")
                 DeletePresentation(lutEntity.common, diagramEntry.common)
             }
@@ -220,26 +220,26 @@ class ClassDiagramEventListener(private val entityLUT: EntityLUT, private val mq
 
     private fun deleteNodePresentation(entity: INodePresentation): ClassDiagramOperation? {
         val diagram = AstahAPI.getAstahAPI().viewManager.diagramViewManager.currentDiagram
-        val diagramEntry = entityLUT.entries.find { it.mine == diagram.id } ?: run {
+        val diagramEntry = entityTable.entries.find { it.mine == diagram.id } ?: run {
             logger.debug("${diagram.id} not found on LUT.")
             return null
         }
         return when (val model = entity.model) {
             is IClass -> {
-                val lutEntity = entityLUT.entries.find { it.mine == entity.id } ?: run {
+                val lutEntity = entityTable.entries.find { it.mine == entity.id } ?: run {
                     logger.debug("${entity.id}(INodePresentation, IClass) not found on LUT.")
                     return null
                 }
-                entityLUT.entries.remove(lutEntity)
+                entityTable.entries.remove(lutEntity)
                 logger.debug("${model.name}(INodePresentation, IClass)")
                 DeletePresentation(lutEntity.common, diagramEntry.common)
             }
             is IComment -> {
-                val lutEntity = entityLUT.entries.find { it.mine == entity.id } ?: run {
+                val lutEntity = entityTable.entries.find { it.mine == entity.id } ?: run {
                     logger.debug("${entity.id}(INodePresentation, IComment) not found on LUT.")
                     return null
                 }
-                entityLUT.entries.remove(lutEntity)
+                entityTable.entries.remove(lutEntity)
                 logger.debug("${model.name}(INodePresentation, IComment)")
                 DeletePresentation(lutEntity.common, diagramEntry.common)
             }
@@ -254,13 +254,13 @@ class ClassDiagramEventListener(private val entityLUT: EntityLUT, private val mq
         val owner = entity.owner as INamedElement
         // TODO: ownerのIDをどうにかして共有させる
         val createClassDiagram = CreateClassDiagram(entity.name, owner.name, entity.id)
-        entityLUT.entries.add(Entry(entity.id, entity.id))
+        entityTable.entries.add(Entry(entity.id, entity.id))
         logger.debug("${entity.name}(IClassDiagram)")
         return createClassDiagram
     }
 
     private fun createClassModel(entity: IClass): CreateClassModel {
-        entityLUT.entries.add(Entry(entity.id, entity.id))
+        entityTable.entries.add(Entry(entity.id, entity.id))
 //        val parentEntry = entityLUT.entries.find { it.mine == entity.owner.id } ?: run {
 //            logger.debug("${entity.owner.id} not found on LUT.")
 //            return null
@@ -279,18 +279,18 @@ class ClassDiagramEventListener(private val entityLUT: EntityLUT, private val mq
             is IClass -> {
                 when (destinationClass) {
                     is IClass -> {
-                        val sourceClassEntry = entityLUT.entries.find { it.mine == sourceClass.id } ?: run {
+                        val sourceClassEntry = entityTable.entries.find { it.mine == sourceClass.id } ?: run {
                             logger.debug("${sourceClass.id} not found on LUT.")
                             return null
                         }
-                        val destinationClassEntry = entityLUT.entries.find { it.mine == destinationClass.id } ?: run {
+                        val destinationClassEntry = entityTable.entries.find { it.mine == destinationClass.id } ?: run {
                             logger.debug("${destinationClass.id} not found on LUT.")
                             return null
                         }
                         val sourceClassNavigability = entity.memberEnds.first().navigability
                         val destinationClassNavigability = entity.memberEnds.last().navigability
                         logger.debug("${sourceClass.name}(IClass, $sourceClassNavigability) - ${entity.name}(IAssociation) - ${destinationClass.name}(IClass, $destinationClassNavigability)")
-                        entityLUT.entries.add(Entry(entity.id, entity.id))
+                        entityTable.entries.add(Entry(entity.id, entity.id))
                         CreateAssociationModel(
                             sourceClassEntry.common,
                             sourceClassNavigability,
@@ -316,44 +316,44 @@ class ClassDiagramEventListener(private val entityLUT: EntityLUT, private val mq
     private fun createGeneralizationModel(entity: IGeneralization): ClassDiagramOperation? {
         val superClass = entity.superType
         val subClass = entity.subType
-        val superClassEntry = entityLUT.entries.find { it.mine == superClass.id } ?: run {
+        val superClassEntry = entityTable.entries.find { it.mine == superClass.id } ?: run {
             logger.debug("${superClass.id} not found on LUT.")
             return null
         }
-        val subClassEntry = entityLUT.entries.find { it.mine == subClass.id } ?: run {
+        val subClassEntry = entityTable.entries.find { it.mine == subClass.id } ?: run {
             logger.debug("${subClass.id} not found on LUT.")
             return null
         }
         logger.debug("${superClass.name}(IClass) -> ${entity.name}(IGeneralization) - ${subClass.name}(IClass)")
-        entityLUT.entries.add(Entry(entity.id, entity.id))
+        entityTable.entries.add(Entry(entity.id, entity.id))
         return CreateGeneralizationModel(superClassEntry.common, subClassEntry.common, entity.name, entity.id)
     }
 
     private fun createRealizationModel(entity: IRealization): ClassDiagramOperation? {
         val supplierClass = entity.supplier
         val clientClass = entity.client
-        val supplierClassEntry = entityLUT.entries.find { it.mine == supplierClass.id } ?: run {
+        val supplierClassEntry = entityTable.entries.find { it.mine == supplierClass.id } ?: run {
             logger.debug("${supplierClass.id} not found on LUT.")
             return null
         }
-        val clientClassEntry = entityLUT.entries.find { it.mine == clientClass.id } ?: run {
+        val clientClassEntry = entityTable.entries.find { it.mine == clientClass.id } ?: run {
             logger.debug("${clientClass.id} not found on LUT.")
             return null
         }
         logger.debug("${supplierClass.name}(IClass) -> ${entity.name}(IRealization) -> ${clientClass.name}(IClass)")
-        entityLUT.entries.add(Entry(entity.id, entity.id))
+        entityTable.entries.add(Entry(entity.id, entity.id))
         return CreateRealizationModel(supplierClassEntry.common, clientClassEntry.common, entity.name, entity.id)
     }
 
     private fun createOperation(entity: IOperation): CreateOperation? {
         return when (val owner = entity.owner) {
             is IClass -> {
-                val ownerEntry = entityLUT.entries.find { it.mine == owner.id } ?: run {
+                val ownerEntry = entityTable.entries.find { it.mine == owner.id } ?: run {
                     logger.debug("${owner.id} not found on LUT.")
                     return null
                 }
                 logger.debug("${entity.name}(IOperation) - $owner(IClass)")
-                entityLUT.entries.add(Entry(entity.id, entity.id))
+                entityTable.entries.add(Entry(entity.id, entity.id))
                 CreateOperation(ownerEntry.common, entity.name, entity.returnTypeExpression, entity.id)
             }
             else -> {
@@ -366,12 +366,12 @@ class ClassDiagramEventListener(private val entityLUT: EntityLUT, private val mq
     private fun createAttribute(entity: IAttribute): CreateAttribute? {
         return when (val owner = entity.owner) {
             is IClass -> {
-                val ownerEntry = entityLUT.entries.find { it.mine == owner.id } ?: run {
+                val ownerEntry = entityTable.entries.find { it.mine == owner.id } ?: run {
                     logger.debug("${owner.id} not found on LUT.")
                     return null
                 }
                 logger.debug("${entity.name}(IAttribute) - ${owner}(IClass)")
-                entityLUT.entries.add(Entry(entity.id, entity.id))
+                entityTable.entries.add(Entry(entity.id, entity.id))
                 CreateAttribute(ownerEntry.common, entity.name, entity.typeExpression, entity.id)
             }
             else -> {
@@ -386,7 +386,7 @@ class ClassDiagramEventListener(private val entityLUT: EntityLUT, private val mq
             is IClassDiagram -> {
                 when (val model = entity.model) {
                     is IClass -> {
-                        val classModelEntry = entityLUT.entries.find { it.mine == model.id } ?: run {
+                        val classModelEntry = entityTable.entries.find { it.mine == model.id } ?: run {
                             logger.debug("${model.id} not found on LUT.")
                             return null
                         }
@@ -399,8 +399,8 @@ class ClassDiagramEventListener(private val entityLUT: EntityLUT, private val mq
                                 )
                             } at ${entity.location})"
                         )
-                        entityLUT.entries.add(Entry(entity.id, entity.id))
-                        val diagramEntry = entityLUT.entries.find { it.mine == diagram.id } ?: run {
+                        entityTable.entries.add(Entry(entity.id, entity.id))
+                        val diagramEntry = entityTable.entries.find { it.mine == diagram.id } ?: run {
                             logger.debug("${diagram.id} not found on LUT.")
                             return null
                         }
@@ -410,8 +410,8 @@ class ClassDiagramEventListener(private val entityLUT: EntityLUT, private val mq
                         val location = Pair(entity.location.x, entity.location.y)
                         val size = Pair(entity.width, entity.height)
                         logger.debug("${entity.label}(INodePresentation) - $model(IComment)")
-                        entityLUT.entries.add(Entry(entity.id, entity.id))
-                        val diagramEntry = entityLUT.entries.find { it.mine == diagram.id } ?: run {
+                        entityTable.entries.add(Entry(entity.id, entity.id))
+                        val diagramEntry = entityTable.entries.find { it.mine == diagram.id } ?: run {
                             logger.debug("${diagram.id} not found on LUT.")
                             return null
                         }
@@ -438,26 +438,26 @@ class ClassDiagramEventListener(private val entityLUT: EntityLUT, private val mq
             is IClass -> {
                 when (target) {
                     is IClass -> {
-                        val modelEntry = entityLUT.entries.find { it.mine == entity.model.id } ?: run {
+                        val modelEntry = entityTable.entries.find { it.mine == entity.model.id } ?: run {
                             logger.debug("${entity.model.id} not found on LUT.")
                             return null
                         }
-                        val sourceEntry = entityLUT.entries.find { it.mine == source.id } ?: run {
+                        val sourceEntry = entityTable.entries.find { it.mine == source.id } ?: run {
                             logger.debug("${source.id} not found on LUT.")
                             return null
                         }
-                        val targetEntry = entityLUT.entries.find { it.mine == target.id } ?: run {
+                        val targetEntry = entityTable.entries.find { it.mine == target.id } ?: run {
                             logger.debug("${target.id} not found on LUT.")
                             return null
                         }
-                        val diagramEntry = entityLUT.entries.find { it.mine == entity.diagram.id } ?: run {
+                        val diagramEntry = entityTable.entries.find { it.mine == entity.diagram.id } ?: run {
                             logger.debug("${entity.diagram.id} not found on LUT.")
                             return null
                         }
                         when (entity.model) {
                             is IAssociation -> {
                                 logger.debug("${source.name}(IClass) - ${entity.label}(ILinkPresentation::IAssociation) - ${target.name}(IClass)")
-                                entityLUT.entries.add(Entry(entity.id, entity.id))
+                                entityTable.entries.add(Entry(entity.id, entity.id))
                                 CreateLinkPresentation(
                                     modelEntry.common,
                                     sourceEntry.common,
@@ -469,7 +469,7 @@ class ClassDiagramEventListener(private val entityLUT: EntityLUT, private val mq
                             }
                             is IGeneralization -> {
                                 logger.debug("${source.name}(IClass) - ${entity.label}(ILinkPresentation::IGeneralization) - ${target.name}(IClass)")
-                                entityLUT.entries.add(Entry(entity.id, entity.id))
+                                entityTable.entries.add(Entry(entity.id, entity.id))
                                 CreateLinkPresentation(
                                     modelEntry.common,
                                     sourceEntry.common,
@@ -481,7 +481,7 @@ class ClassDiagramEventListener(private val entityLUT: EntityLUT, private val mq
                             }
                             is IRealization -> {
                                 logger.debug("${source.name}(IClass, interface) - ${entity.label}(ILinkPresentation::IRealization) - ${target.name}(IClass)")
-                                entityLUT.entries.add(Entry(entity.id, entity.id))
+                                entityTable.entries.add(Entry(entity.id, entity.id))
                                 CreateLinkPresentation(
                                     modelEntry.common,
                                     sourceEntry.common,
@@ -511,11 +511,11 @@ class ClassDiagramEventListener(private val entityLUT: EntityLUT, private val mq
     }
 
     private fun modifyClassDiagram(entity: IClassDiagram): ModifyDiagram? {
-        val entry = entityLUT.entries.find { it.mine == entity.id } ?: run {
+        val entry = entityTable.entries.find { it.mine == entity.id } ?: run {
             logger.debug("${entity.id} not found on LUT.")
             return null
         }
-        val ownerEntry = entityLUT.entries.find { it.mine == entity.owner.id } ?: run {
+        val ownerEntry = entityTable.entries.find { it.mine == entity.owner.id } ?: run {
             logger.debug("${entity.owner.id} not found on LUT.")
             return null
         }
@@ -524,7 +524,7 @@ class ClassDiagramEventListener(private val entityLUT: EntityLUT, private val mq
     }
 
     private fun modifyClassModel(entity: IClass): ModifyClassModel? {
-        val entry = entityLUT.entries.find { it.mine == entity.id } ?: run {
+        val entry = entityTable.entries.find { it.mine == entity.id } ?: run {
             logger.debug("${entity.id} not found on LUT.")
             return null
         }
@@ -556,7 +556,7 @@ class ClassDiagramEventListener(private val entityLUT: EntityLUT, private val mq
         model: IClass,
         entity: INodePresentation
     ): ModifyClassPresentation? {
-        val entry = entityLUT.entries.find { it.mine == entity.id } ?: run {
+        val entry = entityTable.entries.find { it.mine == entity.id } ?: run {
             logger.debug("${entity.id} not found on LUT.")
             return null
         }
@@ -570,7 +570,7 @@ class ClassDiagramEventListener(private val entityLUT: EntityLUT, private val mq
                 )
             } at ${entity.location}) @ClassDiagram${diagram.name}"
         )
-        val diagramEntry = entityLUT.entries.find { it.mine == entity.diagram.id } ?: run {
+        val diagramEntry = entityTable.entries.find { it.mine == entity.diagram.id } ?: run {
             logger.debug("${entity.diagram.id} not found on LUT.")
             return null
         }
@@ -578,7 +578,7 @@ class ClassDiagramEventListener(private val entityLUT: EntityLUT, private val mq
     }
 
     private fun modifyNote(diagram: IDiagram, model: IComment, entity: INodePresentation): ModifyNote? {
-        val entry = entityLUT.entries.find { it.mine == entity.id } ?: run {
+        val entry = entityTable.entries.find { it.mine == entity.id } ?: run {
             logger.debug("${entity.id} not found on LUT.")
             return null
         }
@@ -592,7 +592,7 @@ class ClassDiagramEventListener(private val entityLUT: EntityLUT, private val mq
                 )
             } at ${entity.location}) @ClassDiagram${diagram.name}"
         )
-        val diagramEntry = entityLUT.entries.find { it.mine == entity.diagram.id } ?: run {
+        val diagramEntry = entityTable.entries.find { it.mine == entity.diagram.id } ?: run {
             logger.debug("${entity.diagram.id} not found on LUT.")
             return null
         }
@@ -602,11 +602,11 @@ class ClassDiagramEventListener(private val entityLUT: EntityLUT, private val mq
     private fun modifyOperation(entity: IOperation): ModifyOperation? {
         return when (val owner = entity.owner) {
             is IClass -> {
-                val ownerEntry = entityLUT.entries.find { it.mine == owner.id } ?: run {
+                val ownerEntry = entityTable.entries.find { it.mine == owner.id } ?: run {
                     logger.debug("${owner.id} not found on LUT.")
                     return null
                 }
-                val entry = entityLUT.entries.find { it.mine == entity.id } ?: run {
+                val entry = entityTable.entries.find { it.mine == entity.id } ?: run {
                     logger.debug("${entity.id} not found on LUT.")
                     return null
                 }
@@ -628,11 +628,11 @@ class ClassDiagramEventListener(private val entityLUT: EntityLUT, private val mq
     private fun modifyAttribute(entity: IAttribute): ModifyAttribute? {
         return when (val owner = entity.owner) {
             is IClass -> {
-                val ownerEntry = entityLUT.entries.find { it.mine == owner.id } ?: run {
+                val ownerEntry = entityTable.entries.find { it.mine == owner.id } ?: run {
                     logger.debug("${owner.id} not found on LUT.")
                     return null
                 }
-                val entry = entityLUT.entries.find { it.mine == entity.id } ?: run {
+                val entry = entityTable.entries.find { it.mine == entity.id } ?: run {
                     logger.debug("${entity.id} not found on LUT.")
                     return null
                 }
