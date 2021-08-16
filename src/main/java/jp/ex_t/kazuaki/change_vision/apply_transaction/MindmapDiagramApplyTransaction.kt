@@ -19,7 +19,8 @@ import jp.ex_t.kazuaki.change_vision.logger
 import jp.ex_t.kazuaki.change_vision.network.*
 import java.awt.geom.Point2D
 
-class MindmapDiagramApplyTransaction(private val entityLUT: EntityLUT) : IApplyTransaction<MindmapDiagramOperation> {
+class MindmapDiagramApplyTransaction(private val entityTable: EntityTable) :
+    IApplyTransaction<MindmapDiagramOperation> {
     private val api = AstahAPI.getAstahAPI()
     private val projectAccessor = api.projectAccessor
     private val mindmapEditor = projectAccessor.diagramEditorFactory.mindmapEditor
@@ -98,8 +99,8 @@ class MindmapDiagramApplyTransaction(private val entityLUT: EntityLUT) : IApplyT
         val owner = projectAccessor.findElements(INamedElement::class.java, ownerName).first() as INamedElement
         val diagram = mindmapEditor.createMindmapDiagram(owner, name)
         val rootTopic = diagram.root
-        entityLUT.entries.add(Entry(diagram.id, id))
-        entityLUT.entries.add(Entry(rootTopic.id, rootTopicId))
+        entityTable.entries.add(Entry(diagram.id, id))
+        entityTable.entries.add(Entry(rootTopic.id, rootTopicId))
         diagramViewManager.open(diagram)
     }
 
@@ -119,7 +120,7 @@ class MindmapDiagramApplyTransaction(private val entityLUT: EntityLUT) : IApplyT
 
     private fun createTopic(ownerId: String, name: String, diagramId: String, id: String) {
         logger.debug("Create topic.")
-        val diagramEntry = entityLUT.entries.find { it.common == diagramId } ?: run {
+        val diagramEntry = entityTable.entries.find { it.common == diagramId } ?: run {
             logger.debug("$diagramId not found on LUT.")
             return
         }
@@ -131,7 +132,7 @@ class MindmapDiagramApplyTransaction(private val entityLUT: EntityLUT) : IApplyT
                 }
         mindmapEditor.diagram = diagram
         val topics = diagram.floatingTopics + diagram.root
-        val parentEntry = entityLUT.entries.find { it.common == ownerId }
+        val parentEntry = entityTable.entries.find { it.common == ownerId }
         if (parentEntry == null) {
             logger.debug("$ownerId not found on LUT.")
             return
@@ -142,7 +143,7 @@ class MindmapDiagramApplyTransaction(private val entityLUT: EntityLUT) : IApplyT
             return
         }
         val topic = mindmapEditor.createTopic(parent, name)
-        entityLUT.entries.add(Entry(topic.id, id))
+        entityTable.entries.add(Entry(topic.id, id))
     }
 
     private fun createFloatingTopic(
@@ -154,7 +155,7 @@ class MindmapDiagramApplyTransaction(private val entityLUT: EntityLUT) : IApplyT
     ) {
         logger.debug("Create floating topic.")
         val (width, height) = size
-        val diagramEntry = entityLUT.entries.find { it.common == diagramId } ?: run {
+        val diagramEntry = entityTable.entries.find { it.common == diagramId } ?: run {
             logger.debug("$diagramId not found on LUT.")
             return
         }
@@ -171,7 +172,7 @@ class MindmapDiagramApplyTransaction(private val entityLUT: EntityLUT) : IApplyT
         topic.location = location
         topic.width = width
         topic.height = height
-        entityLUT.entries.add(Entry(topic.id, id))
+        entityTable.entries.add(Entry(topic.id, id))
     }
 
     private fun modifyTopic(
@@ -184,7 +185,7 @@ class MindmapDiagramApplyTransaction(private val entityLUT: EntityLUT) : IApplyT
     ) {
         logger.debug("Modify topic.")
         val (width, height) = size
-        val diagramEntry = entityLUT.entries.find { it.common == diagramId } ?: run {
+        val diagramEntry = entityTable.entries.find { it.common == diagramId } ?: run {
             logger.debug("$diagramId not found on LUT.")
             return
         }
@@ -196,7 +197,7 @@ class MindmapDiagramApplyTransaction(private val entityLUT: EntityLUT) : IApplyT
                 }
         mindmapEditor.diagram = diagram
         val topics = diagram.floatingTopics + diagram.root
-        val entry = entityLUT.entries.find { it.common == id } ?: run {
+        val entry = entityTable.entries.find { it.common == id } ?: run {
             logger.debug("$id not found on LUT.")
             return
         }
@@ -221,7 +222,7 @@ class MindmapDiagramApplyTransaction(private val entityLUT: EntityLUT) : IApplyT
                 topic.height = height
             }
         } else {
-            val parentEntry = entityLUT.entries.find { it.common == parentId } ?: run {
+            val parentEntry = entityTable.entries.find { it.common == parentId } ?: run {
                 logger.debug("$parentId not found on LUT.")
                 return
             }
@@ -240,32 +241,32 @@ class MindmapDiagramApplyTransaction(private val entityLUT: EntityLUT) : IApplyT
 
     private fun deleteMindmapDiagram(id: String) {
         logger.debug("Delete mindmap diagram.")
-        val lutEntry = entityLUT.entries.find { it.common == id } ?: run {
+        val lutEntry = entityTable.entries.find { it.common == id } ?: run {
             logger.debug("$id not found on LUT.")
             return
         }
         val diagram = projectAccessor.project.diagrams.find { it.id == lutEntry.mine } ?: run {
             logger.debug("IDiagram ${lutEntry.mine} not found but $id found on LUT.")
-            entityLUT.entries.remove(lutEntry)
+            entityTable.entries.remove(lutEntry)
             return
         }
         val rootTopic = (diagram as IMindMapDiagram).root
-        val rootEntry = entityLUT.entries.find { it.mine == rootTopic.id } ?: run {
+        val rootEntry = entityTable.entries.find { it.mine == rootTopic.id } ?: run {
             logger.debug("Root topic ${rootTopic.id} not found on LUT.")
-            entityLUT.entries.remove(lutEntry)
+            entityTable.entries.remove(lutEntry)
             mindmapEditor.diagram = diagram
             mindmapEditor.deleteDiagram()
         }
         // TODO: 削除されるとプレゼンテーションのエントリが残り続ける
-        entityLUT.entries.remove(rootEntry)
-        entityLUT.entries.remove(lutEntry)
+        entityTable.entries.remove(rootEntry)
+        entityTable.entries.remove(lutEntry)
         mindmapEditor.diagram = diagram
         mindmapEditor.deleteDiagram()
     }
 
     private fun deleteTopic(id: String, diagramId: String) {
         logger.debug("Delete topic.")
-        val diagramEntry = entityLUT.entries.find { it.common == diagramId } ?: run {
+        val diagramEntry = entityTable.entries.find { it.common == diagramId } ?: run {
             logger.debug("$diagramId not found on LUT.")
             return
         }
@@ -277,7 +278,7 @@ class MindmapDiagramApplyTransaction(private val entityLUT: EntityLUT) : IApplyT
                 }
         mindmapEditor.diagram = diagram
         val topics = diagram.floatingTopics + diagram.root
-        val topicEntry = entityLUT.entries.find { it.common == id }
+        val topicEntry = entityTable.entries.find { it.common == id }
         if (topicEntry == null) {
             logger.debug("$id not found on LUT.")
             return
@@ -285,10 +286,10 @@ class MindmapDiagramApplyTransaction(private val entityLUT: EntityLUT) : IApplyT
         val topic = searchTopic(topicEntry.mine, topics)
         if (topic == null) {
             logger.debug("Topic ${topicEntry.mine} not found but $id found on LUT.")
-            entityLUT.entries.remove(topicEntry)
+            entityTable.entries.remove(topicEntry)
         } else {
             mindmapEditor.deletePresentation(topic)
-            entityLUT.entries.remove(topicEntry)
+            entityTable.entries.remove(topicEntry)
         }
     }
 

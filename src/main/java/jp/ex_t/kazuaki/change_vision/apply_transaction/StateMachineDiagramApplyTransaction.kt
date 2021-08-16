@@ -19,7 +19,7 @@ import jp.ex_t.kazuaki.change_vision.logger
 import jp.ex_t.kazuaki.change_vision.network.*
 import java.awt.geom.Point2D
 
-class StateMachineDiagramApplyTransaction(private val entityLUT: EntityLUT) :
+class StateMachineDiagramApplyTransaction(private val entityTable: EntityTable) :
     IApplyTransaction<StateMachineDiagramOperation> {
     private val api = AstahAPI.getAstahAPI()
     private val projectAccessor = api.projectAccessor
@@ -129,7 +129,7 @@ class StateMachineDiagramApplyTransaction(private val entityLUT: EntityLUT) :
         logger.debug("Create state machine diagram.")
         val owner = projectAccessor.findElements(INamedElement::class.java, ownerName).first()
         val diagram = stateMachineDiagramEditor.createStatemachineDiagram(owner, name)
-        entityLUT.entries.add(Entry(diagram.id, id))
+        entityTable.entries.add(Entry(diagram.id, id))
         diagramViewManager.open(diagram)
     }
 
@@ -142,7 +142,7 @@ class StateMachineDiagramApplyTransaction(private val entityLUT: EntityLUT) :
     ) {
         logger.debug("Create pseudostate.")
         val (width, height) = size
-        val diagramEntry = entityLUT.entries.find { it.common == diagramId } ?: run {
+        val diagramEntry = entityTable.entries.find { it.common == diagramId } ?: run {
             logger.debug("$diagramId not found on LUT.")
             return
         }
@@ -154,7 +154,7 @@ class StateMachineDiagramApplyTransaction(private val entityLUT: EntityLUT) :
                     return
                 }
         stateMachineDiagramEditor.diagram = diagram
-        val parentEntity = if (parentId.isEmpty()) null else entityLUT.entries.find { it.common == parentId } ?: run {
+        val parentEntity = if (parentId.isEmpty()) null else entityTable.entries.find { it.common == parentId } ?: run {
             logger.debug("$parentId not found on LUT.")
             return
         }
@@ -167,7 +167,7 @@ class StateMachineDiagramApplyTransaction(private val entityLUT: EntityLUT) :
                 }
 
         val pseudostate = stateMachineDiagramEditor.createInitialPseudostate(parentPresentation, location)
-        entityLUT.entries.add(Entry(pseudostate.model.id, id))
+        entityTable.entries.add(Entry(pseudostate.model.id, id))
         pseudostate.width = width
         pseudostate.height = height
     }
@@ -182,7 +182,7 @@ class StateMachineDiagramApplyTransaction(private val entityLUT: EntityLUT) :
     ) {
         logger.debug("Create state.")
         val (width, height) = size
-        val diagramEntry = entityLUT.entries.find { it.common == diagramId } ?: run {
+        val diagramEntry = entityTable.entries.find { it.common == diagramId } ?: run {
             logger.debug("$diagramId not found on LUT.")
             return
         }
@@ -194,7 +194,7 @@ class StateMachineDiagramApplyTransaction(private val entityLUT: EntityLUT) :
                     return
                 }
         stateMachineDiagramEditor.diagram = diagram
-        val parentEntity = if (parentId.isEmpty()) null else entityLUT.entries.find { it.common == parentId } ?: run {
+        val parentEntity = if (parentId.isEmpty()) null else entityTable.entries.find { it.common == parentId } ?: run {
             logger.debug("$parentId not found on LUT.")
             return
         }
@@ -207,7 +207,7 @@ class StateMachineDiagramApplyTransaction(private val entityLUT: EntityLUT) :
                 }
 
         val state = stateMachineDiagramEditor.createState(name, parentPresentation, location)
-        entityLUT.entries.add(Entry(state.model.id, id))
+        entityTable.entries.add(Entry(state.model.id, id))
         state.width = width
         state.height = height
     }
@@ -221,7 +221,7 @@ class StateMachineDiagramApplyTransaction(private val entityLUT: EntityLUT) :
     ) {
         logger.debug("Create FinalState.")
         val (width, height) = size
-        val diagramEntry = entityLUT.entries.find { it.common == diagramId } ?: run {
+        val diagramEntry = entityTable.entries.find { it.common == diagramId } ?: run {
             logger.debug("$diagramId not found on LUT.")
             return
         }
@@ -233,7 +233,7 @@ class StateMachineDiagramApplyTransaction(private val entityLUT: EntityLUT) :
                     return
                 }
         stateMachineDiagramEditor.diagram = diagram
-        val parentEntity = if (parentId.isEmpty()) null else entityLUT.entries.find { it.common == parentId } ?: run {
+        val parentEntity = if (parentId.isEmpty()) null else entityTable.entries.find { it.common == parentId } ?: run {
             logger.debug("$parentId not found on LUT.")
             return
         }
@@ -246,14 +246,14 @@ class StateMachineDiagramApplyTransaction(private val entityLUT: EntityLUT) :
                 }
 
         val pseudostate = stateMachineDiagramEditor.createFinalState(parentPresentation, location)
-        entityLUT.entries.add(Entry(pseudostate.model.id, id))
+        entityTable.entries.add(Entry(pseudostate.model.id, id))
         pseudostate.width = width
         pseudostate.height = height
     }
 
     private fun createTransition(id: String, label: String, sourceId: String, targetId: String, diagramId: String) {
         logger.debug("Create transition.")
-        val diagramEntry = entityLUT.entries.find { it.common == diagramId } ?: run {
+        val diagramEntry = entityTable.entries.find { it.common == diagramId } ?: run {
             logger.debug("$diagramId not found on LUT.")
             return
         }
@@ -265,7 +265,7 @@ class StateMachineDiagramApplyTransaction(private val entityLUT: EntityLUT) :
                     return
                 }
         stateMachineDiagramEditor.diagram = diagram
-        val sourceEntry = entityLUT.entries.find { it.common == sourceId } ?: run {
+        val sourceEntry = entityTable.entries.find { it.common == sourceId } ?: run {
             logger.debug("$sourceId not found on LUT.")
             return
         }
@@ -276,7 +276,7 @@ class StateMachineDiagramApplyTransaction(private val entityLUT: EntityLUT) :
                     logger.debug("INodePresentation ${sourceEntry.mine} not found but $sourceId found on LUT.")
                     return
                 }
-        val targetEntry = entityLUT.entries.find { it.common == targetId } ?: run {
+        val targetEntry = entityTable.entries.find { it.common == targetId } ?: run {
             logger.debug("$targetId not found on LUT.")
             return
         }
@@ -288,7 +288,7 @@ class StateMachineDiagramApplyTransaction(private val entityLUT: EntityLUT) :
                     return
                 }
         val transition = stateMachineDiagramEditor.createTransition(sourcePresentation, targetPresentation)
-        entityLUT.entries.add(Entry(transition.model.id, id))
+        entityTable.entries.add(Entry(transition.model.id, id))
         // Because of APIs specification, label must be set as model name.
         (transition.model as INamedElement).name = label
     }
@@ -302,7 +302,7 @@ class StateMachineDiagramApplyTransaction(private val entityLUT: EntityLUT) :
     ) {
         logger.debug("Modify pseudostate.")
         val (width, height) = size
-        val diagramEntry = entityLUT.entries.find { it.common == diagramId } ?: run {
+        val diagramEntry = entityTable.entries.find { it.common == diagramId } ?: run {
             logger.debug("$diagramId not found on LUT.")
             return
         }
@@ -314,11 +314,11 @@ class StateMachineDiagramApplyTransaction(private val entityLUT: EntityLUT) :
                     return
                 }
         stateMachineDiagramEditor.diagram = diagram
-        val entry = entityLUT.entries.find { it.common == id } ?: run {
+        val entry = entityTable.entries.find { it.common == id } ?: run {
             logger.debug("$id not found on LUT.")
             return
         }
-        val parentEntity = if (parentId.isEmpty()) null else entityLUT.entries.find { it.common == parentId } ?: run {
+        val parentEntity = if (parentId.isEmpty()) null else entityTable.entries.find { it.common == parentId } ?: run {
             logger.debug("$parentId not found on LUT.")
             return
         }
@@ -354,7 +354,7 @@ class StateMachineDiagramApplyTransaction(private val entityLUT: EntityLUT) :
     ) {
         logger.debug("Modify state.")
         val (width, height) = size
-        val diagramEntry = entityLUT.entries.find { it.common == diagramId } ?: run {
+        val diagramEntry = entityTable.entries.find { it.common == diagramId } ?: run {
             logger.debug("$diagramId not found on LUT.")
             return
         }
@@ -366,11 +366,11 @@ class StateMachineDiagramApplyTransaction(private val entityLUT: EntityLUT) :
                     return
                 }
         stateMachineDiagramEditor.diagram = diagram
-        val entry = entityLUT.entries.find { it.common == id } ?: run {
+        val entry = entityTable.entries.find { it.common == id } ?: run {
             logger.debug("$id not found on LUT.")
             return
         }
-        val parentEntity = if (parentId.isEmpty()) null else entityLUT.entries.find { it.common == parentId } ?: run {
+        val parentEntity = if (parentId.isEmpty()) null else entityTable.entries.find { it.common == parentId } ?: run {
             logger.debug("$parentId not found on LUT.")
             return
         }
@@ -406,7 +406,7 @@ class StateMachineDiagramApplyTransaction(private val entityLUT: EntityLUT) :
     ) {
         logger.debug("Modify final state.")
         val (width, height) = size
-        val diagramEntry = entityLUT.entries.find { it.common == diagramId } ?: run {
+        val diagramEntry = entityTable.entries.find { it.common == diagramId } ?: run {
             logger.debug("$diagramId not found on LUT.")
             return
         }
@@ -418,11 +418,11 @@ class StateMachineDiagramApplyTransaction(private val entityLUT: EntityLUT) :
                     return
                 }
         stateMachineDiagramEditor.diagram = diagram
-        val entry = entityLUT.entries.find { it.common == id } ?: run {
+        val entry = entityTable.entries.find { it.common == id } ?: run {
             logger.debug("$id not found on LUT.")
             return
         }
-        val parentEntity = if (parentId.isEmpty()) null else entityLUT.entries.find { it.common == parentId } ?: run {
+        val parentEntity = if (parentId.isEmpty()) null else entityTable.entries.find { it.common == parentId } ?: run {
             logger.debug("$parentId not found on LUT.")
             return
         }
@@ -450,7 +450,7 @@ class StateMachineDiagramApplyTransaction(private val entityLUT: EntityLUT) :
 
     private fun modifyTransition(id: String, label: String, diagramId: String) {
         logger.debug("Modify transition.")
-        val diagramEntry = entityLUT.entries.find { it.common == diagramId } ?: run {
+        val diagramEntry = entityTable.entries.find { it.common == diagramId } ?: run {
             logger.debug("$diagramId not found on LUT.")
             return
         }
@@ -461,7 +461,7 @@ class StateMachineDiagramApplyTransaction(private val entityLUT: EntityLUT) :
                     logger.debug("IStateMachineDiagram ${diagramEntry.mine} not found but $diagramId found on LUT.")
                     return
                 }
-        val entry = entityLUT.entries.find { it.common == id } ?: run {
+        val entry = entityTable.entries.find { it.common == id } ?: run {
             logger.debug("$id not found on LUT.")
             return
         }
@@ -476,17 +476,17 @@ class StateMachineDiagramApplyTransaction(private val entityLUT: EntityLUT) :
 
     private fun deleteStateMachineDiagram(id: String) {
         logger.debug("Delete state machine diagram.")
-        val lutEntry = entityLUT.entries.find { it.common == id } ?: run {
+        val lutEntry = entityTable.entries.find { it.common == id } ?: run {
             logger.debug("$id not found on LUT.")
             return
         }
         val diagram = projectAccessor.project.diagrams.find { it.id == lutEntry.mine } ?: run {
             logger.debug("IDiagram ${lutEntry.mine} not found but $id found on LUT.")
-            entityLUT.entries.remove(lutEntry)
+            entityTable.entries.remove(lutEntry)
             return
         }
         // TODO: 削除されるとプレゼンテーションのエントリが残り続ける
-        entityLUT.entries.remove(lutEntry)
+        entityTable.entries.remove(lutEntry)
         stateMachineDiagramEditor.diagram = diagram
         stateMachineDiagramEditor.deleteDiagram()
     }

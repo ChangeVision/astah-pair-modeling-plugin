@@ -13,7 +13,7 @@ import com.change_vision.jude.api.inf.ui.IPluginActionDelegate.UnExpectedExcepti
 import jp.ex_t.kazuaki.change_vision.apply_transaction.SystemMessageReceiver
 import jp.ex_t.kazuaki.change_vision.apply_transaction.TransactionReceiver
 import jp.ex_t.kazuaki.change_vision.event_listener.ProjectChangedListener
-import jp.ex_t.kazuaki.change_vision.network.EntityLUT
+import jp.ex_t.kazuaki.change_vision.network.EntityTable
 import jp.ex_t.kazuaki.change_vision.network.MqttPublisher
 import jp.ex_t.kazuaki.change_vision.network.MqttSubscriber
 import kotlinx.coroutines.CancellationException
@@ -51,10 +51,10 @@ class PairModeling {
         val topicTransaction = "$topic/transaction"
 
         logger.debug("Launching publisher...")
-        val entityLUT = EntityLUT()
+        val entityTable = EntityTable()
         val topicTransactionPublisher = "$topicTransaction/$clientId"
         val mqttPublisher = MqttPublisher(brokerAddress, brokerPortNumber, topicTransactionPublisher, clientId)
-        projectChangedListener = ProjectChangedListener(entityLUT, mqttPublisher)
+        projectChangedListener = ProjectChangedListener(entityTable, mqttPublisher)
         projectAccessor.addProjectEventListener(projectChangedListener)
         logger.debug("Publisher launched: $brokerAddress:$topicTransaction ($clientId)")
         logger.info("Launched publisher.")
@@ -76,7 +76,7 @@ class PairModeling {
         }
 
         val topicTransactionSubscriber = "$topicTransaction/#"
-        val transactionReceiver = TransactionReceiver(entityLUT, projectChangedListener, clientId)
+        val transactionReceiver = TransactionReceiver(entityTable, projectChangedListener, clientId)
         mqttSubscriber.subscribe(
             topicTransactionSubscriber,
             transactionReceiver,
@@ -88,7 +88,7 @@ class PairModeling {
         val topicSystemMessage = "$topic/system"
         val topicSystemMessageSubscriber = "$topicSystemMessage/#"
         val systemMessageReceiver =
-            SystemMessageReceiver(entityLUT, mqttPublisher, clientId, topic, brokerAddress, brokerPortNumber)
+            SystemMessageReceiver(entityTable, mqttPublisher, clientId, topic, brokerAddress, brokerPortNumber)
         mqttSubscriber.subscribe(
             topicSystemMessageSubscriber,
             systemMessageReceiver,
@@ -118,7 +118,7 @@ class PairModeling {
         }
 
         val topicTransaction = "$topic/transaction"
-        val entityLUT = EntityLUT()
+        val entityTable = EntityTable()
 
         try {
             logger.debug("Launching subscriber...")
@@ -140,14 +140,14 @@ class PairModeling {
         logger.debug("Launching publisher...")
         val topicTransactionPublisher = "$topicTransaction/$clientId"
         val mqttPublisher = MqttPublisher(brokerAddress, brokerPortNumber, topicTransactionPublisher, clientId)
-        projectChangedListener = ProjectChangedListener(entityLUT, mqttPublisher)
+        projectChangedListener = ProjectChangedListener(entityTable, mqttPublisher)
         projectAccessor.addProjectEventListener(projectChangedListener)
         logger.debug("Publisher launched: $brokerAddress:$topicTransaction ($clientId)")
         logger.info("Launched publisher.")
 
         logger.debug("Launching subscriber...")
         val topicTransactionSubscriber = "$topicTransaction/#"
-        val transactionReceiver = TransactionReceiver(entityLUT, projectChangedListener, clientId)
+        val transactionReceiver = TransactionReceiver(entityTable, projectChangedListener, clientId)
         mqttSubscriber.subscribe(topicTransactionSubscriber, transactionReceiver)
         logger.debug("Subscribed: $brokerAddress:$topicTransaction ($clientId)")
         logger.info("Launched subscriber.")
@@ -157,7 +157,7 @@ class PairModeling {
         val topicSystemMessage = "$topic/system"
         val topicSystemMessageSubscriber = "$topicSystemMessage/#"
         val systemMessageReceiver =
-            SystemMessageReceiver(entityLUT, mqttPublisher, clientId, topic, brokerAddress, brokerPortNumber)
+            SystemMessageReceiver(entityTable, mqttPublisher, clientId, topic, brokerAddress, brokerPortNumber)
         mqttSubscriber.subscribe(
             topicSystemMessageSubscriber,
             systemMessageReceiver,

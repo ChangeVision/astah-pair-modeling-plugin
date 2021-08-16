@@ -15,10 +15,10 @@ import jp.ex_t.kazuaki.change_vision.Logging
 import jp.ex_t.kazuaki.change_vision.logger
 import jp.ex_t.kazuaki.change_vision.network.CommonOperation
 import jp.ex_t.kazuaki.change_vision.network.DeleteModel
-import jp.ex_t.kazuaki.change_vision.network.EntityLUT
+import jp.ex_t.kazuaki.change_vision.network.EntityTable
 import jp.ex_t.kazuaki.change_vision.network.ModifyDiagram
 
-class CommonApplyTransaction(private val entityLUT: EntityLUT) : IApplyTransaction<CommonOperation> {
+class CommonApplyTransaction(private val entityTable: EntityTable) : IApplyTransaction<CommonOperation> {
     private val api = AstahAPI.getAstahAPI()
     private val projectAccessor = api.projectAccessor
     private val basicModelEditor = projectAccessor.modelEditorFactory.basicModelEditor
@@ -47,7 +47,7 @@ class CommonApplyTransaction(private val entityLUT: EntityLUT) : IApplyTransacti
 
     private fun modifyClassDiagram(id: String, name: String, ownerId: String) {
         logger.debug("Modify diagram.")
-        val diagramEntry = entityLUT.entries.find { it.common == id } ?: run {
+        val diagramEntry = entityTable.entries.find { it.common == id } ?: run {
             logger.debug("$id not found on LUT.")
             return
         }
@@ -57,7 +57,7 @@ class CommonApplyTransaction(private val entityLUT: EntityLUT) : IApplyTransacti
                 logger.debug("IDiagram ${diagramEntry.mine} not found but $id found on LUT.")
                 return
             }
-        val ownerEntry = entityLUT.entries.find { it.common == ownerId } ?: run {
+        val ownerEntry = entityTable.entries.find { it.common == ownerId } ?: run {
             logger.debug("$ownerId not found on LUT.")
             return
         }
@@ -75,16 +75,16 @@ class CommonApplyTransaction(private val entityLUT: EntityLUT) : IApplyTransacti
 
     private fun deleteModel(id: String) {
         logger.debug("Delete model.")
-        val lutEntry = entityLUT.entries.find { it.common == id } ?: run {
+        val lutEntry = entityTable.entries.find { it.common == id } ?: run {
             logger.debug("$id not found on LUT.")
             return
         }
         val model = projectAccessor.findElements(IEntity::class.java).find { it.id == lutEntry.mine } ?: run {
             logger.debug("Model ${lutEntry.mine} not found but $id found on LUT.")
-            entityLUT.entries.remove(lutEntry)
+            entityTable.entries.remove(lutEntry)
             return
         }
-        entityLUT.entries.remove(lutEntry)
+        entityTable.entries.remove(lutEntry)
         basicModelEditor.delete(model)
     }
 

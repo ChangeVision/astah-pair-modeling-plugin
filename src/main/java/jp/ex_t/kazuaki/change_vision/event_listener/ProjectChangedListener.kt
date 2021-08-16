@@ -15,19 +15,19 @@ import com.change_vision.jude.api.inf.project.ProjectEvent
 import com.change_vision.jude.api.inf.project.ProjectEventListener
 import jp.ex_t.kazuaki.change_vision.Logging
 import jp.ex_t.kazuaki.change_vision.logger
-import jp.ex_t.kazuaki.change_vision.network.EntityLUT
+import jp.ex_t.kazuaki.change_vision.network.EntityTable
 import jp.ex_t.kazuaki.change_vision.network.MqttPublisher
 import jp.ex_t.kazuaki.change_vision.network.Transaction
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.cbor.Cbor
 import kotlinx.serialization.encodeToByteArray
 
-class ProjectChangedListener(entityLUT: EntityLUT, mqttPublisher: MqttPublisher) : ProjectEventListener {
+class ProjectChangedListener(entityTable: EntityTable, mqttPublisher: MqttPublisher) : ProjectEventListener {
     private val classDiagramEventListener: ClassDiagramEventListener =
-        ClassDiagramEventListener(entityLUT, mqttPublisher)
+        ClassDiagramEventListener(entityTable, mqttPublisher)
     private val mindmapDiagramEventListener: MindmapDiagramEventListener =
-        MindmapDiagramEventListener(entityLUT, mqttPublisher)
-    private val stateMachineDiagramEventListener = StateMachineDiagramEventListener(entityLUT, mqttPublisher)
+        MindmapDiagramEventListener(entityTable, mqttPublisher)
+    private val stateMachineDiagramEventListener = StateMachineDiagramEventListener(entityTable, mqttPublisher)
 
     @ExperimentalSerializationApi
     override fun projectChanged(e: ProjectEvent) {

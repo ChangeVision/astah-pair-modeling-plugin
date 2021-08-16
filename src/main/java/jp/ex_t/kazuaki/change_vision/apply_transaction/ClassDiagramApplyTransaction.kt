@@ -17,7 +17,7 @@ import jp.ex_t.kazuaki.change_vision.logger
 import jp.ex_t.kazuaki.change_vision.network.*
 import java.awt.geom.Point2D
 
-class ClassDiagramApplyTransaction(private val entityLUT: EntityLUT) : IApplyTransaction<ClassDiagramOperation> {
+class ClassDiagramApplyTransaction(private val entityTable: EntityTable) : IApplyTransaction<ClassDiagramOperation> {
     private val api = AstahAPI.getAstahAPI()
     private val projectAccessor = api.projectAccessor
     private val diagramViewManager = api.viewManager.diagramViewManager
@@ -274,7 +274,7 @@ class ClassDiagramApplyTransaction(private val entityLUT: EntityLUT) : IApplyTra
         logger.debug("Create class diagram.")
         val owner = projectAccessor.findElements(INamedElement::class.java, ownerName).first() as INamedElement
         val diagram = classDiagramEditor.createClassDiagram(owner, name)
-        entityLUT.entries.add(Entry(diagram.id, id))
+        entityTable.entries.add(Entry(diagram.id, id))
         diagramViewManager.open(diagram)
     }
 
@@ -288,7 +288,7 @@ class ClassDiagramApplyTransaction(private val entityLUT: EntityLUT) : IApplyTra
         stereotypes.forEach {
             classModel.addStereotype(it)
         }
-        entityLUT.entries.add(Entry(classModel.id, id))
+        entityTable.entries.add(Entry(classModel.id, id))
 //        val parentEntry = entityLUT.entries.find { it.common == parentId } ?: run {
 //            logger.debug("$parentId not found on LUT.")
 //            return
@@ -322,11 +322,11 @@ class ClassDiagramApplyTransaction(private val entityLUT: EntityLUT) : IApplyTra
         id: String
     ) {
         logger.debug("Create association model.")
-        val sourceClassEntry = entityLUT.entries.find { it.common == sourceClassId } ?: run {
+        val sourceClassEntry = entityTable.entries.find { it.common == sourceClassId } ?: run {
             logger.debug("$sourceClassId not found on LUT.")
             return
         }
-        val destinationClassEntry = entityLUT.entries.find { it.common == destinationClassId } ?: run {
+        val destinationClassEntry = entityTable.entries.find { it.common == destinationClassId } ?: run {
             logger.debug("$destinationClassId not found on LUT.")
             return
         }
@@ -343,7 +343,7 @@ class ClassDiagramApplyTransaction(private val entityLUT: EntityLUT) : IApplyTra
                 }
 
         val association = basicModelEditor.createAssociation(sourceClass, destinationClass, associationName, "", "")
-        entityLUT.entries.add(Entry(association.id, id))
+        entityTable.entries.add(Entry(association.id, id))
         sourceClass.attributes.filterNot { it.association == null }
             .find { it.association == association }?.navigability = sourceClassNavigability
         destinationClass.attributes.filterNot { it.association == null }
@@ -352,11 +352,11 @@ class ClassDiagramApplyTransaction(private val entityLUT: EntityLUT) : IApplyTra
 
     private fun createGeneralizationModel(superClassId: String, subClassId: String, name: String, id: String) {
         logger.debug("Create generalization model.")
-        val superClassEntry = entityLUT.entries.find { it.common == superClassId } ?: run {
+        val superClassEntry = entityTable.entries.find { it.common == superClassId } ?: run {
             logger.debug("$superClassId not found on LUT.")
             return
         }
-        val subClassEntry = entityLUT.entries.find { it.common == subClassId } ?: run {
+        val subClassEntry = entityTable.entries.find { it.common == subClassId } ?: run {
             logger.debug("$subClassId not found on LUT.")
             return
         }
@@ -371,16 +371,16 @@ class ClassDiagramApplyTransaction(private val entityLUT: EntityLUT) : IApplyTra
                 return
             }
         val generalization = basicModelEditor.createGeneralization(subClass, superClass, name)
-        entityLUT.entries.add(Entry(generalization.id, id))
+        entityTable.entries.add(Entry(generalization.id, id))
     }
 
     private fun createRealizationModel(supplierClassId: String, clientClassId: String, name: String, id: String) {
         logger.debug("Create realization model.")
-        val supplierClassEntry = entityLUT.entries.find { it.common == supplierClassId } ?: run {
+        val supplierClassEntry = entityTable.entries.find { it.common == supplierClassId } ?: run {
             logger.debug("$supplierClassId not found on LUT.")
             return
         }
-        val clientClassEntry = entityLUT.entries.find { it.common == clientClassId } ?: run {
+        val clientClassEntry = entityTable.entries.find { it.common == clientClassId } ?: run {
             logger.debug("$clientClassId not found on LUT.")
             return
         }
@@ -396,12 +396,12 @@ class ClassDiagramApplyTransaction(private val entityLUT: EntityLUT) : IApplyTra
                 return
             }
         val realization = basicModelEditor.createRealization(clientClass, supplierClass, name)
-        entityLUT.entries.add(Entry(realization.id, id))
+        entityTable.entries.add(Entry(realization.id, id))
     }
 
     private fun createClassPresentation(classId: String, location: Point2D, diagramId: String, id: String) {
         logger.debug("Create class presentation.")
-        val classEntry = entityLUT.entries.find { it.common == classId } ?: run {
+        val classEntry = entityTable.entries.find { it.common == classId } ?: run {
             logger.debug("$classId not found on LUT.")
             return
         }
@@ -410,7 +410,7 @@ class ClassDiagramApplyTransaction(private val entityLUT: EntityLUT) : IApplyTra
                 logger.debug("IClass ${classEntry.mine} not found but $classId found on LUT.")
                 return
             }
-        val diagramEntry = entityLUT.entries.find { it.common == diagramId } ?: run {
+        val diagramEntry = entityTable.entries.find { it.common == diagramId } ?: run {
             logger.debug("$diagramId not found on LUT.")
             return
         }
@@ -421,7 +421,7 @@ class ClassDiagramApplyTransaction(private val entityLUT: EntityLUT) : IApplyTra
             }
         classDiagramEditor.diagram = diagram
         val classPresentation = classDiagramEditor.createNodePresentation(classModel, location)
-        entityLUT.entries.add(Entry(classPresentation.id, id))
+        entityTable.entries.add(Entry(classPresentation.id, id))
     }
 
     @Throws(ClassNotFoundException::class)
@@ -455,7 +455,7 @@ class ClassDiagramApplyTransaction(private val entityLUT: EntityLUT) : IApplyTra
     ) {
         logger.debug("Create link presentation.")
 
-        val diagramEntry = entityLUT.entries.find { it.common == diagramId } ?: run {
+        val diagramEntry = entityTable.entries.find { it.common == diagramId } ?: run {
             logger.debug("$diagramId not found on LUT.")
             return
         }
@@ -465,7 +465,7 @@ class ClassDiagramApplyTransaction(private val entityLUT: EntityLUT) : IApplyTra
                 return
             }
         classDiagramEditor.diagram = diagram
-        val sourceClassEntry = entityLUT.entries.find { it.common == sourceClassId } ?: run {
+        val sourceClassEntry = entityTable.entries.find { it.common == sourceClassId } ?: run {
             logger.debug("$sourceClassId not found on LUT.")
             return
         }
@@ -475,7 +475,7 @@ class ClassDiagramApplyTransaction(private val entityLUT: EntityLUT) : IApplyTra
                 return
             }
         val sourceClassPresentation = sourceClass.presentations.first { it.diagram == diagram } as INodePresentation
-        val targetClassEntry = entityLUT.entries.find { it.common == targetClassId } ?: run {
+        val targetClassEntry = entityTable.entries.find { it.common == targetClassId } ?: run {
             logger.debug("$targetClassId not found on LUT.")
             return
         }
@@ -487,7 +487,7 @@ class ClassDiagramApplyTransaction(private val entityLUT: EntityLUT) : IApplyTra
         val targetClassPresentation = targetClass.presentations.first { it.diagram == diagram } as INodePresentation
         logger.debug("Source: ${sourceClass.attributes}, target: ${targetClass.attributes}")
         try {
-            val modelEntry = entityLUT.entries.find { it.common == modelId } ?: run {
+            val modelEntry = entityTable.entries.find { it.common == modelId } ?: run {
                 logger.debug("$modelId not found on LUT.")
                 return
             }
@@ -495,7 +495,7 @@ class ClassDiagramApplyTransaction(private val entityLUT: EntityLUT) : IApplyTra
             logger.debug("Link: $element")
             val linkPresentation =
                 classDiagramEditor.createLinkPresentation(element, sourceClassPresentation, targetClassPresentation)
-            entityLUT.entries.add(Entry(linkPresentation.id, id))
+            entityTable.entries.add(Entry(linkPresentation.id, id))
         } catch (e: ClassNotFoundException) {
             logger.error("Link model not found.", e)
             return
@@ -512,7 +512,7 @@ class ClassDiagramApplyTransaction(private val entityLUT: EntityLUT) : IApplyTra
         diagramId: String
     ) {
         logger.debug("Create note.")
-        val diagramEntry = entityLUT.entries.find { it.common == diagramId } ?: run {
+        val diagramEntry = entityTable.entries.find { it.common == diagramId } ?: run {
             logger.debug("$diagramId not found on LUT.")
             return
         }
@@ -525,12 +525,12 @@ class ClassDiagramApplyTransaction(private val entityLUT: EntityLUT) : IApplyTra
         val entity = classDiagramEditor.createNote(note, location)
         entity.width = size.first
         entity.height = size.second
-        entityLUT.entries.add(Entry(entity.id, id))
+        entityTable.entries.add(Entry(entity.id, id))
     }
 
     private fun createOperation(ownerId: String, name: String, returnTypeExpression: String, id: String) {
         logger.debug("Create operation.")
-        val ownerEntry = entityLUT.entries.find { it.common == ownerId } ?: run {
+        val ownerEntry = entityTable.entries.find { it.common == ownerId } ?: run {
             logger.debug("$ownerId not found on LUT.")
             return
         }
@@ -540,12 +540,12 @@ class ClassDiagramApplyTransaction(private val entityLUT: EntityLUT) : IApplyTra
                 return
             }
         val operation = basicModelEditor.createOperation(owner, name, returnTypeExpression)
-        entityLUT.entries.add(Entry(operation.id, id))
+        entityTable.entries.add(Entry(operation.id, id))
     }
 
     private fun createAttribute(ownerId: String, name: String, typeExpression: String, id: String) {
         logger.debug("Create attribute.")
-        val ownerEntry = entityLUT.entries.find { it.common == ownerId } ?: run {
+        val ownerEntry = entityTable.entries.find { it.common == ownerId } ?: run {
             logger.debug("$ownerId not found on LUT.")
             return
         }
@@ -555,7 +555,7 @@ class ClassDiagramApplyTransaction(private val entityLUT: EntityLUT) : IApplyTra
                 return
             }
         val attribute = basicModelEditor.createAttribute(owner, name, typeExpression)
-        entityLUT.entries.add(Entry(attribute.id, id))
+        entityTable.entries.add(Entry(attribute.id, id))
     }
 
     private fun modifyClassPresentation(
@@ -566,7 +566,7 @@ class ClassDiagramApplyTransaction(private val entityLUT: EntityLUT) : IApplyTra
     ) {
         logger.debug("Modify class presentation.")
         val (width, height) = size
-        val diagramEntry = entityLUT.entries.find { it.common == diagramId } ?: run {
+        val diagramEntry = entityTable.entries.find { it.common == diagramId } ?: run {
             logger.debug("$diagramId not found on LUT.")
             return
         }
@@ -576,7 +576,7 @@ class ClassDiagramApplyTransaction(private val entityLUT: EntityLUT) : IApplyTra
                 return
             }
         classDiagramEditor.diagram = diagram
-        val entry = entityLUT.entries.find { it.common == id } ?: run {
+        val entry = entityTable.entries.find { it.common == id } ?: run {
             logger.debug("$id not found on LUT.")
             return
         }
@@ -598,7 +598,7 @@ class ClassDiagramApplyTransaction(private val entityLUT: EntityLUT) : IApplyTra
     ) {
         logger.debug("Resize class presentation.")
         val (width, height) = size
-        val diagramEntry = entityLUT.entries.find { it.common == diagramId } ?: run {
+        val diagramEntry = entityTable.entries.find { it.common == diagramId } ?: run {
             logger.debug("$diagramId not found on LUT.")
             return
         }
@@ -608,7 +608,7 @@ class ClassDiagramApplyTransaction(private val entityLUT: EntityLUT) : IApplyTra
                 return
             }
         classDiagramEditor.diagram = diagram
-        val entry = entityLUT.entries.find { it.common == id } ?: run {
+        val entry = entityTable.entries.find { it.common == id } ?: run {
             logger.debug("$id not found on LUT.")
             return
         }
@@ -624,7 +624,7 @@ class ClassDiagramApplyTransaction(private val entityLUT: EntityLUT) : IApplyTra
 
     private fun modifyClassModel(id: String, name: String, stereotypes: List<String?>) {
         logger.debug("Change class model name and stereotypes.")
-        val entry = entityLUT.entries.find { it.common == id } ?: run {
+        val entry = entityTable.entries.find { it.common == id } ?: run {
             logger.debug("$id not found on LUT.")
             return
         }
@@ -651,7 +651,7 @@ class ClassDiagramApplyTransaction(private val entityLUT: EntityLUT) : IApplyTra
         returnTypeExpression: String
     ) {
         logger.debug("Change operation name and return type expression.")
-        val ownerEntry = entityLUT.entries.find { it.common == ownerId } ?: run {
+        val ownerEntry = entityTable.entries.find { it.common == ownerId } ?: run {
             logger.debug("$id not found on LUT.")
             return
         }
@@ -660,7 +660,7 @@ class ClassDiagramApplyTransaction(private val entityLUT: EntityLUT) : IApplyTra
                 logger.debug("IClass ${ownerEntry.mine} not found but $ownerId found on LUT.")
                 return
             }
-        val entry = entityLUT.entries.find { it.common == id } ?: run {
+        val entry = entityTable.entries.find { it.common == id } ?: run {
             logger.debug("$id not found on LUT.")
             return
         }
@@ -679,7 +679,7 @@ class ClassDiagramApplyTransaction(private val entityLUT: EntityLUT) : IApplyTra
         typeExpression: String
     ) {
         logger.debug("Change attribute name and type expression.")
-        val ownerEntry = entityLUT.entries.find { it.common == ownerId } ?: run {
+        val ownerEntry = entityTable.entries.find { it.common == ownerId } ?: run {
             logger.debug("$id not found on LUT.")
             return
         }
@@ -688,7 +688,7 @@ class ClassDiagramApplyTransaction(private val entityLUT: EntityLUT) : IApplyTra
                 logger.debug("IClass ${ownerEntry.mine} not found but $ownerId found on LUT.")
                 return
             }
-        val entry = entityLUT.entries.find { it.common == id } ?: run {
+        val entry = entityTable.entries.find { it.common == id } ?: run {
             logger.debug("$id not found on LUT.")
             return
         }
@@ -703,24 +703,24 @@ class ClassDiagramApplyTransaction(private val entityLUT: EntityLUT) : IApplyTra
 
     private fun deleteClassDiagram(id: String) {
         logger.debug("Delete class diagram.")
-        val lutEntry = entityLUT.entries.find { it.common == id } ?: run {
+        val lutEntry = entityTable.entries.find { it.common == id } ?: run {
             logger.debug("$id not found on LUT.")
             return
         }
         val diagram = projectAccessor.project.diagrams.find { it.id == lutEntry.mine } ?: run {
             logger.debug("IDiagram ${lutEntry.mine} not found but $id found on LUT.")
-            entityLUT.entries.remove(lutEntry)
+            entityTable.entries.remove(lutEntry)
             return
         }
         // TODO: 削除されるとプレゼンテーションのエントリが残り続ける
-        entityLUT.entries.remove(lutEntry)
+        entityTable.entries.remove(lutEntry)
         classDiagramEditor.diagram = diagram
         classDiagramEditor.deleteDiagram()
     }
 
     private fun deletePresentation(id: String, diagramId: String) {
         logger.debug("Delete presentation.")
-        val diagramEntry = entityLUT.entries.find { it.common == diagramId } ?: run {
+        val diagramEntry = entityTable.entries.find { it.common == diagramId } ?: run {
             logger.debug("$diagramId not found on LUT.")
             return
         }
@@ -730,16 +730,16 @@ class ClassDiagramApplyTransaction(private val entityLUT: EntityLUT) : IApplyTra
                 return
             }
         classDiagramEditor.diagram = diagram
-        val lutEntry = entityLUT.entries.find { it.common == id } ?: run {
+        val lutEntry = entityTable.entries.find { it.common == id } ?: run {
             logger.debug("$id not found on LUT.")
             return
         }
         val classPresentation = diagram.presentations.find { it.id == lutEntry.mine } ?: run {
             logger.debug("Presentation ${lutEntry.mine} not found but $id found on LUT.")
-            entityLUT.entries.remove(lutEntry)
+            entityTable.entries.remove(lutEntry)
             return
         }
-        entityLUT.entries.remove(lutEntry)
+        entityTable.entries.remove(lutEntry)
         classDiagramEditor.deletePresentation(classPresentation)
     }
 

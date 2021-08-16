@@ -1,5 +1,5 @@
 /*
- * EntityLUT.kt - pair-modeling
+ * EntityTable.kt - pair-modeling
  * Copyright © 2021 HyodaKazuaki.
  *
  * Released under the MIT License.
@@ -8,7 +8,7 @@
 
 package jp.ex_t.kazuaki.change_vision.network
 
-data class EntityLUT(
+data class EntityTable(
     val entries: MutableList<Entry> = mutableListOf(),
 )
 

@@ -23,16 +23,16 @@ import org.eclipse.paho.client.mqttv3.MqttMessage
 import javax.swing.SwingUtilities
 
 class TransactionReceiver(
-    private val entityLUT: EntityLUT, private val projectChangedListener: ProjectChangedListener,
+    private val entityTable: EntityTable, private val projectChangedListener: ProjectChangedListener,
     clientId: String
 ) :
     Receiver(clientId) {
     private val api: AstahAPI = AstahAPI.getAstahAPI()
     private val projectAccessor: ProjectAccessor = api.projectAccessor
-    private val commonApplyTransaction = CommonApplyTransaction(entityLUT)
-    private val classDiagramApplyTransaction = ClassDiagramApplyTransaction(entityLUT)
-    private val mindmapDiagramApplyTransaction = MindmapDiagramApplyTransaction(entityLUT)
-    private val stateMachineDiagramApplyTransaction = StateMachineDiagramApplyTransaction(entityLUT)
+    private val commonApplyTransaction = CommonApplyTransaction(entityTable)
+    private val classDiagramApplyTransaction = ClassDiagramApplyTransaction(entityTable)
+    private val mindmapDiagramApplyTransaction = MindmapDiagramApplyTransaction(entityTable)
+    private val stateMachineDiagramApplyTransaction = StateMachineDiagramApplyTransaction(entityTable)
 
     @ExperimentalSerializationApi
     override fun messageArrived(topic: String, message: MqttMessage) {
@@ -92,7 +92,7 @@ class TransactionReceiver(
         projectAccessor.create()
         projectAccessor.project.name = name
 
-        entityLUT.entries.add(Entry(projectAccessor.project.id, id))
+        entityTable.entries.add(Entry(projectAccessor.project.id, id))
     }
 
     companion object : Logging {
