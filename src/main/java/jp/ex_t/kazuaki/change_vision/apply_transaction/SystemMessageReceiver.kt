@@ -1,6 +1,6 @@
 /*
  * SystemMessageReceiver.kt - pair-modeling
- * Copyright © 2021 HyodaKazuaki.
+ * Copyright © 2022 HyodaKazuaki.
  *
  * Released under the MIT License.
  * see https://opensource.org/licenses/MIT
@@ -68,6 +68,21 @@ class SystemMessageReceiver(
         entityTable.entries.add(Entry(project.id, project.id))
         val createProjectTransaction = Transaction(listOf(CreateProject(project.name, project.id)))
         encodeAndPublish(createProjectTransaction)
+
+        // package
+        val createPackageOperations = getElements(IPackage::class.java, project).mapNotNull {
+            when (it) {
+                is IPackage -> createPackage(it)
+                else -> {
+                    logger.debug("$it(Unknown)")
+                    null
+                }
+            }
+        }
+        if (createPackageOperations.isNotEmpty()) {
+            val createTransaction = Transaction(createPackageOperations)
+            encodeAndPublish(createTransaction)
+        }
 
         // diagram
         val createDiagramOperations = project.diagrams.mapNotNull {
@@ -238,6 +253,14 @@ class SystemMessageReceiver(
         }
     }
 
+    private fun <T> getElements(targetClass: Class<T>, element: IPackage): List<T?> {
+        val elements = element.ownedElements
+        return sequenceOf(
+            elements.filterIsInstance(targetClass),
+            elements.filterIsInstance<IPackage>().map { getElements<T>(targetClass, it) }.flatten()
+        ).flatten().toList()
+    }
+
     private fun getTopics(rootTopics: List<INodePresentation>): List<CreateTopic> {
         // add children topics of root / floating topics to ArrayDeque
         val queue = ArrayDeque<INodePresentation>()
@@ -253,6 +276,25 @@ class SystemMessageReceiver(
         }
 
         return operations.toList()
+    }
+
+    private fun createPackage(entity: IPackage): CreatePackage {
+        val owner = entity.owner
+        val ownerEntry = entityTable.entries.find { it.mine == owner.id } ?: run {
+            logger.debug("${owner.id} not found on LUT.")
+            val entry = Entry(owner.id, owner.id)
+            entityTable.entries.add(entry)
+            entry
+        }
+        val entry = entityTable.entries.find { it.mine == entity.id } ?: run {
+            logger.debug("${entity.id} not found on LUT.")
+            val entry = Entry(entity.id, entity.id)
+            entityTable.entries.add(entry)
+            entry
+        }
+        val createPackage = CreatePackage(entity.name, ownerEntry.common, entry.common)
+        logger().debug("${entity.name}(IPackage)")
+        return createPackage
     }
 
     private fun createClassDiagram(entity: IClassDiagram): ClassDiagramOperation {
