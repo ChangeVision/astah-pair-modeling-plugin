@@ -1,6 +1,6 @@
 /*
  * Transaction.kt - pair-modeling
- * Copyright © 2021 HyodaKazuaki.
+ * Copyright © 2022 HyodaKazuaki.
  *
  * Released under the MIT License.
  * see https://opensource.org/licenses/MIT
@@ -30,6 +30,15 @@ sealed class StateMachineDiagramOperation : TransactionalOperation()
 
 @Serializable
 data class CreateProject(val name: String, val id: String) : CommonOperation()
+
+@Serializable
+data class CreatePackage(val name: String, val ownerId: String, val id: String) : CommonOperation()
+
+@Serializable
+data class ModifyPackage(val id: String, val name: String, val parentId: String) : CommonOperation()
+
+@Serializable
+data class DeletePackage(val id: String) : CommonOperation()
 
 @Serializable
 data class CreateClassDiagram(

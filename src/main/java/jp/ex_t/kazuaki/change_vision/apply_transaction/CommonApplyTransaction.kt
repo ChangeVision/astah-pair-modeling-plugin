@@ -1,6 +1,6 @@
 /*
  * CommonApplyTransaction.kt - pair-modeling
- * Copyright © 2021 HyodaKazuaki.
+ * Copyright © 2022 HyodaKazuaki.
  *
  * Released under the MIT License.
  * see https://opensource.org/licenses/MIT
@@ -13,10 +13,7 @@ import com.change_vision.jude.api.inf.exception.BadTransactionException
 import com.change_vision.jude.api.inf.model.*
 import jp.ex_t.kazuaki.change_vision.Logging
 import jp.ex_t.kazuaki.change_vision.logger
-import jp.ex_t.kazuaki.change_vision.network.CommonOperation
-import jp.ex_t.kazuaki.change_vision.network.DeleteModel
-import jp.ex_t.kazuaki.change_vision.network.EntityTable
-import jp.ex_t.kazuaki.change_vision.network.ModifyDiagram
+import jp.ex_t.kazuaki.change_vision.network.*
 
 class CommonApplyTransaction(private val entityTable: EntityTable) : IApplyTransaction<CommonOperation> {
     private val api = AstahAPI.getAstahAPI()
@@ -28,8 +25,23 @@ class CommonApplyTransaction(private val entityTable: EntityTable) : IApplyTrans
         operations.forEach {
             when (it) {
                 is DeleteModel -> validateAndDeleteModel(it)
+                is DeletePackage -> validateAndDeletePackage(it)
                 is ModifyDiagram -> validateAndModifyClassDiagram(it)
+                is ModifyPackage -> validateAndModifyPackage(it)
+                is CreatePackage -> validateAndCreatePackage(it)
             }
+        }
+    }
+
+    private fun validateAndCreatePackage(operation: CreatePackage) {
+        if (operation.id.isNotEmpty() && operation.name.isNotEmpty() && operation.ownerId.isNotEmpty()) {
+            createPackage(operation.id, operation.name, operation.ownerId)
+        }
+    }
+
+    private fun validateAndModifyPackage(operation: ModifyPackage) {
+        if (operation.id.isNotEmpty() && operation.name.isNotEmpty() && operation.parentId.isNotEmpty()) {
+            modifyPackage(operation.id, operation.name, operation.parentId)
         }
     }
 
@@ -39,10 +51,55 @@ class CommonApplyTransaction(private val entityTable: EntityTable) : IApplyTrans
         }
     }
 
+    private fun validateAndDeletePackage(operation: DeletePackage) {
+        if (operation.id.isNotEmpty()) {
+            deletePackage(operation.id)
+        }
+    }
+
     private fun validateAndDeleteModel(operation: DeleteModel) {
         if (operation.id.isNotEmpty()) {
             deleteModel(operation.id)
         }
+    }
+
+    private fun createPackage(id: String, name: String, ownerId: String) {
+        logger.debug("Create package.")
+        val ownerEntry = entityTable.entries.find { it.common == ownerId } ?: run {
+            logger.debug("$ownerId not found on LUT.")
+            return
+        }
+        val owner =
+            projectAccessor.findElements(INamedElement::class.java).find { it.id == ownerEntry.mine } as IPackage?
+                ?: run {
+                    logger.debug("INamedElement ${ownerEntry.mine} not found but $ownerId found on LUT.")
+                    return
+                }
+        val newPackage = basicModelEditor.createPackage(owner, name)
+        entityTable.entries.add(Entry(newPackage.id, id))
+    }
+
+    private fun modifyPackage(id: String, name: String, ownerId: String) {
+        logger.debug("Modify package.")
+        val entry = entityTable.entries.find { it.common == id } ?: run {
+            logger.debug("$id not found on LUT.")
+            return
+        }
+        val existPackage =
+            projectAccessor.findElements(IPackage::class.java).find { it.id == entry.mine } as IPackage? ?: run {
+                logger.debug("IPackage ${entry.mine} not found but $id found on LUT.")
+                return
+            }
+        existPackage.name = name
+        val ownerEntry = entityTable.entries.find { it.common == ownerId } ?: run {
+            logger.debug("owner id $ownerId not found on LUT.")
+            return
+        }
+        val owner = projectAccessor.findElements(INamedElement::class.java).find { it.id == ownerEntry.mine } ?: run {
+            logger.debug("INamedElement ${ownerEntry.mine} not found but $ownerId found on LUT.")
+            return
+        }
+        basicModelEditor.changeParent(owner, existPackage)
     }
 
     private fun modifyClassDiagram(id: String, name: String, ownerId: String) {
@@ -71,6 +128,21 @@ class CommonApplyTransaction(private val entityTable: EntityTable) : IApplyTrans
             logger.debug("IActivityDiagram, IDataFlowDiagram and IStateMachineDiagram cannot change parent.")
         }
         basicModelEditor.changeParent(owner, diagram)
+    }
+
+    private fun deletePackage(id: String) {
+        logger.debug("Delete package.")
+        val lutEntry = entityTable.entries.find { it.common == id } ?: run {
+            logger.debug("$id not found on LUT.")
+            return
+        }
+        val existPackage = projectAccessor.findElements(IPackage::class.java).find { it.id == lutEntry.mine } ?: run {
+            logger.debug("Package ${lutEntry.mine} not found but $id found on LUT.")
+            entityTable.entries.remove(lutEntry)
+            return
+        }
+        entityTable.entries.remove(lutEntry)
+        basicModelEditor.delete(existPackage)
     }
 
     private fun deleteModel(id: String) {
