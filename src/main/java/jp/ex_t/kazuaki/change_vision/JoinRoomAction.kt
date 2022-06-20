@@ -1,6 +1,6 @@
 /*
  * JoinRoomAction.kt - pair-modeling
- * Copyright © 2021 HyodaKazuaki.
+ * Copyright © 2022 HyodaKazuaki.
  *
  * Released under the MIT License.
  * see https://opensource.org/licenses/MIT
@@ -41,6 +41,8 @@ class JoinRoomAction : IPluginActionDelegate {
                 val dialog =
                     ProgressBarDialog(window.parent, "Connecting...", Dialog.ModalityType.DOCUMENT_MODAL, 0, 100, true)
 
+                menuTextChanger.setAfterText(menuId)
+                menuTextChanger.disable(menuId)
                 val scope = CoroutineScope(Dispatchers.Default)
                 val exceptionHandler = CoroutineExceptionHandler { _, e ->
                     logger.error("Join exception", e)
@@ -74,6 +76,8 @@ class JoinRoomAction : IPluginActionDelegate {
                                 "Room not found",
                                 JOptionPane.ERROR_MESSAGE
                             )
+                            menuTextChanger.setBeforeText(menuId)
+                            menuTextChanger.enable(menuId)
                         }
                     }
                 }
@@ -91,8 +95,6 @@ class JoinRoomAction : IPluginActionDelegate {
                     for (i in 0..Int.MAX_VALUE) {
                         if (job.isCompleted && job.isCancelled.not() && dialog.isCanceled.not()) {
                             logger.debug("Job completed.")
-                            menuTextChanger.setAfterText(menuId)
-                            menuTextChanger.disable(menuId)
                             dialog.dispose()
                             break
                         }
