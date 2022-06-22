@@ -42,8 +42,6 @@ class JoinRoomAction : IPluginActionDelegate {
                 val dialog =
                     ProgressBarDialog(window.parent, "Connecting...", Dialog.ModalityType.DOCUMENT_MODAL, 0, 100, true)
 
-                menuTextChanger.setAfterText(menuId)
-                menuTextChanger.disable(menuId)
                 val scope = CoroutineScope(Dispatchers.Default)
                 val exceptionHandler = CoroutineExceptionHandler { _, e ->
                     logger.error("Join exception", e)
@@ -59,7 +57,6 @@ class JoinRoomAction : IPluginActionDelegate {
                     }
                 }
                 val job = scope.launch(exceptionHandler) {
-                    async {
                         try {
                             pairModeling.join(
                                 topic,
@@ -69,18 +66,17 @@ class JoinRoomAction : IPluginActionDelegate {
                             )
                         } catch (e: TimeoutCancellationException) {
                             dialog.dispose()
+                            this.cancel()
                             logger.debug("Canceled by system.")
-                            logger.error(e.toString())
                             JOptionPane.showMessageDialog(
                                 window.parent,
                                 "No response to the connection request.\nConfirm the room is exist.",
                                 "Room not found",
                                 JOptionPane.ERROR_MESSAGE
                             )
-                            menuTextChanger.setBeforeText(menuId)
-                            menuTextChanger.enable(menuId)
                         } catch (e: MqttException) {
                             dialog.dispose()
+                            this.cancel()
                             logger.debug("Canceled by system.")
                             JOptionPane.showMessageDialog(
                                 window.parent,
@@ -88,10 +84,7 @@ class JoinRoomAction : IPluginActionDelegate {
                                 "MQTT broker not found",
                                 JOptionPane.ERROR_MESSAGE
                             )
-                            menuTextChanger.setBeforeText(menuId)
-                            menuTextChanger.enable(menuId)
                         }
-                    }
                 }
 
                 dialog.addCancelAction {
@@ -108,6 +101,8 @@ class JoinRoomAction : IPluginActionDelegate {
                         if (job.isCompleted && job.isCancelled.not() && dialog.isCanceled.not()) {
                             logger.debug("Job completed.")
                             dialog.dispose()
+                            menuTextChanger.setAfterText(menuId)
+                            menuTextChanger.disable(menuId)
                             break
                         }
                         if (job.isCancelled || dialog.isCanceled) {
