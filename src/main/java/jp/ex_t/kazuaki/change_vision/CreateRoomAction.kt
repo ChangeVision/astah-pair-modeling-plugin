@@ -1,6 +1,6 @@
 /*
  * CreateRoomAction.kt - pair-modeling
- * Copyright © 2021 HyodaKazuaki.
+ * Copyright © 2022 HyodaKazuaki.
  *
  * Released under the MIT License.
  * see https://opensource.org/licenses/MIT
@@ -11,6 +11,7 @@ package jp.ex_t.kazuaki.change_vision
 import com.change_vision.jude.api.inf.ui.IPluginActionDelegate
 import com.change_vision.jude.api.inf.ui.IPluginActionDelegate.UnExpectedException
 import com.change_vision.jude.api.inf.ui.IWindow
+import org.eclipse.paho.client.mqttv3.MqttException
 import java.awt.Dialog
 import java.awt.FlowLayout
 import java.awt.Window
@@ -44,6 +45,13 @@ class CreateRoomAction : IPluginActionDelegate {
                 menuTextChanger.setBeforeText(menuId)
                 menuTextChanger.enable(menuId)
             }
+        } catch (e: MqttException) {
+            JOptionPane.showMessageDialog(
+                window.parent,
+                "No response from MQTT broker.\nConfirm host name and port number are correct.",
+                "MQTT broker not found",
+                JOptionPane.ERROR_MESSAGE
+            )
         } catch (e: UnExpectedException) {
             val message = "Exception occurred."
             JOptionPane.showMessageDialog(window.parent, message, "Alert", JOptionPane.ERROR_MESSAGE)

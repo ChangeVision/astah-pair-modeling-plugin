@@ -1,6 +1,6 @@
 /*
  * PairModeling.kt - pair-modeling
- * Copyright © 2021 HyodaKazuaki.
+ * Copyright © 2022 HyodaKazuaki.
  *
  * Released under the MIT License.
  * see https://opensource.org/licenses/MIT
@@ -9,7 +9,6 @@
 package jp.ex_t.kazuaki.change_vision
 
 import com.change_vision.jude.api.inf.AstahAPI
-import com.change_vision.jude.api.inf.ui.IPluginActionDelegate.UnExpectedException
 import jp.ex_t.kazuaki.change_vision.apply_transaction.SystemMessageReceiver
 import jp.ex_t.kazuaki.change_vision.apply_transaction.TransactionReceiver
 import jp.ex_t.kazuaki.change_vision.event_listener.ProjectChangedListener
@@ -24,7 +23,6 @@ import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.cbor.Cbor
 import kotlinx.serialization.encodeToByteArray
 import org.eclipse.paho.client.mqttv3.MqttException
-import java.net.SocketTimeoutException
 import java.util.*
 
 class PairModeling {
@@ -38,7 +36,7 @@ class PairModeling {
     private lateinit var projectChangedListener: ProjectChangedListener
     private lateinit var mqttSubscriber: MqttSubscriber
 
-    @Throws(UnExpectedException::class)
+    @Throws(MqttException::class)
     fun create(
         topicBase: String,
         clientId: String,
@@ -68,11 +66,9 @@ class PairModeling {
                     clientId,
                 )
         } catch (e: MqttException) {
-            if (e.cause is SocketTimeoutException) {
-                projectAccessor.removeProjectEventListener(projectChangedListener)
-                logger.error("MQTT broker timeout.", e)
-                throw UnExpectedException()
-            }
+            projectAccessor.removeProjectEventListener(projectChangedListener)
+            logger.error("MQTT exception.", e)
+            throw e
         }
 
         val topicTransactionSubscriber = "$topicTransaction/#"
@@ -100,7 +96,7 @@ class PairModeling {
     }
 
     @ExperimentalSerializationApi
-    @Throws(TimeoutCancellationException::class, CancellationException::class)
+    @Throws(MqttException::class, TimeoutCancellationException::class, CancellationException::class)
     suspend fun join(
         topicBase: String,
         clientId: String,
@@ -129,11 +125,8 @@ class PairModeling {
                     clientId,
                 )
         } catch (e: MqttException) {
-            if (e.cause is SocketTimeoutException) {
-                projectAccessor.removeProjectEventListener(projectChangedListener)
-                logger.error("MQTT broker timeout.", e)
-                throw UnExpectedException()
-            }
+            logger.error("MQTT exception.", e)
+            throw e
         }
 
         // 差分の同期を始める
@@ -153,7 +146,6 @@ class PairModeling {
         logger.info("Launched subscriber.")
 
         // システムメッセージのsubscriberを用意
-        logger.debug("Launching system message subscriber...")
         val topicSystemMessage = "$topic/system"
         val topicSystemMessageSubscriber = "$topicSystemMessage/#"
         val systemMessageReceiver =

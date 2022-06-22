@@ -13,6 +13,7 @@ import com.change_vision.jude.api.inf.ui.IWindow
 import kotlinx.coroutines.*
 import kotlinx.coroutines.swing.Swing
 import kotlinx.serialization.ExperimentalSerializationApi
+import org.eclipse.paho.client.mqttv3.MqttException
 import java.awt.Dialog
 import java.awt.FlowLayout
 import java.awt.Window
@@ -74,6 +75,17 @@ class JoinRoomAction : IPluginActionDelegate {
                                 window.parent,
                                 "No response to the connection request.\nConfirm the room is exist.",
                                 "Room not found",
+                                JOptionPane.ERROR_MESSAGE
+                            )
+                            menuTextChanger.setBeforeText(menuId)
+                            menuTextChanger.enable(menuId)
+                        } catch (e: MqttException) {
+                            dialog.dispose()
+                            logger.debug("Canceled by system.")
+                            JOptionPane.showMessageDialog(
+                                window.parent,
+                                "No response from MQTT broker.\nConfirm host name and port number are correct.",
+                                "MQTT broker not found",
                                 JOptionPane.ERROR_MESSAGE
                             )
                             menuTextChanger.setBeforeText(menuId)
